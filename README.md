@@ -1,6 +1,7 @@
 ## Install Deps
+```
 npm i
-
+```
 ### Use it
 
 ```
