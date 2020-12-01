@@ -1,6 +1,6 @@
 ## Install Deps
 ```
-npm i
+$ npm i
 ```
 ### Use it
 
