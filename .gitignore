@@ -4,3 +4,5 @@ node_modules
 app
 dist
 cardano
+#Electron-builder output
+/dist_electron
