@@ -74,6 +74,7 @@ ipcMain.on('req:start-cnode', (event, args) => {
   cnode = spawn(path.resolve('.', cardanoPath, 'mac', 'cardano-node'), ['run',...cardanoNodeOptions])
   //walletApi = spawn()
   //cnode = spawn(args, []);
+  //export CARDANO_NODE_SOCKET_PATH=/Users/kylejohns/Perdix/perdix-app/cardano/socket && ./cardano-wallet serve --mainnet --node-socket /Users/kylejohns/Perdix/perdix-app/cardano/socket
   cnode.stderr
   event.reply('res:start-cnode', cnode.pid);
   // cnode.stdout.on('data', (data) => {
