@@ -3,6 +3,9 @@ node_modules
 .next
 app
 dist
-cardano
+cardano/mac
+cardano/db
+cardano/socket
+cardano/sockets
 #Electron-builder output
 /dist_electron

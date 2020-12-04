@@ -1,9 +1,11 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { spawn } from 'child_process'
+import path from 'path'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
-import { startCardanoNode } from './bootstrap-cardano'
+import { cardanoPath,cardanoNodeOptions, walletServeOptions } from './util-cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -57,12 +59,58 @@ app.on('ready', async () => {
     // Install Vue Devtools
     try {
       await installExtension(VUEJS_DEVTOOLS)
-      startCardanoNode();
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
   createWindow()
+})
+
+///Cardano Operations
+let cnode = null;
+let walletApi = null;
+
+ipcMain.on('req:start-cnode', (event, args) => {
+  cnode = spawn(path.resolve('.', cardanoPath, 'mac', 'cardano-node'), ['run',...cardanoNodeOptions])
+  //walletApi = spawn()
+  //cnode = spawn(args, []);
+  cnode.stderr
+  event.reply('res:start-cnode', cnode.pid);
+  // cnode.stdout.on('data', (data) => {
+  //   console.log(data.toString('ascii'));
+  //   event.reply('res:start-cnode', data.toString('ascii'));
+  // });
+  cnode.stdout.on('data', (data) => {
+    console.info(`stdout: ${data}`);
+  });
+
+  cnode.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+  });
+})
+
+ipcMain.on('generate-recovery-phrase', (event, args) => {
+
+})
+
+ipcMain.on('create-wallet', (event, args) => {
+
+})
+
+ipcMain.on('get-wallet', (event, args) => {
+
+})
+
+ipcMain.on('get-address', (event, args) => {
+
+})
+
+ipcMain.on('get-fee', (event, args) => {
+
+})
+
+ipcMain.on('send-transaction', (event, args) => {
+
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -79,3 +127,8 @@ if (isDevelopment) {
     })
   }
 }
+
+
+app.on('quit', () => {
+  cnode.kill();
+})

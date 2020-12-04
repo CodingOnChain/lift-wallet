@@ -26,7 +26,7 @@
       </div>
 
       <v-spacer></v-spacer>
-
+      <v-btn v-on:click="executeShell">Test</v-btn>
       <v-btn
         href="https://github.com/vuetifyjs/vuetify/releases/latest"
         target="_blank"
@@ -44,6 +44,7 @@
 </template>
 
 <script>
+const { ipcRenderer } = require('electron')
 import HelloWorld from './components/HelloWorld';
 
 export default {
@@ -53,8 +54,20 @@ export default {
     HelloWorld,
   },
 
+  created(){
+    ipcRenderer.on('res:start-cnode', (event, arg) => {
+      console.log(arg) 
+    })
+  },
+
   data: () => ({
     //
   }),
+
+  methods: {
+    executeShell: function() {
+      ipcRenderer.send('req:start-cnode', 'top');
+    }
+  }
 };
 </script>

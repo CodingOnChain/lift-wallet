@@ -6,6 +6,7 @@ module.exports = {
   ],
   pluginOptions: {
     electronBuilder: {
+      nodeIntegration: true,
       builderOptions: {
         "mac": {
           "extraFiles": [
