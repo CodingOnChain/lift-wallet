@@ -4,6 +4,7 @@ node_modules
 app
 dist
 cardano/mac
+cardano/win32
 cardano/db
 cardano/socket
 cardano/sockets
