@@ -3,9 +3,10 @@ node_modules
 .next
 app
 dist
-cardano/mac
+cardano/darwin
 cardano/win32
 cardano/db
+cardano/wallets
 cardano/socket
 cardano/sockets
 #Electron-builder output

@@ -5,7 +5,7 @@ import path from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
-import { cardanoPath,cardanoNodeOptions, walletServeOptions } from './util-cardano'
+import { cardanoPath, socketPath, cardanoNodeOptions, walletServeOptions, walletServeEnvs } from './util-cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -71,22 +71,33 @@ let cnode = null;
 let walletApi = null;
 
 ipcMain.on('req:start-cnode', (event, args) => {
-  cnode = spawn(path.resolve('.', cardanoPath, process.platform, 'cardano-node'), ['run',...cardanoNodeOptions])
-  //walletApi = spawn()
-  //cnode = spawn(args, []);
-  //export CARDANO_NODE_SOCKET_PATH=/Users/kylejohns/Perdix/perdix-app/cardano/socket && ./cardano-wallet serve --mainnet --node-socket /Users/kylejohns/Perdix/perdix-app/cardano/socket
-  cnode.stderr
-  event.reply('res:start-cnode', cnode.pid);
-  // cnode.stdout.on('data', (data) => {
-  //   console.log(data.toString('ascii'));
-  //   event.reply('res:start-cnode', data.toString('ascii'));
-  // });
+  //start cardano-node
+  console.log(socketPath)
+  cnode = spawn(
+    path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
+    ['run',...cardanoNodeOptions])
+  //start cardano-wallet serve
+  walletApi = spawn(
+    path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 
+    ['serve',...walletServeOptions], 
+    walletServeEnvs)
+    
+  event.reply('res:start-cnode', { 'cnode': cnode.pid, 'wallet-api': walletApi.pid });
+
   cnode.stdout.on('data', (data) => {
-    console.info(`stdout: ${data}`);
+    console.info(`cnode: ${data}`);
   });
 
   cnode.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
+    console.error(`cnode err: ${data}`);
+  });
+
+  walletApi.stdout.on('data', (data) => {
+    console.info(`wallet-api: ${data}`);
+  });
+
+  walletApi.stderr.on('data', (data) => {
+    console.error(`wallet-api err: ${data}`);
   });
 })
 
@@ -132,4 +143,5 @@ if (isDevelopment) {
 
 app.on('quit', () => {
   cnode.kill();
+  walletApi.kill();
 })
