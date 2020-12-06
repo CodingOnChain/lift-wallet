@@ -72,7 +72,7 @@ let walletApi = null;
 
 ipcMain.on('req:start-cnode', (event, args) => {
   //start cardano-node
-  console.log(socketPath)
+  console.log(cardanoNodeOptions)
   cnode = spawn(
     path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
     ['run',...cardanoNodeOptions])
@@ -82,7 +82,7 @@ ipcMain.on('req:start-cnode', (event, args) => {
     ['serve',...walletServeOptions], 
     walletServeEnvs)
     
-  event.reply('res:start-cnode', { 'cnode': cnode.pid, 'wallet-api': walletApi.pid });
+  event.reply('res:start-cnode', { 'cnode': cnode.pid });
 
   cnode.stdout.on('data', (data) => {
     console.info(`cnode: ${data}`);
