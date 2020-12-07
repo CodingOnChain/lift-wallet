@@ -15,7 +15,10 @@
     </v-app-bar>
 
     <v-main>
-      <LoadingCnode v-show="bootingCnode" />
+      <LoadingCnode v-show="bootingCnode || syncingCnode" 
+        v-bind:loading="bootingCnode" 
+        v-bind:syncing="syncingCnode"
+        v-bind:progress="syncingProgress" />
     </v-main>
   </v-app>
 </template>
@@ -43,20 +46,34 @@ export default {
     ipcRenderer.on('res:stop-cnode', () => {
       this.toggleStartCnode = false;
       this.bootingCnode = false;
+      this.syncingCnode = false;
+      this.activeCnode = false;
     })
 
     ipcRenderer.on('res:get-network', (_, args) => {
-      if(args.network.sync_progress.status == 'syncing')
-      {
-        console.log(`${args.network.sync_progress.progress.quantity}%`)
-        setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 5000);
+      console.log(args);
+      if(args.network != null) {
+        if(args.network.sync_progress.status == 'syncing')
+        {
+          this.bootingCnode = false;
+          this.syncingCnode = true;
+          this.syncingProgress = args.network.sync_progress.progress.quantity;
+          console.log(`${args.network.sync_progress.progress.quantity}%`)
+          this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
+        }
+      }else {
+          this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
       }
     })
   },
 
   data: () => ({
     toggleStartCnode: false,
-    bootingCnode: false
+    bootingCnode: false,
+    syncingCnode: false,
+    activeCnode: false,
+    syncingProgress: 0,
+    getSyncInfo: null
   }),
 
   methods: {
@@ -65,6 +82,7 @@ export default {
     },
     stopCnode: function() {
       ipcRenderer.send('req:stop-cnode', 'top');
+      clearTimeout(this.getSyncInfo);
     }
   }
 };

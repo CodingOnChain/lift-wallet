@@ -3,6 +3,7 @@ node_modules
 .next
 app
 dist
+cardano/configs
 cardano/darwin
 cardano/win32
 cardano/db

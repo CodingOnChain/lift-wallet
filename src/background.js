@@ -116,13 +116,8 @@ ipcMain.on('req:stop-cnode', (event, args) => {
 })
 
 ipcMain.on('req:get-network', async (event, args) => {
-
-  let networkInfo = null;
-  do { //remove this and do it from the app side
-    networkInfo = await getNetworkInfo()
-  }while(networkInfo == null)
-
-  event.reply('res:get-network', { network: networkInfo.data })
+  const networkInfo = await getNetworkInfo();
+  event.reply('res:get-network', { network: networkInfo != null ? networkInfo.data : null })
 })
 
 ipcMain.on('generate-recovery-phrase', (event, args) => {

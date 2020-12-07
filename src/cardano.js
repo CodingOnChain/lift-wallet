@@ -9,7 +9,7 @@ export const walletDbPath = isDevelopment ? path.resolve(cardanoPath, 'wallets')
 export const socketPath = isDevelopment ? (process.platform == 'win32') ? '\\\\.\\pipe\\cardano-node-mainnet' : path.resolve(cardanoPath, 'socket') : '';
 export const configPath = isDevelopment ? path.resolve(cardanoPath, 'configs') : '';
 export const topolgoyFile = isDevelopment ? path.resolve(configPath, 'mainnet-topology.json') : '';
-export const configFile = isDevelopment ? path.resolve(configPath, (process.platform == 'win32') ? 'mainnet-config-win32.json' : 'mainnet-config.json') : '';
+export const configFile = isDevelopment ? path.resolve(configPath, 'mainnet-config.json') : '';
 
 export const cardanoNodeOptions = [
     '--port', '6000',
@@ -28,7 +28,7 @@ export const walletServeOptions = [
     '--node-socket', socketPath,
     '--database', walletDbPath,
     '--pool-metadata-fetching', 'https://smash.cardano-mainnet.iohk.io',
-    '--log-level', 'WARNING'
+    '--log-level', 'ERROR'
 ]
 
 export async function getNetworkInfo() {
