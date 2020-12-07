@@ -25,5 +25,7 @@ export const walletServeEnvs = {
 export const walletServeOptions = [
     '--mainnet',
     '--node-socket', socketPath,
-    '--database', walletDbPath
+    '--database', walletDbPath,
+    '--pool-metadata-fetching', 'https://smash.cardano-mainnet.iohk.io',
+    '--log-level', 'WARNING'
 ]

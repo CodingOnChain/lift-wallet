@@ -142,6 +142,6 @@ if (isDevelopment) {
 
 
 app.on('quit', () => {
-  cnode.kill();
-  walletApi.kill();
+  if(!!cnode) cnode.kill();
+  if(!!walletApi) walletApi.kill();
 })
