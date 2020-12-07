@@ -5,7 +5,7 @@ import path from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
-import { cardanoPath, socketPath, cardanoNodeOptions, walletServeOptions, walletServeEnvs } from './util-cardano'
+import { cardanoPath, cardanoNodeOptions, walletServeOptions, walletServeEnvs, getNetworkInfo } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -28,7 +28,7 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
+    //if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     // Load the index.html when not in development
@@ -72,33 +72,57 @@ let walletApi = null;
 
 ipcMain.on('req:start-cnode', (event, args) => {
   //start cardano-node
-  console.log(cardanoNodeOptions)
-  cnode = spawn(
-    path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
-    ['run',...cardanoNodeOptions])
-  //start cardano-wallet serve
-  walletApi = spawn(
-    path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 
-    ['serve',...walletServeOptions], 
-    walletServeEnvs)
-    
-  event.reply('res:start-cnode', { 'cnode': cnode.pid });
+  if(cnode == null) {
+    cnode = spawn(
+      path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
+      ['run',...cardanoNodeOptions])
+    //start cardano-wallet serve
+    walletApi = spawn(
+      path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 
+      ['serve',...walletServeOptions], 
+      walletServeEnvs)
+      
+    event.reply('res:start-cnode', { 'cnode': cnode.pid });
 
-  cnode.stdout.on('data', (data) => {
-    console.info(`cnode: ${data}`);
-  });
+    cnode.stdout.on('data', (data) => {
+      console.info(`cnode: ${data}`);
+    });
 
-  cnode.stderr.on('data', (data) => {
-    console.error(`cnode err: ${data}`);
-  });
+    cnode.stderr.on('data', (data) => {
+      console.error(`cnode err: ${data}`);
+    });
 
-  walletApi.stdout.on('data', (data) => {
-    console.info(`wallet-api: ${data}`);
-  });
+    walletApi.stdout.on('data', (data) => {
+      console.info(`wallet-api: ${data}`);
+    });
 
-  walletApi.stderr.on('data', (data) => {
-    console.error(`wallet-api err: ${data}`);
-  });
+    walletApi.stderr.on('data', (data) => {
+      console.error(`wallet-api err: ${data}`);
+    });
+  }
+})
+
+ipcMain.on('req:stop-cnode', (event, args) => {
+  if(!!cnode) {
+    cnode.kill();
+    cnode = null;
+  }
+  if(!!walletApi) {
+    walletApi.kill();
+    walletApi = null
+  }
+
+  event.reply('res:stop-cnode');
+})
+
+ipcMain.on('req:get-network', async (event, args) => {
+
+  let networkInfo = null;
+  do { //remove this and do it from the app side
+    networkInfo = await getNetworkInfo()
+  }while(networkInfo == null)
+
+  event.reply('res:get-network', { network: networkInfo.data })
 })
 
 ipcMain.on('generate-recovery-phrase', (event, args) => {

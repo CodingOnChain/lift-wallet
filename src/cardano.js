@@ -1,5 +1,6 @@
 const { spawn } = require("child_process")
 const path = require("path")
+import axios from 'axios'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export const cardanoPath = isDevelopment ? path.resolve(__dirname, '..', 'cardano') : '';
@@ -29,3 +30,11 @@ export const walletServeOptions = [
     '--pool-metadata-fetching', 'https://smash.cardano-mainnet.iohk.io',
     '--log-level', 'WARNING'
 ]
+
+export async function getNetworkInfo() {
+    try {
+        return await axios.get('http://localhost:8090/v2/network/information', { timeout: 10000 })
+    }catch(err){
+        return null
+    }
+}

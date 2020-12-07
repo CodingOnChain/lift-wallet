@@ -6,67 +6,65 @@
       dark
     >
       <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
-
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
+        <h1>Perdix</h1>
       </div>
 
       <v-spacer></v-spacer>
-      <v-btn v-on:click="executeShell">Test</v-btn>
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
+      <v-btn color="success" v-on:click="startCnode" v-show="!toggleStartCnode" >Start Node</v-btn>
+      <v-btn color="danger" v-on:click="stopCnode" v-show="toggleStartCnode" >Stop Node</v-btn>
     </v-app-bar>
 
     <v-main>
-      <HelloWorld/>
+      <LoadingCnode v-show="bootingCnode" />
     </v-main>
   </v-app>
 </template>
 
 <script>
 const { ipcRenderer } = require('electron')
-import HelloWorld from './components/HelloWorld';
+import LoadingCnode from './components/LoadingCnode'
 
 export default {
   name: 'App',
 
   components: {
-    HelloWorld,
+    LoadingCnode
   },
 
   created(){
-    ipcRenderer.on('res:start-cnode', (event, arg) => {
-      console.log(arg) 
+    ipcRenderer.on('res:start-cnode', (_, args) => {
+      if(args.cnode) {
+        this.toggleStartCnode = true;
+        this.bootingCnode = true;
+        ipcRenderer.send('req:get-network');
+      }
+    })
+
+    ipcRenderer.on('res:stop-cnode', () => {
+      this.toggleStartCnode = false;
+      this.bootingCnode = false;
+    })
+
+    ipcRenderer.on('res:get-network', (_, args) => {
+      if(args.network.sync_progress.status == 'syncing')
+      {
+        console.log(`${args.network.sync_progress.progress.quantity}%`)
+        setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 5000);
+      }
     })
   },
 
   data: () => ({
-    //
+    toggleStartCnode: false,
+    bootingCnode: false
   }),
 
   methods: {
-    executeShell: function() {
+    startCnode: function() {
       ipcRenderer.send('req:start-cnode', 'top');
+    },
+    stopCnode: function() {
+      ipcRenderer.send('req:stop-cnode', 'top');
     }
   }
 };
