@@ -1,17 +1,24 @@
 <template>
   <v-container>
-    <v-row align="center" justify="center" class="text-center">
-      <v-col cols="12">
-        <h2>Synced!</h2>
-      </v-col>
-    </v-row>
+    <WalletPage v-show="this.page == 'Wallets'"/>
+    <StakingPage v-show="this.page == 'Staking'"/>
+    <VotingPage v-show="this.page == 'Voting'"/>
   </v-container>
 </template>
 
 <script>
+  import WalletPage from './WalletPage'
+  import StakingPage from './StakingPage'
+  import VotingPage from './VotingPage'
+
   export default {
     name: 'MainView',
-    props: [],
+    components: {
+      WalletPage,
+      StakingPage,
+      VotingPage
+    },
+    props: ['page'],
     data: () => ({
       
     }),

@@ -22,7 +22,11 @@
         <v-btn
           v-for="link in links"
           :key="link"
-          text
+          v-on:click="setActivePage(link)"
+          :text="link != activePage"
+          :outlined="link == activePage"
+          class="mr-2"
+          v-show="activeCnode" 
         >
           {{ link }}
         </v-btn>
@@ -36,7 +40,7 @@
         v-bind:loading="bootingCnode" 
         v-bind:syncing="syncingCnode"
         v-bind:progress="syncingProgress" />
-      <MainView v-show="activeCnode" />
+      <MainView v-show="activeCnode" v-bind:page="activePage" />
     </v-main>
   </v-app>
 </template>
@@ -99,7 +103,8 @@ export default {
     activeCnode: false,
     syncingProgress: 0,
     getSyncInfo: null,
-    links: ['Wallets', 'Staking', 'Voting']
+    links: ['Wallets', 'Staking', 'Voting'],
+    activePage: 'Wallets'
   }),
 
   methods: {
@@ -109,6 +114,9 @@ export default {
     stopCnode: function() {
       ipcRenderer.send('req:stop-cnode', 'top');
       clearTimeout(this.getSyncInfo);
+    },
+    setActivePage: function(page) {
+      this.activePage = page;
     }
   }
 };
