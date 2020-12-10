@@ -1,20 +1,37 @@
 <template>
-  <v-app>
+  <v-app id="inspire">
     <v-app-bar
       app
-      color="primary"
-      dark
+      color="white"
+      flat
     >
-      <div class="d-flex align-center">
-        <h1>Perdix</h1>
-      </div>
+      <v-container class="py-0 fill-height">
+        <v-avatar
+          class="mr-5"
+          color="grey darken-1"
+          size="32"
+        ></v-avatar>
 
-      <v-spacer></v-spacer>
-      <v-btn color="success" v-on:click="startCnode" v-show="!toggleStartCnode" >Start Node</v-btn>
-      <v-btn color="danger" v-on:click="stopCnode" v-show="toggleStartCnode" >Stop Node</v-btn>
+        <div class="d-flex align-center">
+          <h1>Perdix</h1>
+        </div>
+
+
+        <v-spacer></v-spacer>
+
+        <v-btn
+          v-for="link in links"
+          :key="link"
+          text
+        >
+          {{ link }}
+        </v-btn>
+        <v-btn color="success" v-on:click="startCnode" v-show="!toggleStartCnode" >Start Node</v-btn>
+        <v-btn color="danger" v-on:click="stopCnode" v-show="toggleStartCnode" >Stop Node</v-btn>
+      </v-container>
     </v-app-bar>
 
-    <v-main>
+    <v-main class="grey lighten-3">
       <LoadingCnode v-show="bootingCnode || syncingCnode" 
         v-bind:loading="bootingCnode" 
         v-bind:syncing="syncingCnode"
@@ -73,7 +90,8 @@ export default {
     syncingCnode: false,
     activeCnode: false,
     syncingProgress: 0,
-    getSyncInfo: null
+    getSyncInfo: null,
+    links: ['Wallets', 'Staking', 'Voting']
   }),
 
   methods: {

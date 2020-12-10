@@ -54,7 +54,7 @@
     "127.0.0.1",
     12798
   ],
-  "minSeverity": "Warning",
+  "minSeverity": "Error",
   "options": {
     "mapBackends": {
       "cardano.node-metrics": [
@@ -70,6 +70,9 @@
         "EKGViewBK"
       ],
       "cardano.node.metrics": [
+        "EKGViewBK"
+      ],
+      "cardano.node.resources": [
         "EKGViewBK"
       ]
     },
