@@ -36,6 +36,7 @@
         v-bind:loading="bootingCnode" 
         v-bind:syncing="syncingCnode"
         v-bind:progress="syncingProgress" />
+      <MainView v-show="activeCnode" />
     </v-main>
   </v-app>
 </template>
@@ -43,12 +44,14 @@
 <script>
 const { ipcRenderer } = require('electron')
 import LoadingCnode from './components/LoadingCnode'
+import MainView from './components/MainView'
 
 export default {
   name: 'App',
 
   components: {
-    LoadingCnode
+    LoadingCnode,
+    MainView
   },
 
   created(){
@@ -77,6 +80,11 @@ export default {
           this.syncingProgress = args.network.sync_progress.progress.quantity;
           console.log(`${args.network.sync_progress.progress.quantity}%`)
           this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
+        }else {
+          console.log('synced!')
+          this.bootingCnode = false;
+          this.syncingCnode = false;
+          this.activeCnode = true;
         }
       }else {
           this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
