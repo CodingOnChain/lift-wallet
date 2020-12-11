@@ -2,13 +2,11 @@
   <v-app id="inspire">
     <v-app-bar
       app
-      color="white"
       flat
     >
       <v-container class="py-0 fill-height">
         <v-avatar
           class="mr-5"
-          color="grey darken-1"
           size="32"
         ></v-avatar>
 
@@ -18,15 +16,15 @@
 
 
         <v-spacer></v-spacer>
-
         <v-btn
           v-for="link in links"
           :key="link"
+          color="primary"
           v-on:click="setActivePage(link)"
           :text="link != activePage"
-          :outlined="link == activePage"
+          :depressed="link == activePage"
           class="mr-2"
-          v-show="activeCnode" 
+          v-show="activeCnode"
         >
           {{ link }}
         </v-btn>
