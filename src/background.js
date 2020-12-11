@@ -136,12 +136,12 @@ ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
 
 ipcMain.on('req:add-wallet', async (event, args) => {
   const wallet = await createWallet(args.name, args.mnemonic, args.passphrase);
-  event.reply('res:add-wallet', wallet);
+  event.reply('res:add-wallet', { wallet:wallet });
 })
 
 ipcMain.on('req:get-wallets', async (event, args) => {
   const wallets = await getWallets();
-  event.reply('res:get-wallets', {wallets: wallets});
+  event.reply('res:get-wallets', { wallets: wallets });
 })
 
 ipcMain.on('req:get-addresses', (event, args) => {

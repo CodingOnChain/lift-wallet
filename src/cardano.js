@@ -61,7 +61,7 @@ export async function getPhrase() {
 export async function createWallet(name, mnemonic, passphrase) {
     try {
         const mnemonicList = mnemonic.split(" ");
-        return await axios.post(
+        var result = await axios.post(
             `${baseUrl}/v2/wallets`, 
             {
                 "name": name,
@@ -69,7 +69,8 @@ export async function createWallet(name, mnemonic, passphrase) {
                 "passphrase": passphrase,
                 "address_pool_gap": 20
             }, 
-            { timeout: 10000 })
+            { timeout: 10000 });
+        return result.data;
     }catch(err){
         return null
     }
