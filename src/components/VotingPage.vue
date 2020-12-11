@@ -4,22 +4,20 @@
     <v-row>
       <v-col cols="2">
         <v-sheet rounded="lg">
-          <v-list color="transparent">
-            <v-list-item>
-              <v-list-item-content>
+          <v-list nav>
+            <v-list-item-group
+              v-model="selectedOption"
+              color="primary"
+            >
+              <v-list-item
+                v-for="option in votingOptions"
+                :key="option"
+              >
                 <v-list-item-title>
-                  Create Ballot
+                  {{option}}
                 </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title>
-                  Cast Ballot
-                </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
+              </v-list-item>
+            </v-list-item-group>
           </v-list>
         </v-sheet>
       </v-col>
@@ -42,6 +40,11 @@
     props: [],
     data: () => ({
       
+      votingOptions: [
+        'Create Ballot',
+        'Cast Ballot'
+      ],
+      selectedOption: 0
     }),
   }
 </script>

@@ -4,30 +4,20 @@
     <v-row>
       <v-col cols="2">
         <v-sheet rounded="lg">
-          <v-list color="transparent">
-            <v-list-item>
-              <v-list-item-content>
+          <v-list nav>
+            <v-list-item-group
+              v-model="selectedOption"
+              color="primary"
+            >
+              <v-list-item
+                v-for="option in stakingOptions"
+                :key="option"
+              >
                 <v-list-item-title>
-                  Find a Pool
+                  {{option}}
                 </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title>
-                  View Rewards
-                </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title>
-                  View Network
-                </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
+              </v-list-item>
+            </v-list-item-group>
           </v-list>
         </v-sheet>
       </v-col>
@@ -49,7 +39,12 @@
     name: 'StakingPage',
     props: [],
     data: () => ({
-      
+      stakingOptions: [
+        'Find Pool',
+        'View Rewards',
+        'View Network'
+      ],
+      selectedOption: 0
     }),
   }
 </script>
