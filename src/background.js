@@ -124,7 +124,7 @@ ipcMain.on('generate-recovery-phrase', (event, args) => {
 
 })
 
-ipcMain.on('create-wallet', (event, args) => {
+ipcMain.on('add-wallet', (event, args) => {
 
 })
 
@@ -132,7 +132,7 @@ ipcMain.on('get-wallet', (event, args) => {
 
 })
 
-ipcMain.on('get-address', (event, args) => {
+ipcMain.on('get-addresses', (event, args) => {
 
 })
 
@@ -141,6 +141,10 @@ ipcMain.on('get-fee', (event, args) => {
 })
 
 ipcMain.on('send-transaction', (event, args) => {
+
+})
+
+ipcMain.on('get-transactions', (event, args) => {
 
 })
 
