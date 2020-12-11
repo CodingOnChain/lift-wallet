@@ -7,7 +7,7 @@
 
           <v-list nav>
             <v-list-item>
-              <v-btn color="primary">New Wallet</v-btn>
+              <v-btn color="primary" block v-on:click="getMnemonic">Add</v-btn>
             </v-list-item>
             <v-list-item-group
               v-model="selectedWallet"
@@ -31,7 +31,20 @@
           min-height="70vh"
           rounded="lg"
         >
-          <!--  -->
+          <!-- 
+            Views:
+              - No Wallets - Add now!
+              - Show Mnemonic
+              - Input Name, Mnemonic and Passphrase
+              - Show selected wallet
+                - Home Screen
+                  - Name
+                  - Current Balance
+                  - Transactions
+                - Send Ada
+                - Receive Ada
+                  - Show Address
+           -->
         </v-sheet>
       </v-col>
     </v-row>
@@ -39,20 +52,48 @@
 </template>
 
 <script>
+  const { ipcRenderer } = require('electron')
   export default {
     name: 'WalletPage',
-    props: [],
+    props: ['render'],
+    watch: {
+      render: function(newVal, oldVal) {
+        if(!oldVal && newVal) {
+          this.getWallets();
+        }
+      }
+    },
     data: () => ({
       selectedWallet: null,
-      wallets: [
-        { name: 'Wallet 1', balance: '12k'},
-        { name: 'Wallet 2', balance: '234'},
-        { name: 'Wallet 3', balance: '100k'},
-        { name: 'Wallet 4', balance: '1.2m'}
-      ]
+      wallets: [],
+      newWallet: {
+        name: '',
+        mnemonic: '',
+        passphrase: ''
+      },
+      newMnemonic: ''
     }),
     mounted() {
-      this.selectedWallet = 0;
+      ipcRenderer.on('res:get-wallets', (_, args) => {
+        console.log('wallets',args);
+      })
+
+      ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
+        console.log('phrase',args);
+        if(! args.error) this.newMnemonic = args.passphrase;
+      })
+    },
+    methods: {
+      addWallet: function() {
+        
+      },
+      getWallets: function() {
+        console.log('get wallets');
+        ipcRenderer.send('req:get-wallets');
+      },
+      getMnemonic: function() {
+        ipcRenderer.send('req:generate-recovery-phrase');
+      }
     }
   }
 </script>

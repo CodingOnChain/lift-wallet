@@ -45,12 +45,16 @@ export async function getNetworkInfo() {
 
 export async function getPhrase() {
     try {
-        const addressCli = path.resolve(cardanoPath, 'cardano-address');
+        const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
+        console.info(addressCli)
         const { stdout, stderr } = await exec(`${addressCli} recovery-phrase generate`)
-        if(stderr) return stderr;
-        return stdout;
+        console.info(stdout)
+        console.info(stderr)
+        if(stderr) return { error: stderr, phrase: null };
+        return { error: null, phrase: stdout };
     }catch(e) {
-        return e;
+        console.error(e);
+        return { error: e, phrase: null };
     }
 }
 
@@ -73,7 +77,8 @@ export async function createWallet(name, mnemonic, passphrase) {
 
 export async function getWallets() {
     try {
-        return await axios.get(`${baseUrl}/v2/wallets`, { timeout: 10000 })
+        var result = await axios.get(`${baseUrl}/v2/wallets`, { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }

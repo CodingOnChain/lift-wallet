@@ -5,7 +5,15 @@ import path from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
-import { cardanoPath, cardanoNodeOptions, walletServeOptions, walletServeEnvs, getNetworkInfo } from './cardano'
+import { 
+  cardanoPath, 
+  cardanoNodeOptions, 
+  walletServeOptions, 
+  walletServeEnvs, 
+  getNetworkInfo, 
+  getPhrase, 
+  createWallet,
+  getWallets } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -120,31 +128,35 @@ ipcMain.on('req:get-network', async (event, args) => {
   event.reply('res:get-network', { network: networkInfo != null ? networkInfo.data : null })
 })
 
-ipcMain.on('generate-recovery-phrase', (event, args) => {
+ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
+  console.info("get phrase")
+  const recoveryPhrase = await getPhrase();
+  event.reply('res:generate-recovery-phrase', recoveryPhrase);
+})
+
+ipcMain.on('req:add-wallet', async (event, args) => {
+  const wallet = await createWallet(args.name, args.mnemonic, args.passphrase);
+  event.reply('res:add-wallet', wallet);
+})
+
+ipcMain.on('req:get-wallets', async (event, args) => {
+  const wallets = await getWallets();
+  event.reply('res:get-wallets', {wallets: wallets});
+})
+
+ipcMain.on('req:get-addresses', (event, args) => {
 
 })
 
-ipcMain.on('add-wallet', (event, args) => {
+ipcMain.on('req:get-fee', (event, args) => {
 
 })
 
-ipcMain.on('get-wallet', (event, args) => {
+ipcMain.on('req:send-transaction', (event, args) => {
 
 })
 
-ipcMain.on('get-addresses', (event, args) => {
-
-})
-
-ipcMain.on('get-fee', (event, args) => {
-
-})
-
-ipcMain.on('send-transaction', (event, args) => {
-
-})
-
-ipcMain.on('get-transactions', (event, args) => {
+ipcMain.on('req:get-transactions', (event, args) => {
 
 })
 

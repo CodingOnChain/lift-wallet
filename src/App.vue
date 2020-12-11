@@ -24,7 +24,6 @@
           :text="link != activePage"
           :depressed="link == activePage"
           class="mr-2"
-          v-show="activeCnode"
         >
           {{ link }}
         </v-btn>
@@ -38,7 +37,7 @@
         v-bind:loading="bootingCnode" 
         v-bind:syncing="syncingCnode"
         v-bind:progress="syncingProgress" />
-      <MainView v-show="activeCnode" v-bind:page="activePage" />
+      <MainView v-bind:page="activePage" />
     </v-main>
   </v-app>
 </template>
@@ -84,12 +83,13 @@ export default {
           this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
         }else {
           console.log('synced!')
+          clearTimeout(this.getSyncInfo);
           this.bootingCnode = false;
           this.syncingCnode = false;
           this.activeCnode = true;
         }
       }else {
-          this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
+        if(this.toggleStartCnode) this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
       }
     })
   },

@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <WalletPage v-show="this.page == 'Wallets'"/>
+    <WalletPage v-show="this.page == 'Wallets'" v-bind:render="this.page == 'Wallets'"/>
     <StakingPage v-show="this.page == 'Staking'"/>
     <VotingPage v-show="this.page == 'Voting'"/>
   </v-container>
