@@ -14,7 +14,9 @@ import {
   getPhrase, 
   createWallet,
   getWallets,
-  getWallet } from './cardano'
+  getWallet,
+  getTransactions,
+  getAddresses } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -150,8 +152,9 @@ ipcMain.on('req:get-wallet', async (event, args) => {
   event.reply('res:get-wallet', { wallet: wallet });
 })
 
-ipcMain.on('req:get-addresses', (event, args) => {
-
+ipcMain.on('req:get-addresses', async (event, args) => {
+  const addresses = await getAddresses(args.walletId);
+  event.reply('res:get-addresses', { addresses: addresses });
 })
 
 ipcMain.on('req:get-fee', (event, args) => {
@@ -162,8 +165,9 @@ ipcMain.on('req:send-transaction', (event, args) => {
 
 })
 
-ipcMain.on('req:get-transactions', (event, args) => {
-
+ipcMain.on('req:get-transactions', async (event, args) => {
+  const transactions = await getTransactions(args.walletId);
+  event.reply('res:get-transactions', { transactions: transactions });
 })
 
 // Exit cleanly on request from parent process in development mode.

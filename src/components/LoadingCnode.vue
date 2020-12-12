@@ -1,7 +1,7 @@
 <template>
   <v-container class="max-height">
     <v-row align="center" justify="center" class="text-center max-height">
-      <v-col cols="12" v-show="loading">
+      <v-col cols="12" v-if="loading">
         <v-progress-circular
           :size="100"
           color="primary"
@@ -9,7 +9,7 @@
         ></v-progress-circular>
         <h2>Loading the Cardano Node</h2>
       </v-col>
-      <v-col cols="12" v-show="syncing">
+      <v-col cols="12" v-if="syncing">
         <v-progress-circular
           :rotate="360"
           :size="100"
