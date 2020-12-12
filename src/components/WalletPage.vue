@@ -15,6 +15,7 @@
               <v-list-item
                 v-for="(wallet, i) in wallets"
                 :key="i"
+                :disabled="i == selectedWalletIndex"
               >
                 <v-list-item-title>
                   {{wallet.name}}
@@ -32,7 +33,7 @@
         >
           <NoWallet v-if="!hasWallets && !addingWallet" />
           <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
-          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:wallet="selectedWallet" />
+          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:walletId="selectedWalletId" />
           <!-- 
             Views:
               - No Wallets - Add now!
@@ -74,19 +75,9 @@
         }
       },
       selectedWalletIndex: function(newVal, oldVal) {
-        if(oldVal != newVal) {
-          if(this.getWalletInterval != null) {
-            clearInterval(this.getWalletInterval);
-            this.getWalletInterval = null;
-          }
-
-          this.selectedWallet = this.wallets[newVal];
-          
-          if(this.isSyncing && this.getWalletInterval == null){
-            this.getWalletInterval = setInterval(() => {  
-              ipcRenderer.send('req:get-wallet', { walletId: this.selectedWallet.id }); 
-            }, 5000)
-          }
+        if(newVal != undefined && oldVal != newVal) {
+          this.selectedWalletId = this.wallets[newVal].id;
+          console.log(newVal)
         }
       }
     },
@@ -94,31 +85,11 @@
       hasWallets: function () {
         // `this` points to the vm instance
         return this.wallets.length > 0
-      },
-      isSyncing: function() {
-          if(this.selectedWallet == null) return false;
-          if(this.selectedWallet.state.status != "ready")
-          {
-            if(this.selectedWallet.state.progress != null
-              && this.selectedWallet.state.progress != undefined) {
-                console.log(this.selectedWallet.state.progress)
-                if(this.selectedWallet.state.progress?.quantity < 100) return true;
-              }
-          }
-          return false;
-      },
-      syncProgress: function() {
-          if(this.selectedWallet == null) return '';
-          if(this.selectedWallet.state.progress != null
-            && this.selectedWallet.state.progress != undefined) {
-            return `${this.selectedWallet.state.progress.quantity}%`
-          }
-          return '';
       }
     },
     data: () => ({
       selectedWalletIndex: null,
-      selectedWallet: null,
+      selectedWalletId: null,
       wallets: [],
       newWallet: {
         name: '',
@@ -137,19 +108,13 @@
         this.wallets = args.wallets;
         if(this.wallets.length > 0 && !this.selectedWalletIndex) {
           this.selectedWalletIndex = 0
+          this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
         }
       })
 
       ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
         console.log('phrase',args);
         if(! args.error) this.newMnemonic = args.passphrase;
-      })
-
-      ipcRenderer.on('res:get-wallet', (_, args) => {
-          console.log(args);
-          this.selectedWallet = args.wallet;
-          this.wallets[this.selectedWalletIndex] = this.selectedWallet;
-          if(!this.isSyncing && this.getWalletInterval != null) clearInterval(this.getWalletInterval);
       })
     },
     methods: {
@@ -172,6 +137,7 @@
       newWalletAdded: function(e) {
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
+        this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
         this.addingWallet = false;
       }
     }
