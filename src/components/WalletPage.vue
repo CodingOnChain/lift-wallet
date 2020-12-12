@@ -9,7 +9,7 @@
               <v-btn color="primary" block v-on:click="startNewWallet">Add</v-btn>
             </v-list-item>
             <v-list-item-group
-              v-model="selectedWallet"
+              v-model="selectedWalletIndex"
               color="primary"
             >
               <v-list-item
@@ -30,9 +30,9 @@
           min-height="70vh"
           rounded="lg"
         >
-          <NoWallet v-show="!hasWallets && !addingWallet" />
-          <AddWallet v-show="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
-          <WalletDetails v-show="hasWallets && !addingWallet" v-bind:wallet="wallets[selectedWallet]" />
+          <NoWallet v-if="!hasWallets && !addingWallet" />
+          <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
+          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:wallet="selectedWallet" />
           <!-- 
             Views:
               - No Wallets - Add now!
@@ -72,15 +72,52 @@
         if(!oldVal && newVal) {
           this.getWallets();
         }
+      },
+      selectedWalletIndex: function(newVal, oldVal) {
+        if(oldVal != newVal) {
+          if(this.getWalletInterval != null) {
+            clearInterval(this.getWalletInterval);
+            this.getWalletInterval = null;
+          }
+
+          this.selectedWallet = this.wallets[newVal];
+          
+          if(this.isSyncing && this.getWalletInterval == null){
+            this.getWalletInterval = setInterval(() => {  
+              ipcRenderer.send('req:get-wallet', { walletId: this.selectedWallet.id }); 
+            }, 5000)
+          }
+        }
       }
     },
     computed: {
       hasWallets: function () {
         // `this` points to the vm instance
         return this.wallets.length > 0
+      },
+      isSyncing: function() {
+          if(this.selectedWallet == null) return false;
+          if(this.selectedWallet.state.status != "ready")
+          {
+            if(this.selectedWallet.state.progress != null
+              && this.selectedWallet.state.progress != undefined) {
+                console.log(this.selectedWallet.state.progress)
+                if(this.selectedWallet.state.progress?.quantity < 100) return true;
+              }
+          }
+          return false;
+      },
+      syncProgress: function() {
+          if(this.selectedWallet == null) return '';
+          if(this.selectedWallet.state.progress != null
+            && this.selectedWallet.state.progress != undefined) {
+            return `${this.selectedWallet.state.progress.quantity}%`
+          }
+          return '';
       }
     },
     data: () => ({
+      selectedWalletIndex: null,
       selectedWallet: null,
       wallets: [],
       newWallet: {
@@ -89,7 +126,8 @@
         passphrase: ''
       },
       newMnemonic: '',
-      addingWallet: false
+      addingWallet: false,
+      getWalletInterval: null
     }),
     mounted() {
       this.getWallets();
@@ -97,12 +135,21 @@
       ipcRenderer.on('res:get-wallets', (_, args) => {
         console.log('wallets',args);
         this.wallets = args.wallets;
-        if(this.wallets.length > 0 && !this.selectedWallet) this.selectedWallet = 0
+        if(this.wallets.length > 0 && !this.selectedWalletIndex) {
+          this.selectedWalletIndex = 0
+        }
       })
 
       ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
         console.log('phrase',args);
         if(! args.error) this.newMnemonic = args.passphrase;
+      })
+
+      ipcRenderer.on('res:get-wallet', (_, args) => {
+          console.log(args);
+          this.selectedWallet = args.wallet;
+          this.wallets[this.selectedWalletIndex] = this.selectedWallet;
+          if(!this.isSyncing && this.getWalletInterval != null) clearInterval(this.getWalletInterval);
       })
     },
     methods: {
@@ -124,7 +171,7 @@
       },
       newWalletAdded: function(e) {
         this.wallets.push(e.wallet);
-        this.selectedWallet = this.wallets.length - 1;
+        this.selectedWalletIndex = this.wallets.length - 1;
         this.addingWallet = false;
       }
     }

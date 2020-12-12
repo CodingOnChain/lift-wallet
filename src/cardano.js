@@ -85,9 +85,19 @@ export async function getWallets() {
     }
 }
 
+export async function getWallet(walletId) {
+    try {
+        var result = await axios.get(`${baseUrl}/v2/wallets/${walletId}`, { timeout: 10000 })
+        return result.data;
+    }catch(err){
+        return null
+    }
+}
+
 export async function getAddresses(walletId) {
     try {
-        return await axios.get(`${baseUrl}/v2/wallets/${walletId}/addresses`, { timeout: 10000 })
+        var result = await axios.get(`${baseUrl}/v2/wallets/${walletId}/addresses`, { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }
@@ -95,7 +105,8 @@ export async function getAddresses(walletId) {
 
 export async function getTransactions(walletId) {
     try {
-        return await axios.get(`${baseUrl}/v2/wallets/${walletId}/transactions`, { timeout: 10000 })
+        var result = await axios.get(`${baseUrl}/v2/wallets/${walletId}/transactions`, { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }
@@ -103,10 +114,11 @@ export async function getTransactions(walletId) {
 
 export async function createTransactions(walletId, transaction) {
     try {
-        return await axios.post(
+        var result = await axios.post(
             `${baseUrl}/v2/wallets/${walletId}/transactions`, 
             transaction, 
             { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }
@@ -114,10 +126,11 @@ export async function createTransactions(walletId, transaction) {
 
 export async function getTransactionFee(walletId, transaction) {
     try {
-        return await axios.post(
+        var result = await axios.post(
             `${baseUrl}/v2/wallets/${walletId}/payment-fees`, 
             transaction, 
             { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }
@@ -125,7 +138,8 @@ export async function getTransactionFee(walletId, transaction) {
 
 export async function getPools() {
     try {
-        return await axios.get(`${baseUrl}/v2/stake-pools`, { timeout: 10000 })
+        var result = await axios.get(`${baseUrl}/v2/stake-pools`, { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }
@@ -133,12 +147,13 @@ export async function getPools() {
 
 export async function delegateToPool(walletId, stakePoolId, passphrase) {
     try {
-        return await axios.put(
+        var result = await axios.put(
             `${baseUrl}/v2/stake-pools/${stakePoolId}/wallets/${walletId}`, 
             {
                 "passphrase": passphrase
             }, 
             { timeout: 10000 })
+        return result.data;
     }catch(err){
         return null
     }

@@ -13,7 +13,8 @@ import {
   getNetworkInfo, 
   getPhrase, 
   createWallet,
-  getWallets } from './cardano'
+  getWallets,
+  getWallet } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -142,6 +143,11 @@ ipcMain.on('req:add-wallet', async (event, args) => {
 ipcMain.on('req:get-wallets', async (event, args) => {
   const wallets = await getWallets();
   event.reply('res:get-wallets', { wallets: wallets });
+})
+
+ipcMain.on('req:get-wallet', async (event, args) => {
+  const wallet = await getWallet(args.walletId);
+  event.reply('res:get-wallet', { wallet: wallet });
 })
 
 ipcMain.on('req:get-addresses', (event, args) => {

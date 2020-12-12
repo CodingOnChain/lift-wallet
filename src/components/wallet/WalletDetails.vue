@@ -8,15 +8,9 @@
 
                         <v-spacer></v-spacer>
 
-                        <v-progress-circular
-                            v-show="isSyncing"
-                            :rotate="360"
-                            :value="syncProgress"
-                            color="teal"
-                            icon
-                            >
-                            {{ syncProgress }}
-                        </v-progress-circular>
+                        <v-toolbar-items v-if="isSyncing">
+                        Sync Status: {{ syncProgress }}
+                        </v-toolbar-items>
                     </v-toolbar>
                 </v-card>
             </v-col>
@@ -28,17 +22,28 @@
   export default {
     name: 'WalletDetails',
     props: ['wallet'],
-    data: () => ({
-        wallet: null
-    }),
     computed: {
         isSyncing: function() {
             if(this.wallet == null) return false;
-            return this.wallet.state.status !== "ready" && this.wallet.state.progress.quantity < 100;
+            console.log(this.wallet);
+            if(this.wallet.state.status != "ready")
+            {
+                if(this.wallet.state.progress != null
+                    && this.wallet.state.progress != undefined) {
+                    console.log(this.wallet.state.progress);
+                    if(this.wallet.state.progress?.quantity < 100) return true;
+                }
+            }
+            return false;
         },
         syncProgress: function() {
             if(this.wallet == null) return '';
-            return `${this.wallet.state.progress.quantity}%`
+            if(this.wallet.state.progress != null
+                && this.wallet.state.progress != undefined) {
+                console.log(this.wallet.state.progress);
+                return `${this.wallet.state.progress.quantity}%`
+            }
+            return '';
         }
     }
   }

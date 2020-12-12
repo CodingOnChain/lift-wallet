@@ -23,6 +23,7 @@
           v-on:click="setActivePage(link)"
           :text="link != activePage"
           :depressed="link == activePage"
+           v-show="activeCnode"
           class="mr-2"
         >
           {{ link }}
@@ -33,11 +34,11 @@
     </v-app-bar>
 
     <v-main class="grey lighten-3">
-      <LoadingCnode v-show="bootingCnode || syncingCnode" 
+      <LoadingCnode v-if="bootingCnode || syncingCnode" 
         v-bind:loading="bootingCnode" 
         v-bind:syncing="syncingCnode"
         v-bind:progress="syncingProgress" />
-      <MainView v-bind:page="activePage" />
+      <MainView v-if="activeCnode" v-bind:page="activePage" />
     </v-main>
   </v-app>
 </template>
