@@ -143,7 +143,7 @@ export async function getTransactionFee(walletId, transaction) {
             { timeout: 10000 })
         return result.data;
     }catch(err){
-        return null
+        return err
     }
 }
 

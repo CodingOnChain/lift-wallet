@@ -1,4 +1,4 @@
-    <template>
+<template>
     <v-container fluid :style="cssProps">
         <v-row no-gutters>
             <v-col>
@@ -115,44 +115,57 @@
 
                             <v-tab-item>
                                 <v-card>
-                                    <v-form
-                                        v-model="sendFormValid"
-                                        ref="form"
-                                        lazy-validation>
-                                        <!-- <v-card-text>
+                                    <v-form>
+                                        <v-card-text>
                                             <v-text-field
-                                                v-model="walletForm.name"
-                                                :counter="50"
-                                                :rules="rules.name"
-                                                label="Name"
+                                                v-model="sendForm.address"
+                                                label="Address"
+                                                @change="getFee"
+                                                :error-messages="addressErrors"
+                                                required
+                                                @input="$v.address.$touch()"
+                                                @blur="$v.address.$touch()"
+                                                ></v-text-field>
+
+                                            <v-text-field
+                                                v-model="sendForm.amountFormatted"
+                                                :error-messages="amountErrors"
+                                                label="Amount (ADA)"
+                                                @input="$v.sendForm.amount.$touch()"
+                                                @blur="sendAdaFocusOut" 
+                                                @focus="sendAdaFocusIn"
                                                 required
                                                 >
                                             </v-text-field>
 
-                                            <v-text-field
-                                                v-model="walletForm.mnemonic"
-                                                :rules="rules.mnemonic"
-                                                label="Mnemonic"
-                                                required
-                                                >
-                                            </v-text-field>
+                                            <v-input
+                                                label="Est. Fee (ADA)"
+                                                >: {{sendForm.feeFormatted}}
+                                                </v-input>
+
+                                            <v-input
+                                                label="Total (ADA)"
+                                                >: {{sendForm.totalFormatted}}
+                                                </v-input>
 
                                             <v-text-field
                                                 :append-icon="showPassphrase ? 'mdi-eye' : 'mdi-eye-off'"
-                                                v-model="walletForm.passphrase"
+                                                v-model="sendForm.passphrase"
                                                 :type="showPassphrase ? 'text' : 'password'"
-                                                :rules="rules.passphrase"
+                                                :error-messages="passphraseErrors"
                                                 label="Passphrase"
                                                 required
                                                 @click:append="showPassphrase = !showPassphrase"
+                                                @input="$v.passphrase.$touch()"
+                                                @blur="$v.passphrase.$touch()"
                                                 >
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions>
-                                            <v-btn color="primary" @click="submitAddWalletForm" :disabled="!walletFormValid">
+                                            <v-btn color="primary" :disabled="!$v.$invalid" @click="submitSendAda">
                                                 Submit
                                             </v-btn>
-                                        </v-card-actions> -->
+                                        </v-card-actions>
                                     </v-form>
                                 </v-card>
                             </v-tab-item>
@@ -166,7 +179,8 @@
 
 <script>
   const { ipcRenderer } = require('electron')
-    import WalletSyncing from './wallet-details/WalletSyncing'
+  import { validationMixin } from 'vuelidate'
+  import WalletSyncing from './wallet-details/WalletSyncing'
 
   export default {
     name: 'WalletDetails',
@@ -174,45 +188,43 @@
     components: {
         WalletSyncing  
     },
+    mixins: [validationMixin],
+
+    validations: {
+      address: {  },
+      amount: {  },
+      passphrase: {  }
+    },
     data: () => ({ 
         wallet: null,
         getWalletInterval: null,
         transactions: [],
         addresses: [],
-        sendFormValid: true,
+        sendFormValid: false,
         showPassphrase: false,
         sendForm: {
             address: '',
-            amount: '',
-            passphrase: ''
-        },
-        rules: {
-            name:[
-                v => !!v || 'Name is required'
-            ],
-            amount:[
-                v => !!v || 'Amount is required'
-            ],
-            passphrase:[
-                v => !!v || 'Passphrase is required'
-            ]
+            amount: 0,
+            amountFormatted: '0.000000',
+            fee: 0,
+            feeFormatted: '0.000000',
+            total: 0,
+            totalFormatted: '0.000000',
+            passphrase: '',
+            validAddress: true
         }
     }),
     watch: {
         focus: function(newVal) {
             if(!newVal) {
-                console.log('lost focus')
                 if(this.getWalletInterval) clearInterval(this.getWalletInterval)
             }else {
-                console.log('focused again')
                 this.transactions = [];
                 this.addresses = [];
                 this.pollWallet();
             }
         },
         walletId: function(newVal, oldVal) {
-            console.log('new',newVal);
-            console.log('old',oldVal);
             if(newVal != oldVal) {
                 if(this.getWalletInterval != null) {
                     clearInterval(this.getWalletInterval);
@@ -237,7 +249,6 @@
                 if(this.wallet.state.progress != null
                     && this.wallet.state.progress != undefined) {
                     if(this.wallet.state.progress?.quantity < 100) {
-                        console.log("im still syncing");
                         return true;
                     }
                 }
@@ -251,25 +262,44 @@
                 return this.wallet.state.progress.quantity
             }
             return 0;
-        }
+        },
+        addressErrors: function() {
+            const errors = [];
+            if (!this.$v.address.$dirty) return errors
+            this.sendForm.address.length == 0 && errors.push('Address is required.')
+            !this.sendForm.validAddress && errors.push('Address is invalid.')
+            return errors;
+        },
+        amountErrors: function() {
+            const errors = [];
+            if (!this.$v.amount.$dirty) return errors
+            this.sendForm.amount.length == 0 && errors.push('Amount is required.')
+            return errors;
+        },
+        passphraseErrors: function() {
+            const errors = [];
+            if (!this.$v.passphrase.$dirty) return errors
+            this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.')
+            return errors;
+        },
     },
     mounted() {
         this.pollWallet();
 
         ipcRenderer.on('res:get-transactions', (_, args) => {
             this.transactions = args.transactions;
-            console.log(this.transactions)
+        });
+
+        ipcRenderer.on('res:get-fee', (_, args) => {
+            const fee = args.fee.estimated_max.quantity/1000000
+            this.setSendAdaFee(fee);
         });
 
         ipcRenderer.on('res:get-addresses', (_, args) => {
             this.addresses = args.addresses;
         });
 
-        ipcRenderer.on('res:get-wallet', (_, args) => {
-            console.log('walletId', this.walletId)
-            console.log('wallet', this.wallet)
-            console.log('args.wallet', args.wallet)
-                
+        ipcRenderer.on('res:get-wallet', (_, args) => {                
             this.setWallet(args.wallet);
 
             if(this.wallet != null && !this.isSyncing) {
@@ -290,6 +320,60 @@
             this.getWalletInterval = setInterval(() => {  
                 ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
             }, 5000)
+        },
+        getFee() {
+            if(this.sendForm.address.length > 0)
+            {
+                const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
+                ipcRenderer.send('req:get-fee', {walletId: this.walletId, address: this.sendForm.address, amount: amount})
+            }
+            
+        },
+        sendAdaFocusOut: function() {
+            // Recalculate the currencyValue after ignoring "$" and "," in user input
+            this.sendForm.amount = parseFloat(this.sendForm.amountFormatted.replace(/[^\d.]/g, ""))
+            // Ensure that it is not NaN. If so, initialize it to zero.
+            // This happens if user provides a blank input or non-numeric input like "abc"
+            if (isNaN(this.sendForm.amount)) {
+                this.sendForm.amount = 0
+            }
+						// Format display value based on calculated currencyValue
+            this.sendForm.amountFormatted = this.sendForm.amount.toFixed(6)
+            this.setSendAdaTotal();
+        },
+        sendAdaFocusIn: function() {
+            // Unformat display value before user starts modifying it
+            this.sendForm.amountFormatted = this.sendForm.amount.toString();
+        },
+        setSendAdaFee(ada) {
+            // Recalculate the currencyValue after ignoring "$" and "," in user input
+            this.sendForm.fee = parseFloat(ada)
+            // Ensure that it is not NaN. If so, initialize it to zero.
+            // This happens if user provides a blank input or non-numeric input like "abc"
+            if (isNaN(ada)) {
+                console.log('nan')
+                this.sendForm.fee = 0
+            }
+						// Format display value based on calculated currencyValue
+            this.sendForm.feeFormatted = ada.toFixed(6)
+            this.setSendAdaTotal();
+        },
+        setSendAdaTotal() {
+            this.sendForm.total = parseFloat(this.sendForm.amount) + parseFloat(this.sendForm.fee);
+            this.sendForm.totalFormatted = this.sendForm.total.toFixed(6)
+            console.log(this.sendForm)
+        },
+        submitSendAda() {
+            this.$v.$touch()
+            if (this.$v.$invalid) {
+                this.submitStatus = 'ERROR'
+            } else {
+                // do your submit logic here
+                this.submitStatus = 'PENDING'
+                setTimeout(() => {
+                this.submitStatus = 'OK'
+                }, 500)
+            }
         }
     }
   }

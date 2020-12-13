@@ -29,8 +29,8 @@ protocol.registerSchemesAsPrivileged([
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 900,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -89,12 +89,15 @@ ipcMain.on('req:start-cnode', (event, args) => {
     cnode = spawn(
       path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
       ['run',...cardanoNodeOptions])
+
+    console.log(path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 'run', cardanoNodeOptions.join(' '))
     //start cardano-wallet serve
     walletApi = spawn(
       path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 
       ['serve',...walletServeOptions], 
       walletServeEnvs)
-      
+    console.log(path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 'serve', walletServeOptions.join(' '))
+    
     event.reply('res:start-cnode', { 'cnode': cnode.pid });
 
     cnode.stdout.on('data', (data) => {
@@ -165,7 +168,24 @@ ipcMain.on('req:validate-address', async (event, args) => {
 })
 
 ipcMain.on('req:get-fee', async (event, args) => {
-  const fee = await getTransactionFee(args.walletId);
+  const transaction = {
+    payments: [
+      {
+        address: args.address,
+        amount: {
+          quantity: args.amount,
+          unit: "lovelace"
+        }
+      }
+    ],
+    time_to_live: {
+      quantity: 10,
+      unit: "second"
+    }
+  };
+
+  const fee = await getTransactionFee(args.walletId, transaction);
+  console.error(fee);
   event.reply('res:get-fee', { fee: fee });
 })
 
