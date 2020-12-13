@@ -103,6 +103,17 @@ export async function getAddresses(walletId) {
     }
 }
 
+export async function validateAddress(addressId) {
+    try {
+        var result = await axios.get(`${baseUrl}/v2/addresses/${addressId}`, { timeout: 10000 })
+        if(result.status != 200)
+            return null;
+        return result.data;
+    }catch(err){
+        return null
+    }
+}
+
 export async function getTransactions(walletId) {
     try {
         var result = await axios.get(`${baseUrl}/v2/wallets/${walletId}/transactions`, { timeout: 10000 })

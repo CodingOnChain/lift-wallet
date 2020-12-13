@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid>
         <v-row>
             <v-col>
                 <v-btn color="error lighten-1" class="float-right" v-on:click="cancelAdd">Cancel Wallet Creation</v-btn>

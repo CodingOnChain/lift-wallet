@@ -1,5 +1,5 @@
     <template>
-    <v-container>
+    <v-container fluid :style="cssProps">
         <v-row no-gutters>
             <v-col>
                 <v-card flat v-if="wallet != null">
@@ -22,49 +22,56 @@
                                     <v-expansion-panel
                                             v-for="(item,i) in transactions"
                                             :key="i"
+                                            class="bordered-panel"
                                             >
-                                        <v-expansion-panel-header >
+                                        <v-expansion-panel-header class="pl-5 pr-5 pt-0 pb-0">
                                             <v-row>
-                                                <v-col md="2" sm="12" v-if="item.status == 'in_ledger'">
-                                                    <v-chip label color="danger" v-if="item.direction == 'outgoing'">
-                                                        Sent
-                                                    </v-chip>
-                                                    <v-chip label color="success" v-if="item.direction == 'incoming'">
-                                                        Received
-                                                    </v-chip>
-                                                </v-col>
-                                                <v-col md="2" sm="12" v-if="item.status == 'pending'">
-                                                    <v-chip label color="accent">
-                                                        Pending
-                                                    </v-chip>
-                                                </v-col>
-                                                <v-col md="10" sm="12" class="pa-5">
-                                                    {{displayADA(item.amount.quantity)}}
+                                                <v-col sm="12">
+                                                    <v-row>
+                                                        <v-col sm="12" v-if="item.status == 'in_ledger'" class="pt-0 pb-2">
+                                                            <v-chip small label color="danger" v-if="item.direction == 'outgoing'">
+                                                                Sent
+                                                            </v-chip>
+                                                            <v-chip small label color="success" v-if="item.direction == 'incoming'">
+                                                                Received
+                                                            </v-chip>
+                                                        </v-col>
+                                                        <v-col sm="12" v-if="item.status == 'pending'" class="pt-0 pb-2">
+                                                            <v-chip small label color="accent">
+                                                                Pending
+                                                            </v-chip>
+                                                        </v-col>
+                                                    </v-row>
+                                                    <v-row>
+                                                        <v-col sm="12" class="pt-0 pb-2">
+                                                            {{displayADA(item.amount.quantity)}}
+                                                        </v-col>
+                                                    </v-row>
                                                 </v-col>
                                             </v-row>
                                         </v-expansion-panel-header>
-                                        <v-expansion-panel-content>
-                                            <v-sheet class="pa-5" color="primary lighten-5">
-                                                <v-row>
+                                        <v-expansion-panel-content class="pa-0">
+                                            <v-sheet class="pa-5" color="primary lighten-5" max-width="100vw">
+                                                <v-row dense>
                                                     <v-col>
                                                         <p class="text-subtitle-2">Transaction Id</p>
                                                         <p class="text-body-2">{{item.id}}</p>
                                                     </v-col>
                                                 </v-row>
                                                 <v-divider></v-divider>
-                                                <v-row>
+                                                <v-row dense>
                                                     <v-col>
                                                         <p class="text-subtitle-2">Inputs</p>
-                                                        <div v-for="(input,inputIndex) in item.inputs" :key="inputIndex">
+                                                        <div class="pa-0" v-for="(input,inputIndex) in item.inputs" :key="inputIndex">
                                                            <p class="text-caption">{{input.id}}</p>
                                                         </div>
                                                     </v-col>
                                                 </v-row>
                                                 <v-divider></v-divider>
-                                                <v-row>
+                                                <v-row dense>
                                                     <v-col>
                                                         <p class="text-subtitle-2">Outputs</p>
-                                                        <div v-for="(output,outputIndex) in item.outputs" :key="outputIndex">
+                                                        <div class="pa-0" v-for="(output,outputIndex) in item.outputs" :key="outputIndex">
                                                             <p class="text-caption">
                                                                 {{output.address}}<br/>
                                                                 {{displayADA(output.amount.quantity)}}
@@ -108,7 +115,45 @@
 
                             <v-tab-item>
                                 <v-card>
-                                    a form to send ada
+                                    <v-form
+                                        v-model="sendFormValid"
+                                        ref="form"
+                                        lazy-validation>
+                                        <!-- <v-card-text>
+                                            <v-text-field
+                                                v-model="walletForm.name"
+                                                :counter="50"
+                                                :rules="rules.name"
+                                                label="Name"
+                                                required
+                                                >
+                                            </v-text-field>
+
+                                            <v-text-field
+                                                v-model="walletForm.mnemonic"
+                                                :rules="rules.mnemonic"
+                                                label="Mnemonic"
+                                                required
+                                                >
+                                            </v-text-field>
+
+                                            <v-text-field
+                                                :append-icon="showPassphrase ? 'mdi-eye' : 'mdi-eye-off'"
+                                                v-model="walletForm.passphrase"
+                                                :type="showPassphrase ? 'text' : 'password'"
+                                                :rules="rules.passphrase"
+                                                label="Passphrase"
+                                                required
+                                                @click:append="showPassphrase = !showPassphrase"
+                                                >
+                                            </v-text-field>
+                                        </v-card-text>
+                                        <v-card-actions>
+                                            <v-btn color="primary" @click="submitAddWalletForm" :disabled="!walletFormValid">
+                                                Submit
+                                            </v-btn>
+                                        </v-card-actions> -->
+                                    </v-form>
                                 </v-card>
                             </v-tab-item>
                         </v-tabs>
@@ -125,7 +170,7 @@
 
   export default {
     name: 'WalletDetails',
-    props: ['walletId'],
+    props: ['walletId','focus'],
     components: {
         WalletSyncing  
     },
@@ -133,9 +178,38 @@
         wallet: null,
         getWalletInterval: null,
         transactions: [],
-        addresses: []
+        addresses: [],
+        sendFormValid: true,
+        showPassphrase: false,
+        sendForm: {
+            address: '',
+            amount: '',
+            passphrase: ''
+        },
+        rules: {
+            name:[
+                v => !!v || 'Name is required'
+            ],
+            amount:[
+                v => !!v || 'Amount is required'
+            ],
+            passphrase:[
+                v => !!v || 'Passphrase is required'
+            ]
+        }
     }),
     watch: {
+        focus: function(newVal) {
+            if(!newVal) {
+                console.log('lost focus')
+                if(this.getWalletInterval) clearInterval(this.getWalletInterval)
+            }else {
+                console.log('focused again')
+                this.transactions = [];
+                this.addresses = [];
+                this.pollWallet();
+            }
+        },
         walletId: function(newVal, oldVal) {
             console.log('new',newVal);
             console.log('old',oldVal);
@@ -144,12 +218,18 @@
                     clearInterval(this.getWalletInterval);
                     this.getWalletInterval = null;
                 }
-
-                ipcRenderer.send('req:get-wallet', { walletId: newVal });
+                this.transactions = [];
+                this.addresses = [];
+                this.pollWallet();
             }
         }
     },
     computed: {
+        cssProps () {
+            return {
+                '--primary-color': this.$vuetify.theme.themes.light.primary.base
+            }
+        },
         isSyncing: function() {
             if(this.wallet == null) return false;
             if(this.wallet.state.status != "ready")
@@ -174,9 +254,7 @@
         }
     },
     mounted() {
-        if(this.getWalletInterval != null) clearInterval(this.getWalletInterval)
-
-        ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
+        this.pollWallet();
 
         ipcRenderer.on('res:get-transactions', (_, args) => {
             this.transactions = args.transactions;
@@ -191,23 +269,12 @@
             console.log('walletId', this.walletId)
             console.log('wallet', this.wallet)
             console.log('args.wallet', args.wallet)
-
-            if(this.wallet != null)
-                if(this.walletId != this.wallet.id) 
-                    if(this.getWalletInterval != null) 
-                        clearInterval(this.getWalletInterval);
                 
             this.setWallet(args.wallet);
 
-            if(this.getWalletInterval == null) {
-                this.getWalletInterval = setInterval(() => {  
-                    ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
-                    }, 5000)
-            }
-
             if(this.wallet != null && !this.isSyncing) {
                 ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
-                ipcRenderer.send('req:get-addresses', { walletId: this.walletId })
+                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { walletId: this.walletId })
             }
         })
     },
@@ -217,7 +284,24 @@
         },
         displayADA(lovelaces) {
             return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`
+        },
+        pollWallet() {
+            ipcRenderer.send('req:get-wallet', { walletId: this.walletId })
+            this.getWalletInterval = setInterval(() => {  
+                ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
+            }, 5000)
         }
     }
   }
 </script>
+
+<style scoped>
+.bordered-panel
+{
+    border-bottom-color: var(--primary-color);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-left-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
+</style>

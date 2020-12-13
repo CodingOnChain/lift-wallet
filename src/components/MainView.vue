@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <WalletPage v-show="this.page == 'Wallets'" v-bind:render="this.page == 'Wallets'"/>
     <StakingPage v-show="this.page == 'Staking'"/>
     <VotingPage v-show="this.page == 'Voting'"/>

@@ -1,8 +1,8 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-row>
-      <v-col cols="2">
-        <v-sheet rounded="lg">
+      <v-col sm="12" md="2">
+        <v-sheet>
 
           <v-list nav>
             <v-list-item>
@@ -26,14 +26,14 @@
         </v-sheet>
       </v-col>
 
-      <v-col>
+      <v-col sm="12" md="10">
         <v-sheet
           min-height="70vh"
           rounded="lg"
         >
           <NoWallet v-if="!hasWallets && !addingWallet" />
           <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
-          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:walletId="selectedWalletId" />
+          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:focus="render" v-bind:walletId="selectedWalletId" />
           <!-- 
             Views:
               - No Wallets - Add now!
