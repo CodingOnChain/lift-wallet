@@ -15,7 +15,7 @@
               <v-list-item
                 v-for="(wallet, i) in wallets"
                 :key="i"
-                :disabled="i == selectedWalletIndex"
+                :disabled="i == selectedWalletIndex || addingWallet"
               >
                 <v-list-item-title>
                   {{wallet.name}}
@@ -33,7 +33,7 @@
         >
           <NoWallet v-if="!hasWallets && !addingWallet" />
           <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
-          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:focus="render" v-bind:walletId="selectedWalletId" />
+          <WalletDetails v-if="render && hasWallets && !addingWallet" v-bind:focus="enableDetails" v-bind:walletId="selectedWalletId" />
           <!-- 
             Views:
               - No Wallets - Add now!
@@ -72,6 +72,8 @@
       render: function(newVal, oldVal) {
         if(!oldVal && newVal) {
           this.getWallets();
+        }else {
+          this.addingWallet = false;
         }
       },
       selectedWalletIndex: function(newVal, oldVal) {
@@ -85,6 +87,9 @@
       hasWallets: function () {
         // `this` points to the vm instance
         return this.wallets.length > 0
+      },
+      enableDetails: function() {
+        return this.render;
       }
     },
     data: () => ({
@@ -137,7 +142,7 @@
       newWalletAdded: function(e) {
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
-        this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
+        //this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
         this.addingWallet = false;
       }
     }

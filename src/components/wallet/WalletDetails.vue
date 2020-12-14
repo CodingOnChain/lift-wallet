@@ -217,21 +217,24 @@
     watch: {
         focus: function(newVal) {
             if(!newVal) {
-                if(this.getWalletInterval) clearInterval(this.getWalletInterval)
+                console.log('focus false')
+                clearInterval(this.getWalletInterval)
             }else {
                 this.transactions = [];
                 this.addresses = [];
+                clearInterval(this.getWalletInterval)
+                console.log('focus true')
                 this.pollWallet();
             }
         },
         walletId: function(newVal, oldVal) {
             if(newVal != oldVal) {
-                if(this.getWalletInterval != null) {
-                    clearInterval(this.getWalletInterval);
-                    this.getWalletInterval = null;
-                }
+                clearInterval(this.getWalletInterval);
+                this.getWalletInterval = null;
+                
                 this.transactions = [];
                 this.addresses = [];
+                console.log('new wallet id')
                 this.pollWallet();
             }
         }
@@ -283,32 +286,43 @@
             return errors;
         },
     },
+    destroyed() {
+        console.log('destroy')
+        clearInterval(this.getWalletInterval)
+        this.getWalletInterval = null;
+        ipcRenderer.off('res:get-transactions', this.setTransactions);
+        ipcRenderer.off('res:get-fee', this.setFee);
+        ipcRenderer.off('res:get-addresses', this.setAddresses);
+        ipcRenderer.off('res:get-wallet', this.updateWallet)
+    },
     mounted() {
+        console.log('mounted poll')
         this.pollWallet();
 
-        ipcRenderer.on('res:get-transactions', (_, args) => {
+        ipcRenderer.on('res:get-transactions', this.setTransactions);
+        ipcRenderer.on('res:get-fee', this.setFee);
+        ipcRenderer.on('res:get-addresses', this.setAddresses);
+        ipcRenderer.on('res:get-wallet', this.updateWallet)
+    },
+    methods: {
+        setTransactions(_, args) {
             this.transactions = args.transactions;
-        });
-
-        ipcRenderer.on('res:get-fee', (_, args) => {
+        },
+        setFee(_, args) {
             const fee = args.fee.estimated_max.quantity/1000000
             this.setSendAdaFee(fee);
-        });
-
-        ipcRenderer.on('res:get-addresses', (_, args) => {
+        },
+        setAddresses(_, args) {
             this.addresses = args.addresses;
-        });
-
-        ipcRenderer.on('res:get-wallet', (_, args) => {                
+        },
+        updateWallet(_, args) {                
             this.setWallet(args.wallet);
-
+            console.log('got wallet', this.walletId)
             if(this.wallet != null && !this.isSyncing) {
                 ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
                 if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { walletId: this.walletId })
             }
-        })
-    },
-    methods: {
+        },
         setWallet(wallet) {
             this.wallet = wallet;
         },
