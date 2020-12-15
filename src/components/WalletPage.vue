@@ -34,20 +34,6 @@
           <NoWallet v-if="!hasWallets && !addingWallet" />
           <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
           <WalletDetails v-if="render && hasWallets && !addingWallet" v-bind:focus="enableDetails" v-bind:walletId="selectedWalletId" />
-          <!-- 
-            Views:
-              - No Wallets - Add now!
-              - Show Mnemonic
-              - Input Name, Mnemonic and Passphrase
-              - Show selected wallet
-                - Home Screen
-                  - Name
-                  - Current Balance
-                  - Transactions
-                - Send Ada
-                - Receive Ada
-                  - Show Address
-           -->
         </v-sheet>
       </v-col>
     </v-row>

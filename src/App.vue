@@ -58,6 +58,7 @@ export default {
 
   created(){
     ipcRenderer.on('res:start-cnode', (_, args) => {
+      console.log(args.cnode);
       if(args.cnode) {
         this.toggleStartCnode = true;
         this.bootingCnode = true;
@@ -99,7 +100,7 @@ export default {
     toggleStartCnode: false,
     bootingCnode: false,
     syncingCnode: false,
-    activeCnode: true,
+    activeCnode: false,
     syncingProgress: 0,
     getSyncInfo: null,
     links: ['Wallets', 'Staking', 'Voting'],

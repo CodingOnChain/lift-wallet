@@ -41,6 +41,11 @@
                                                                 Pending
                                                             </v-chip>
                                                         </v-col>
+                                                        <v-col sm="12" v-if="item.status == 'expired'" class="pt-0 pb-2">
+                                                            <v-chip small label color="error">
+                                                                Expired
+                                                            </v-chip>
+                                                        </v-col>
                                                     </v-row>
                                                     <v-row>
                                                         <v-col sm="12" class="pt-0 pb-2">
@@ -131,7 +136,7 @@
                                                 v-model="sendForm.amountFormatted"
                                                 :error-messages="amountErrors"
                                                 label="Amount (ADA)"
-                                                @input="$v.sendForm.amount.$touch()"
+                                                @input="$v.amount.$touch()"
                                                 @blur="sendAdaFocusOut" 
                                                 @focus="sendAdaFocusIn"
                                                 required
@@ -162,7 +167,7 @@
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions>
-                                            <v-btn color="primary" :disabled="!$v.$invalid" @click="submitSendAda">
+                                            <v-btn color="primary" :disabled="$v.$invalid" @click="submitSendAda">
                                                 Submit
                                             </v-btn>
                                         </v-card-actions>
@@ -302,15 +307,26 @@
         ipcRenderer.on('res:get-transactions', this.setTransactions);
         ipcRenderer.on('res:get-fee', this.setFee);
         ipcRenderer.on('res:get-addresses', this.setAddresses);
-        ipcRenderer.on('res:get-wallet', this.updateWallet)
+        ipcRenderer.on('res:get-wallet', this.updateWallet);
+        ipcRenderer.on('res:send-transaction', this.transactionResult)
     },
     methods: {
+        transactionResult(_, args) {
+            console.log(args.transaction);
+        },
         setTransactions(_, args) {
             this.transactions = args.transactions;
         },
         setFee(_, args) {
-            const fee = args.fee.estimated_max.quantity/1000000
-            this.setSendAdaFee(fee);
+            console.log('fees',args);
+            if(args.fee.estimated_max != undefined) {
+                const fee = args.fee.estimated_max.quantity/1000000
+
+                this.sendForm.validAddress = true;
+                this.setSendAdaFee(fee);
+            }else{
+                this.sendForm.validAddress = false;
+            }
         },
         setAddresses(_, args) {
             this.addresses = args.addresses;
@@ -379,14 +395,10 @@
         },
         submitSendAda() {
             this.$v.$touch()
-            if (this.$v.$invalid) {
-                this.submitStatus = 'ERROR'
-            } else {
-                // do your submit logic here
-                this.submitStatus = 'PENDING'
-                setTimeout(() => {
-                this.submitStatus = 'OK'
-                }, 500)
+            if (!this.$v.$invalid) {
+                console.log('valid')
+
+                ipcRenderer.send('req:send-transaction', {walletId: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
             }
         }
     }

@@ -18,7 +18,8 @@ import {
   getTransactions,
   getAddresses,
   validateAddress,
-  getTransactionFee } from './cardano'
+  getTransactionFee,
+  createTransactions } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -179,18 +180,35 @@ ipcMain.on('req:get-fee', async (event, args) => {
       }
     ],
     time_to_live: {
-      quantity: 10,
+      quantity: 500,
       unit: "second"
     }
   };
 
   const fee = await getTransactionFee(args.walletId, transaction);
-  console.error(fee);
   event.reply('res:get-fee', { fee: fee });
 })
 
-ipcMain.on('req:send-transaction', (event, args) => {
+ipcMain.on('req:send-transaction', async (event, args) => {
+  const transaction = {
+    passphrase: args.passphrase,
+    payments: [
+      {
+        address: args.address,
+        amount: {
+          quantity: args.amount,
+          unit: "lovelace"
+        }
+      }
+    ],
+    time_to_live: {
+      quantity: 500,
+      unit: "second"
+    }
+  };
 
+  const result = await createTransactions(args.walletId, transaction);
+  event.reply('res:send-transaction', { transaction: result });
 })
 
 ipcMain.on('req:get-transactions', async (event, args) => {
