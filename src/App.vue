@@ -11,7 +11,7 @@
         ></v-avatar>
 
         <div class="d-flex align-center">
-          <h1>Perdix</h1>
+          <h1>LIFT</h1>
         </div>
 
 
