@@ -228,7 +228,8 @@
             total: 0,
             totalFormatted: '0.000000',
             passphrase: '',
-            validAddress: true
+            validAddress: true,
+            validPassphrase: true
         }
     }),
     watch: {
@@ -300,6 +301,7 @@
             const errors = [];
             if (!this.$v.passphrase.$dirty) return errors
             this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.')
+            !this.sendForm.validPassphrase && errors.push('Incorrect passphrase')
             return errors;
         },
     },
@@ -325,6 +327,9 @@
     methods: {
         transactionResult(_, args) {
             console.log(args.transaction);
+            if(args.code == 'wrong_encryption_passphrase') {
+                this.sendForm.validPassphrase = false;
+            }
         },
         setTransactions(_, args) {
             this.transactions = args.transactions;
