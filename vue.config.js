@@ -10,7 +10,8 @@ module.exports = {
       builderOptions: {
         "mac": {
           "extraFiles": [
-            "cardano/mac/**/*"
+            "cardano/darwin/**/*",
+            "cardano/configs/**/*"
           ]
         }
       }
