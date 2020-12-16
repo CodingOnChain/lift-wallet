@@ -12,7 +12,7 @@
                 <v-card flat v-if="wallet != null">
                     <WalletSyncing v-bind:progress="syncProgress" v-if="isSyncing" />
                     <v-sheet v-if="!isSyncing" height="100%" width="100%">
-                        <v-tabs centered grow background-color="primary" dark>
+                        <v-tabs v-model="tabIndex" centered grow background-color="primary" dark>
                             <v-tab>Transactions</v-tab>
                             <v-tab>Receive</v-tab>
                             <v-tab>Send</v-tab>
@@ -132,7 +132,8 @@
                                                 @blur="$v.address.$touch()"
                                                 ></v-text-field>
 
-                                            <v-text-field
+
+                                            <!-- <v-text-field
                                                 v-model="sendForm.amountFormatted"
                                                 :error-messages="amountErrors"
                                                 label="Amount (ADA)"
@@ -141,14 +142,24 @@
                                                 @focus="sendAdaFocusIn"
                                                 required
                                                 >
+                                            </v-text-field> -->
+
+                                             
+                                            <v-text-field
+                                                v-model="sendForm.amountFormatted"
+                                                :error-messages="amountErrors"
+                                                label="Amount (ADA)"
+                                                @input="$v.amount.$touch()"
+                                                @blur="sendAdaFocusOut" 
+                                                @focus="sendAdaFocusIn"
+                                                :hint="`Est. Fee: ${sendForm.feeFormatted}`"
+                                                persistent-hint
+                                                required
+                                                >
                                             </v-text-field>
 
                                             <v-input
-                                                label="Est. Fee (ADA)"
-                                                >: {{sendForm.feeFormatted}}
-                                                </v-input>
-
-                                            <v-input
+                                                class="mt-5"
                                                 label="Total (ADA)"
                                                 >: {{sendForm.totalFormatted}}
                                                 </v-input>
@@ -202,6 +213,7 @@
     },
     data: () => ({ 
         wallet: null,
+        tabIndex: 0,
         getWalletInterval: null,
         transactions: [],
         addresses: [],
@@ -236,7 +248,7 @@
             if(newVal != oldVal) {
                 clearInterval(this.getWalletInterval);
                 this.getWalletInterval = null;
-                
+                this.tabIndex = 0;
                 this.transactions = [];
                 this.addresses = [];
                 console.log('new wallet id')
