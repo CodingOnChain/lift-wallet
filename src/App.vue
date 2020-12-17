@@ -100,7 +100,7 @@ export default {
     toggleStartCnode: false,
     bootingCnode: false,
     syncingCnode: false,
-    activeCnode: true,
+    activeCnode: false,
     syncingProgress: 0,
     getSyncInfo: null,
     links: ['Wallets', 'Staking', 'Voting'],

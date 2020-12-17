@@ -130,19 +130,8 @@
                                                 required
                                                 @input="$v.address.$touch()"
                                                 @blur="$v.address.$touch()"
+                                                @focus="addressFocusIn"
                                                 ></v-text-field>
-
-
-                                            <!-- <v-text-field
-                                                v-model="sendForm.amountFormatted"
-                                                :error-messages="amountErrors"
-                                                label="Amount (ADA)"
-                                                @input="$v.amount.$touch()"
-                                                @blur="sendAdaFocusOut" 
-                                                @focus="sendAdaFocusIn"
-                                                required
-                                                >
-                                            </v-text-field> -->
 
                                              
                                             <v-text-field
@@ -174,6 +163,7 @@
                                                 @click:append="showPassphrase = !showPassphrase"
                                                 @input="$v.passphrase.$touch()"
                                                 @blur="$v.passphrase.$touch()"
+                                                @focus="passphraseFocusIn"
                                                 >
                                             </v-text-field>
                                         </v-card-text>
@@ -229,7 +219,8 @@
             totalFormatted: '0.000000',
             passphrase: '',
             validAddress: true,
-            validPassphrase: true
+            validPassphrase: true,
+            validAmount: true
         }
     }),
     watch: {
@@ -295,6 +286,7 @@
             const errors = [];
             if (!this.$v.amount.$dirty) return errors
             this.sendForm.amount.length == 0 && errors.push('Amount is required.')
+            !this.sendForm.validAmount && errors.push('Amount needs to be at least 1 ADA');
             return errors;
         },
         passphraseErrors: function() {
@@ -327,8 +319,12 @@
     methods: {
         transactionResult(_, args) {
             console.log(args.transaction);
-            if(args.code == 'wrong_encryption_passphrase') {
+            if(args.transaction.code == 'wrong_encryption_passphrase') {
                 this.sendForm.validPassphrase = false;
+                this.$v.passphrase.$touch();
+            } else if(args.transaction.code == 'utxo_too_small') {
+                this.sendForm.validAmount = false;
+                this.$v.amount.$touch();
             }
         },
         setTransactions(_, args) {
@@ -389,8 +385,15 @@
             this.setSendAdaTotal();
         },
         sendAdaFocusIn: function() {
+            this.sendForm.validAmount = true;
             // Unformat display value before user starts modifying it
             this.sendForm.amountFormatted = this.sendForm.amount.toString();
+        },
+        passphraseFocusIn: function() {
+            this.sendForm.validPassphrase = true;
+        },
+        addressFocusIn: function() {
+            this.sendForm.validAddress = true;
         },
         setSendAdaFee(ada) {
             // Recalculate the currencyValue after ignoring "$" and "," in user input
