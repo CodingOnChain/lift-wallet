@@ -7,26 +7,17 @@
           min-height="70vh"
           rounded="lg"
         >
-          <v-row class="ma-0">
-            <v-col md="4" class="d-flex">
-              <v-btn color="primary">Create</v-btn>
-            </v-col>
-            <v-col md="4" offset-md="4" class="d-flex">
-              <v-text-field
-                v-model="ballotId"
-                class="mr-2 mt-0 pt-2"
-                color="accent"
-                label="Ballot Id"
-              ></v-text-field>
-              <v-btn color="accent">Start</v-btn>
-            </v-col>
-          </v-row>
           <!--  -->
-          <v-row>
-            <v-col>
-
-            </v-col>
-          </v-row>
+          <VotingList 
+            v-if="page == 1" 
+            v-on:goto-create="gotoCreate"
+            v-on:goto-cast="gotoCast" />
+          <VotingCreate 
+            v-if="page == 2"
+            v-on:cancel="gotoList" />
+          <VotingCast 
+            v-if="page == 3"
+            v-on:cancel="gotoList" />
         </v-sheet>
       </v-col>
     </v-row>
@@ -34,12 +25,32 @@
 </template>
 
 <script>
+  import VotingList from './voting/VotingList'
+  import VotingCreate from './voting/VotingCreate'
+  import VotingCast from './voting/VotingCast'
+
   export default {
     name: 'VotingPage',
-    props: [],
+    props: ['render'],
+    components: {
+      VotingList,
+      VotingCreate,
+      VotingCast
+    },
     data: () => ({
-      ballotId: ''
+      page: 1, //1 - List, 2 - Create, 3 - Cast
     }),
+    methods: {
+      gotoList() {
+        this.page = 1
+      },
+      gotoCreate() {
+        this.page = 2
+      },
+      gotoCast() {
+        this.page = 3
+      }
+    }
   }
 </script>
 
