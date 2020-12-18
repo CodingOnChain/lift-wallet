@@ -12,7 +12,7 @@
                 <v-card flat v-if="wallet != null">
                     <WalletSyncing v-bind:progress="syncProgress" v-if="isSyncing" />
                     <v-sheet v-if="!isSyncing" height="100%" width="100%">
-                        <v-tabs centered grow background-color="primary" dark>
+                        <v-tabs v-model="tabIndex" centered grow background-color="primary" dark>
                             <v-tab>Transactions</v-tab>
                             <v-tab>Receive</v-tab>
                             <v-tab>Send</v-tab>
@@ -130,8 +130,10 @@
                                                 required
                                                 @input="$v.address.$touch()"
                                                 @blur="$v.address.$touch()"
+                                                @focus="addressFocusIn"
                                                 ></v-text-field>
 
+                                             
                                             <v-text-field
                                                 v-model="sendForm.amountFormatted"
                                                 :error-messages="amountErrors"
@@ -139,16 +141,14 @@
                                                 @input="$v.amount.$touch()"
                                                 @blur="sendAdaFocusOut" 
                                                 @focus="sendAdaFocusIn"
+                                                :hint="`Est. Fee: ${sendForm.feeFormatted}`"
+                                                persistent-hint
                                                 required
                                                 >
                                             </v-text-field>
 
                                             <v-input
-                                                label="Est. Fee (ADA)"
-                                                >: {{sendForm.feeFormatted}}
-                                                </v-input>
-
-                                            <v-input
+                                                class="mt-5"
                                                 label="Total (ADA)"
                                                 >: {{sendForm.totalFormatted}}
                                                 </v-input>
@@ -163,6 +163,7 @@
                                                 @click:append="showPassphrase = !showPassphrase"
                                                 @input="$v.passphrase.$touch()"
                                                 @blur="$v.passphrase.$touch()"
+                                                @focus="passphraseFocusIn"
                                                 >
                                             </v-text-field>
                                         </v-card-text>
@@ -202,6 +203,7 @@
     },
     data: () => ({ 
         wallet: null,
+        tabIndex: 0,
         getWalletInterval: null,
         transactions: [],
         addresses: [],
@@ -216,7 +218,9 @@
             total: 0,
             totalFormatted: '0.000000',
             passphrase: '',
-            validAddress: true
+            validAddress: true,
+            validPassphrase: true,
+            validAmount: true
         }
     }),
     watch: {
@@ -236,7 +240,7 @@
             if(newVal != oldVal) {
                 clearInterval(this.getWalletInterval);
                 this.getWalletInterval = null;
-                
+                this.tabIndex = 0;
                 this.transactions = [];
                 this.addresses = [];
                 console.log('new wallet id')
@@ -282,12 +286,14 @@
             const errors = [];
             if (!this.$v.amount.$dirty) return errors
             this.sendForm.amount.length == 0 && errors.push('Amount is required.')
+            !this.sendForm.validAmount && errors.push('Amount needs to be at least 1 ADA');
             return errors;
         },
         passphraseErrors: function() {
             const errors = [];
             if (!this.$v.passphrase.$dirty) return errors
             this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.')
+            !this.sendForm.validPassphrase && errors.push('Incorrect passphrase')
             return errors;
         },
     },
@@ -313,6 +319,13 @@
     methods: {
         transactionResult(_, args) {
             console.log(args.transaction);
+            if(args.transaction.code == 'wrong_encryption_passphrase') {
+                this.sendForm.validPassphrase = false;
+                this.$v.passphrase.$touch();
+            } else if(args.transaction.code == 'utxo_too_small') {
+                this.sendForm.validAmount = false;
+                this.$v.amount.$touch();
+            }
         },
         setTransactions(_, args) {
             this.transactions = args.transactions;
@@ -372,8 +385,15 @@
             this.setSendAdaTotal();
         },
         sendAdaFocusIn: function() {
+            this.sendForm.validAmount = true;
             // Unformat display value before user starts modifying it
             this.sendForm.amountFormatted = this.sendForm.amount.toString();
+        },
+        passphraseFocusIn: function() {
+            this.sendForm.validPassphrase = true;
+        },
+        addressFocusIn: function() {
+            this.sendForm.validAddress = true;
         },
         setSendAdaFee(ada) {
             // Recalculate the currencyValue after ignoring "$" and "," in user input

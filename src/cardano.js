@@ -7,13 +7,16 @@ import axios from 'axios'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const baseUrl = 'http://localhost:8090'
 
-export const cardanoPath = isDevelopment ? path.resolve(__dirname, '..', 'cardano') : '';
-export const dbPath = isDevelopment ? path.resolve(cardanoPath, 'db') : '';
-export const walletDbPath = isDevelopment ? path.resolve(cardanoPath, 'wallets') : '';
-export const socketPath = isDevelopment ? (process.platform == 'win32') ? '\\\\.\\pipe\\cardano-node-mainnet' : path.resolve(cardanoPath, 'socket') : '';
-export const configPath = isDevelopment ? path.resolve(cardanoPath, 'configs') : '';
-export const topolgoyFile = isDevelopment ? path.resolve(configPath, 'mainnet-topology.json') : '';
-export const configFile = isDevelopment ? path.resolve(configPath, 'mainnet-config.json') : '';
+export const cardanoPath = isDevelopment ? path.resolve(__dirname, '..', 'cardano') 
+: (process.platform == 'darwin') 
+    ? path.resolve(__dirname, '..', '..', 'cardano')
+    : '';
+export const dbPath = path.resolve(cardanoPath, 'db');
+export const walletDbPath = path.resolve(cardanoPath, 'wallets');
+export const socketPath = (process.platform == 'win32') ? '\\\\.\\pipe\\cardano-node-mainnet' : path.resolve(cardanoPath, 'socket');
+export const configPath = path.resolve(cardanoPath, 'configs');
+export const topolgoyFile = path.resolve(configPath, 'mainnet-topology.json');
+export const configFile = path.resolve(configPath, 'mainnet-config.json');
 
 export const cardanoNodeOptions = [
     '--port', '6000',

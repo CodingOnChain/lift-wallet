@@ -1,5 +1,4 @@
 'use strict'
-
 import { spawn } from 'child_process'
 import path from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
@@ -99,7 +98,7 @@ ipcMain.on('req:start-cnode', (event, args) => {
       walletServeEnvs)
     console.log(path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 'serve', walletServeOptions.join(' '))
     
-    event.reply('res:start-cnode', { 'cnode': cnode.pid });
+    event.reply('res:start-cnode', { 'cnode': path.resolve('.', cardanoPath, process.platform, 'cardano-node') });
 
     cnode.stdout.on('data', (data) => {
       console.info(`cnode: ${data}`);
@@ -190,6 +189,104 @@ ipcMain.on('req:get-fee', async (event, args) => {
 })
 
 ipcMain.on('req:send-transaction', async (event, args) => {
+  // {
+  //   0: {
+  //     "map": [
+  //       { 
+  //         "k": { "string": "BallotID" },
+  //         "v": { "string": "some-unqiue-ballot-id" }
+  //       }
+  //     ]
+  //   },
+  //   1: {
+  //     "map": [
+  //       { 
+  //         "k": { "string": "Service" },
+  //         "v": { "string": "LIFT Ballots" }
+  //       }
+  //     ]
+  //   },
+  //   2: {
+  //     "map": [
+  //       { 
+  //         "k": { "string": "Author" },
+  //         "v": { "string": "some-unqiue-author-id" }
+  //       }
+  //     ]
+  //   },
+  //   3: {
+  //     "list": [
+  //       {
+  //         "map": [
+  //         { 
+  //             "k": { "string": "Question" },
+  //             "v": { "string": "Some question 1" }
+  //           },
+  //           { 
+  //             "k": { "string": "Type" },
+  //             "v": { "string": "Single" }
+  //           },
+  //           {
+  //             "k": { "string": "Choices" },
+  //             "v": { 
+  //               "list": [
+  //                 { 
+  //                   "string": "Some Choice 1" 
+  //                 },
+  //                 { 
+  //                   "string": "Some Another Choice 1" 
+  //                 }
+  //               ]
+  //             }
+  //           }
+  //         ]
+  //       },
+  //       {
+  //         "map": [
+  //         { 
+  //             "k": { "string": "Question" },
+  //             "v": { "string": "Some question 2" }
+  //           },
+  //           { 
+  //             "k": { "string": "Type" },
+  //             "v": { "string": "Multiple" }
+  //           },
+  //           {
+  //             "k": { "string": "Choices" },
+  //             "v": { 
+  //               "list": [
+  //                 { 
+  //                   "string": "Some Choice2" 
+  //                 },
+  //                 { 
+  //                   "string": "Some Another Choice2" 
+  //                 }
+  //               ]
+  //             }
+  //           }
+  //         ]
+  //       }
+  //     ]
+  //   }
+  // }
+  var ballotJson = {
+    BallotID: "some-unique-ballot-id",
+    Service: "LIFT Ballots",
+    Author: "some-unique-author-id",
+    Questions: [
+      {
+        Question: "Question #1",
+        Type: "Single",
+        Choices: ["Choice 1-1", "Choice 1-2"]
+      },
+      {
+        Question: "Question #2",
+        Type: "Multiple",
+        Choices: ["Choice 2-1", "Choice 2-2"]
+      }
+    ]
+  };
+
   const transaction = {
     passphrase: args.passphrase,
     payments: [
@@ -201,6 +298,7 @@ ipcMain.on('req:send-transaction', async (event, args) => {
         }
       }
     ],
+    //metadata: ,
     time_to_live: {
       quantity: 500,
       unit: "second"
