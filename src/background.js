@@ -298,7 +298,32 @@ ipcMain.on('req:send-transaction', async (event, args) => {
         }
       }
     ],
-    //metadata: ,
+    metadata: {
+      0: {
+        "map": [
+          { 
+            "k": { "string": "Service" },
+            "v": { "string": "LIFT" }
+          }
+        ]
+      },
+      1: {
+        "map": [
+          { 
+            "k": { "string": "Action" },
+            "v": { "string": "Registration" }
+          }
+        ]
+      },
+      2: {
+        "map": [
+          { 
+            "k": { "string": "VoterId" },
+            "v": { "string": "9AE23982-6988-4314-B123-0759D83D2CF1" }
+          }
+        ]
+      }
+    },
     time_to_live: {
       quantity: 500,
       unit: "second"
