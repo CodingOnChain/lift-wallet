@@ -8,8 +8,23 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
-        "mac": {
-          "extraFiles": [
+        appId: "com.electron.lift-wallet",
+        productName: "LIFT Wallet",
+        win: {
+          target: "nsis",
+          extraFiles: [
+            "cardano/win32/**/*",
+            "cardano/configs/**/*"
+          ]
+        },
+        nsis: {
+          oneClick: false,
+          perMachine: true,
+          allowToChangeInstallationDirectory: true
+        },
+        mac: {
+          target: "dmg",
+          extraFiles: [
             "cardano/darwin/**/*",
             "cardano/configs/**/*"
           ]
