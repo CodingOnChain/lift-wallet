@@ -17,6 +17,11 @@ module.exports = {
             "cardano/configs/**/*"
           ]
         },
+        nsis: {
+          oneClick: false,
+          perMachine: true,
+          allowToChangeInstallationDirectory: true
+        },
         mac: {
           target: "dmg",
           extraFiles: [

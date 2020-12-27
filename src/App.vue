@@ -58,7 +58,7 @@ export default {
 
   created(){
     ipcRenderer.on('res:start-cnode', (_, args) => {
-      console.log(args.cnode);
+      console.log(args);
       if(args.cnode) {
         this.toggleStartCnode = true;
         this.bootingCnode = true;
