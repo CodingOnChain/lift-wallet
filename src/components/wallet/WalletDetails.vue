@@ -18,7 +18,7 @@
                             <v-tab>Send</v-tab>
 
                             <v-tab-item>
-                                <v-expansion-panels>
+                                <v-expansion-panels :accordion="true">
                                     <v-expansion-panel
                                             v-for="(item,i) in transactions"
                                             :key="i"
@@ -55,7 +55,7 @@
                                                 </v-col>
                                             </v-row>
                                         </v-expansion-panel-header>
-                                        <v-expansion-panel-content class="pa-0">
+                                        <v-expansion-panel-content class="pa-0" :eager="true">
                                             <v-sheet class="pa-5" color="primary lighten-5" max-width="100vw">
                                                 <v-row dense>
                                                     <v-col>
