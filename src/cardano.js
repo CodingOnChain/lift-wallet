@@ -9,7 +9,7 @@ const baseUrl = 'http://localhost:8090'
 
 export const cardanoPath = isDevelopment 
     ? path.resolve(__dirname, '..', 'cardano') 
-    : path.resolve(__dirname, '..', '..', 'cardano') ;
+    : path.resolve(__dirname, '..', '..', 'cardano');
 export const dbPath = path.resolve(cardanoPath, 'db');
 export const walletDbPath = path.resolve(cardanoPath, 'wallets');
 export const socketPath = (process.platform == 'win32') ? '\\\\.\\pipe\\cardano-node-mainnet' : path.resolve(cardanoPath, 'socket');
