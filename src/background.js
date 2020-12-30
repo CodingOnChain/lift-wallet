@@ -19,8 +19,14 @@ import {
   validateAddress,
   getTransactionFee,
   createTransactions } from './cardano'
-import { initiateRegistration } from './lift'
-import { setupLiftDb, addVoter } from './lift-db'
+import { initiateRegistration, getVoterById } from './lift'
+import { setupLiftDb, addVoter, updateVoterStatus, updateVoterStatus, getVoterById as getVoterDbById } from './lift-db'
+import { 
+  basic as basicTransaction, 
+  registration as registrationTransaction, 
+  createBallot as createBallotTransaction, 
+  castBallot as castBallotTransaction 
+} from './transactions'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -192,72 +198,16 @@ ipcMain.on('req:validate-address', async (event, args) => {
 })
 
 ipcMain.on('req:get-fee', async (event, args) => {
-  const transaction = {
-    payments: [
-      {
-        address: args.address,
-        amount: {
-          quantity: args.amount,
-          unit: "lovelace"
-        }
-      }
-    ],
-    time_to_live: {
-      quantity: 500,
-      unit: "second"
-    }
-  };
-
-  const fee = await getTransactionFee(args.walletId, transaction);
+  const fee = await getTransactionFee(
+    args.walletId, 
+    basicTransaction(args.amount, args.address, args.passphrase, 500));
   event.reply('res:get-fee', { fee: fee });
 })
 
 ipcMain.on('req:send-transaction', async (event, args) => {
-
-  const transaction = {
-    passphrase: args.passphrase,
-    payments: [
-      {
-        address: args.address,
-        amount: {
-          quantity: args.amount,
-          unit: "lovelace"
-        }
-      }
-    ],
-    metadata: {
-      700: {
-        "map": [
-          { 
-            "k": { "string": "Service" },
-            "v": { "string": "LIFT" }
-          }
-        ]
-      },
-      701: {
-        "map": [
-          { 
-            "k": { "string": "Action" },
-            "v": { "string": "Registration" }
-          }
-        ]
-      },
-      702: {
-        "map": [
-          { 
-            "k": { "string": "VoterId" },
-            "v": { "string": "94b606c3-cad5-4a98-a323-0942f4b4f0db" }
-          }
-        ]
-      }
-    },
-    time_to_live: {
-      quantity: 500,
-      unit: "second"
-    }
-  };
-
-  const result = await createTransactions(args.walletId, transaction);
+  const result = await createTransactions(
+    args.walletId, 
+    basicTransaction(args.amount, args.address, args.passphrase, 500));
   event.reply('res:send-transaction', { transaction: result });
 })
 
@@ -266,179 +216,39 @@ ipcMain.on('req:get-transactions', async (event, args) => {
   event.reply('res:get-transactions', { transactions: transactions });
 })
 
-ipcMain.on('req:initiate-registration', async (event, args) => {
-  //1 lift-api - init registration
-  //2 send transaction with guid/voterid from init reg
-  //3. store voter id in sqlite
-  //3 return success with
-  
+ipcMain.on('req:initiate-registration', async (event, args) => {  
   //initiate a new voter registration
   var voterRes = await initiateRegistration();
-  //save the pending voter record
-  await addVoter(voterRes.voterId, args.walletId, 0);
   //send transactions
   const transaction = await createTransactions(
     args.walletId, 
-    {
-      passphrase: args.passphrase,
-      payments: [
-        {
-          address: args.address,
-          amount: {
-            quantity: args.amount,
-            unit: "lovelace"
-          }
-        }
-      ],
-      metadata: {
-        700: {
-          "map": [
-            { 
-              "k": { "string": "Service" },
-              "v": { "string": "LIFT" }
-            }
-          ]
-        },
-        701: {
-          "map": [
-            { 
-              "k": { "string": "Action" },
-              "v": { "string": "Registration" }
-            }
-          ]
-        },
-        702: {
-          "map": [
-            { 
-              "k": { "string": "VoterId" },
-              "v": { "string": voterRes.voterId }
-            }
-          ]
-        }
-      },
-      time_to_live: {
-        quantity: 500,
-        unit: "second"
-      }
-    });
+    registrationTransaction(
+      args.amount,
+      args.address, 
+      args.passphrase, 
+      500, 
+      voterRes.voterId
+    ));
+  //save the pending voter record
+  await addVoter(voterRes.voterId, args.walletId, 0);
 
   event.reply('res:initiate-registration', { voterId: voterRes.voterId, transaction: transaction.id });
+});
+
+ipcMain.on('req:check-registration-status', async(event, args) => {
+  var voterApi = await getVoterById(args.voterId);
+  var voterDb = await getVoterDbById(args.voterId);
+  if(voterApi.VoterStatus == 'Active') {
+    await updateVoterStatus(args.voterId, 1);
+    voterDb = await getVoterDbById(args.voterId)
+  }
+  
 })
 
-ipcMain.on('req:send-registration', async () => {
-
-});
-
-ipcMain.on('req:initiate-create-ballot', async () => {
-
-});
-
 ipcMain.on('req:send-create-ballot', async () => {
-
-});
-
-ipcMain.on('req:initiate-cast-ballot', async () => {
 
 });
 
 ipcMain.on('req:send-cast-ballot', async () => {
 
 });
-
-// {
-  //   0: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "BallotID" },
-  //         "v": { "string": "some-unqiue-ballot-id" }
-  //       }
-  //     ]
-  //   },
-  //   1: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "Service" },
-  //         "v": { "string": "LIFT Ballots" }
-  //       }
-  //     ]
-  //   },
-  //   2: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "Author" },
-  //         "v": { "string": "some-unqiue-author-id" }
-  //       }
-  //     ]
-  //   },
-  //   3: {
-  //     "list": [
-  //       {
-  //         "map": [
-  //         { 
-  //             "k": { "string": "Question" },
-  //             "v": { "string": "Some question 1" }
-  //           },
-  //           { 
-  //             "k": { "string": "Type" },
-  //             "v": { "string": "Single" }
-  //           },
-  //           {
-  //             "k": { "string": "Choices" },
-  //             "v": { 
-  //               "list": [
-  //                 { 
-  //                   "string": "Some Choice 1" 
-  //                 },
-  //                 { 
-  //                   "string": "Some Another Choice 1" 
-  //                 }
-  //               ]
-  //             }
-  //           }
-  //         ]
-  //       },
-  //       {
-  //         "map": [
-  //         { 
-  //             "k": { "string": "Question" },
-  //             "v": { "string": "Some question 2" }
-  //           },
-  //           { 
-  //             "k": { "string": "Type" },
-  //             "v": { "string": "Multiple" }
-  //           },
-  //           {
-  //             "k": { "string": "Choices" },
-  //             "v": { 
-  //               "list": [
-  //                 { 
-  //                   "string": "Some Choice2" 
-  //                 },
-  //                 { 
-  //                   "string": "Some Another Choice2" 
-  //                 }
-  //               ]
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     ]
-  //   }
-  // }
-  // var ballotJson = {
-  //   BallotID: "some-unique-ballot-id",
-  //   Service: "LIFT Ballots",
-  //   Author: "some-unique-author-id",
-  //   Questions: [
-  //     {
-  //       Question: "Question #1",
-  //       Type: "Single",
-  //       Choices: ["Choice 1-1", "Choice 1-2"]
-  //     },
-  //     {
-  //       Question: "Question #2",
-  //       Type: "Multiple",
-  //       Choices: ["Choice 2-1", "Choice 2-2"]
-  //     }
-  //   ]
-  // };

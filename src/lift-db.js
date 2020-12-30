@@ -34,17 +34,46 @@ export async function addVoter(voterId, walletId, confirmation) {
     try
     {
         const db = await openDb();
-        await db.exec(`INSERT INTO voters VALUES ("${voterId}", "${walletId}", ${confirmation})`)
+        await db.run('INSERT INTO voters(voterId, walletId, confirmed) VALUES (:voterId, :walletId, :confirmed)', {
+            ':voterId': voterId,
+            ':walletId': walletId,
+            ':confirmed': confirmation
+          })
     }catch(err) {
         console.error(err);
     }
 }
 
-export async function getAllVoters(voterId, walletId, confirmation) {
+export async function updateVoterStatus(voterId, confirmation) {
     try
     {
         const db = await openDb();
-        await db.all('SELECT voterId, walletId, confirmed FROM voters')
+        await db.run('UPDATE voters SET confirmed = :confirmed where voterId = :voterId', {
+            ':voterId': voterId,
+            ':confirmed': confirmation
+          })
+    }catch(err) {
+        console.error(err);
+    }
+}
+
+export async function getAllVoters() {
+    try
+    {
+        const db = await openDb();
+        return await db.all('SELECT voterId, walletId, confirmed FROM voters')
+    }catch(err) {
+        console.error(err);
+    }
+}
+
+export async function getVoterById(voterId) {
+    try
+    {
+        const db = await openDb();
+        return await db.get('SELECT voterId, walletId, confirmed FROM voters WHERE voterId = :voterId', {
+            ':voterId': voterId
+        })
     }catch(err) {
         console.error(err);
     }
