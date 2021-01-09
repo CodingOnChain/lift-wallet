@@ -20,7 +20,7 @@ import {
   getTransactionFee,
   createTransactions } from './cardano'
 import { initiateRegistration, getVoterById } from './lift'
-import { setupLiftDb, addVoter, updateVoterStatus, updateVoterStatus, getVoterById as getVoterDbById } from './lift-db'
+import { setupLiftDb, addVoter, updateVoterStatus, getVoterById as getVoterDbById } from './lift-db'
 import { 
   basic as basicTransaction, 
   registration as registrationTransaction, 
@@ -242,7 +242,7 @@ ipcMain.on('req:check-registration-status', async(event, args) => {
     await updateVoterStatus(args.voterId, 1);
     voterDb = await getVoterDbById(args.voterId)
   }
-  
+
 })
 
 ipcMain.on('req:send-create-ballot', async () => {
