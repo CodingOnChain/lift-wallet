@@ -4,8 +4,8 @@ const exec = util.promisify(require('child_process').exec);
 const path = require("path")
 import axios from 'axios'
 
-const isDevelopment = process.env.NODE_ENV !== 'production'
 const baseUrl = 'http://localhost:8090'
+const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export const cardanoPath = isDevelopment 
     ? path.resolve(__dirname, '..', 'cardano') 
@@ -25,33 +25,10 @@ export const cardanoNodeOptions = [
     '--topology', topolgoyFile
 ]
 
-export const walletServeEnvs = { 
-    env: { ...process.env, CARDANO_NODE_SOCKET_PATH: socketPath } 
-}
-
-export const walletServeOptions = [
-    '--mainnet',
-    '--node-socket', socketPath,
-    '--database', walletDbPath,
-    '--pool-metadata-fetching', 'https://smash.cardano-mainnet.iohk.io',
-    '--log-level', 'ERROR'
-]
-
-export async function getNetworkInfo() {
-    try {
-        return await axios.get(`${baseUrl}/v2/network/information`, { timeout: 10000 })
-    }catch(err){
-        return null
-    }
-}
-
 export async function getPhrase() {
     try {
         const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-        console.info(addressCli)
         const { stdout, stderr } = await exec(`${addressCli} recovery-phrase generate`)
-        console.info(stdout)
-        console.info(stderr)
         if(stderr) return { error: stderr, phrase: null };
         return { error: null, phrase: stdout };
     }catch(e) {
@@ -146,28 +123,5 @@ export async function getTransactionFee(walletId, transaction) {
         return result.data;
     }catch(err){
         return err.response.data;
-    }
-}
-
-export async function getPools() {
-    try {
-        var result = await axios.get(`${baseUrl}/v2/stake-pools`, { timeout: 10000 })
-        return result.data;
-    }catch(err){
-        return err.response.data
-    }
-}
-
-export async function delegateToPool(walletId, stakePoolId, passphrase) {
-    try {
-        var result = await axios.put(
-            `${baseUrl}/v2/stake-pools/${stakePoolId}/wallets/${walletId}`, 
-            {
-                "passphrase": passphrase
-            }, 
-            { timeout: 10000 })
-        return result.data;
-    }catch(err){
-        return err.response.data
     }
 }

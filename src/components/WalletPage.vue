@@ -128,7 +128,6 @@
       newWalletAdded: function(e) {
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
-        //this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
         this.addingWallet = false;
       }
     }

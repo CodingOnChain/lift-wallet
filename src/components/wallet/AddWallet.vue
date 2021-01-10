@@ -175,11 +175,11 @@
         mounted() {
             ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
                 console.log('phrase',args);
-                if(!args.error) {
-                    this.newMnemonic = args.phrase;
+                if(args.isSuccessful) {
+                    this.newMnemonic = args.data;
                     this.e6 = 2;
                 }else {
-                    //err
+                    console.log(args.data)
                 }
             })
 

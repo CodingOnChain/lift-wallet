@@ -5,21 +5,21 @@ import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { 
+  getMnemonic, 
+  getAddresses, 
+  getBalance,
+  createWallet } from './services/wallet.service.js';
+import { 
   cardanoPath, 
-  cardanoNodeOptions, 
-  walletServeOptions, 
-  walletServeEnvs, 
+  cardanoNodeOptions,  
   getNetworkInfo, 
-  getPhrase, 
-  createWallet,
   getWallets,
   getWallet,
   getTransactions,
-  getAddresses,
   validateAddress,
   getTransactionFee,
   createTransactions } from './cardano'
-const isDevelopment = process.env.NODE_ENV !== 'production'
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -89,14 +89,6 @@ ipcMain.on('req:start-cnode', (event, args) => {
     cnode = spawn(
       path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
       ['run',...cardanoNodeOptions])
-
-    console.log(path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 'run', cardanoNodeOptions.join(' '))
-    //start cardano-wallet serve
-    walletApi = spawn(
-      path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 
-      ['serve',...walletServeOptions], 
-      walletServeEnvs)
-    console.log(path.resolve('.', cardanoPath, process.platform, 'cardano-wallet'), 'serve', walletServeOptions.join(' '))
     
     event.reply('res:start-cnode', { 'cnode': path.resolve('.', cardanoPath, process.platform, 'cardano-node') });
 
@@ -106,14 +98,6 @@ ipcMain.on('req:start-cnode', (event, args) => {
 
     cnode.stderr.on('data', (data) => {
       console.error(`cnode err: ${data}`);
-    });
-
-    walletApi.stdout.on('data', (data) => {
-      console.info(`wallet-api: ${data}`);
-    });
-
-    walletApi.stderr.on('data', (data) => {
-      console.error(`wallet-api err: ${data}`);
     });
   }
 })
@@ -137,14 +121,27 @@ ipcMain.on('req:get-network', async (event, args) => {
 })
 
 ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
-  console.info("get phrase")
-  const recoveryPhrase = await getPhrase();
-  event.reply('res:generate-recovery-phrase', recoveryPhrase);
+  try{
+    console.info("get phrase")
+    const recoveryPhrase = await getMnemonic();
+    event.reply('res:generate-recovery-phrase', { isSuccessful: true, data: recoveryPhrase });
+  }catch(e) {
+    event.reply('res:generate-recovery-phrase', { isSuccessful: false, data: e.toString() });
+  }
 })
 
 ipcMain.on('req:add-wallet', async (event, args) => {
-  const wallet = await createWallet(args.name, args.mnemonic, args.passphrase);
-  event.reply('res:add-wallet', { wallet:wallet });
+  try{
+    await createWallet(args.network, args.name, args.mnemonic, args.passphrase);
+    const balance = await getBalance(args.network, args.name);
+    const wallet = {
+      name: args.name,
+      balance: balance
+    }
+    event.reply('res:add-wallet', { isSuccessful: true, data: wallet });
+  }catch(e) {
+    event.reply('res:add-wallet', { isSuccessful: false, data: e.toString() });
+  }
 })
 
 ipcMain.on('req:get-wallets', async (event, args) => {
@@ -153,8 +150,16 @@ ipcMain.on('req:get-wallets', async (event, args) => {
 })
 
 ipcMain.on('req:get-wallet', async (event, args) => {
-  const wallet = await getWallet(args.walletId);
-  event.reply('res:get-wallet', { wallet: wallet });
+  try{
+    const balance = await getBalance(args.network, args.name);
+    const wallet = {
+      name: args.name,
+      balance: balance
+    }
+    event.reply('res:get-wallet', { isSuccessful: true, data: wallet });
+  }catch(e) {
+    event.reply('res:get-wallet', { isSuccessful: false, data: e.toString() });
+  }
 })
 
 ipcMain.on('req:get-addresses', async (event, args) => {
@@ -189,104 +194,6 @@ ipcMain.on('req:get-fee', async (event, args) => {
 })
 
 ipcMain.on('req:send-transaction', async (event, args) => {
-  // {
-  //   0: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "BallotID" },
-  //         "v": { "string": "some-unqiue-ballot-id" }
-  //       }
-  //     ]
-  //   },
-  //   1: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "Service" },
-  //         "v": { "string": "LIFT Ballots" }
-  //       }
-  //     ]
-  //   },
-  //   2: {
-  //     "map": [
-  //       { 
-  //         "k": { "string": "Author" },
-  //         "v": { "string": "some-unqiue-author-id" }
-  //       }
-  //     ]
-  //   },
-  //   3: {
-  //     "list": [
-  //       {
-  //         "map": [
-  //         { 
-  //             "k": { "string": "Question" },
-  //             "v": { "string": "Some question 1" }
-  //           },
-  //           { 
-  //             "k": { "string": "Type" },
-  //             "v": { "string": "Single" }
-  //           },
-  //           {
-  //             "k": { "string": "Choices" },
-  //             "v": { 
-  //               "list": [
-  //                 { 
-  //                   "string": "Some Choice 1" 
-  //                 },
-  //                 { 
-  //                   "string": "Some Another Choice 1" 
-  //                 }
-  //               ]
-  //             }
-  //           }
-  //         ]
-  //       },
-  //       {
-  //         "map": [
-  //         { 
-  //             "k": { "string": "Question" },
-  //             "v": { "string": "Some question 2" }
-  //           },
-  //           { 
-  //             "k": { "string": "Type" },
-  //             "v": { "string": "Multiple" }
-  //           },
-  //           {
-  //             "k": { "string": "Choices" },
-  //             "v": { 
-  //               "list": [
-  //                 { 
-  //                   "string": "Some Choice2" 
-  //                 },
-  //                 { 
-  //                   "string": "Some Another Choice2" 
-  //                 }
-  //               ]
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     ]
-  //   }
-  // }
-  var ballotJson = {
-    BallotID: "some-unique-ballot-id",
-    Service: "LIFT Ballots",
-    Author: "some-unique-author-id",
-    Questions: [
-      {
-        Question: "Question #1",
-        Type: "Single",
-        Choices: ["Choice 1-1", "Choice 1-2"]
-      },
-      {
-        Question: "Question #2",
-        Type: "Multiple",
-        Choices: ["Choice 2-1", "Choice 2-2"]
-      }
-    ]
-  };
-
   const transaction = {
     passphrase: args.passphrase,
     payments: [

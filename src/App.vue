@@ -23,98 +23,52 @@
           v-on:click="setActivePage(link)"
           :text="link != activePage"
           :depressed="link == activePage"
-           v-show="activeCnode"
           class="mr-2"
         >
           {{ link }}
         </v-btn>
-        <v-btn color="success" v-on:click="startCnode" v-show="!toggleStartCnode" >Start Node</v-btn>
-        <v-btn color="danger" v-on:click="stopCnode" v-show="toggleStartCnode" >Stop Node</v-btn>
+        <v-btn-toggle
+          v-model="selectedWalletType"
+          mandatory
+        >
+          <v-btn 
+            :color="selectedWalletType == 0 ? 'accent' : 'default'"
+            :style="{ color: selectedWalletType == 0 ? 'white' : 'black' }">
+            Lite
+          </v-btn>
+          <v-btn 
+            :color="selectedWalletType == 1 ? 'accent' : 'default'"
+            :style="{ color: selectedWalletType == 1 ? 'white' : 'black' }">
+            Full
+          </v-btn>
+        </v-btn-toggle>
       </v-container>
     </v-app-bar>
 
     <v-main class="grey lighten-3">
-      <LoadingCnode v-if="bootingCnode || syncingCnode" 
-        v-bind:loading="bootingCnode" 
-        v-bind:syncing="syncingCnode"
-        v-bind:progress="syncingProgress" />
-      <MainView v-if="activeCnode" v-bind:page="activePage" />
+      <MainView v-bind:page="activePage" />
     </v-main>
   </v-app>
 </template>
 
 <script>
-const { ipcRenderer } = require('electron')
-import LoadingCnode from './components/LoadingCnode'
 import MainView from './components/MainView'
 
 export default {
   name: 'App',
 
   components: {
-    LoadingCnode,
     MainView
   },
 
-  created(){
-    ipcRenderer.on('res:start-cnode', (_, args) => {
-      console.log(args);
-      if(args.cnode) {
-        this.toggleStartCnode = true;
-        this.bootingCnode = true;
-        ipcRenderer.send('req:get-network');
-      }
-    })
-
-    ipcRenderer.on('res:stop-cnode', () => {
-      this.toggleStartCnode = false;
-      this.bootingCnode = false;
-      this.syncingCnode = false;
-      this.activeCnode = false;
-    })
-
-    ipcRenderer.on('res:get-network', (_, args) => {
-      console.log(args);
-      if(args.network != null) {
-        if(args.network.sync_progress.status == 'syncing')
-        {
-          this.bootingCnode = false;
-          this.syncingCnode = true;
-          this.syncingProgress = args.network.sync_progress.progress.quantity;
-          console.log(`${args.network.sync_progress.progress.quantity}%`)
-          this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
-        }else {
-          console.log('synced!')
-          clearTimeout(this.getSyncInfo);
-          this.bootingCnode = false;
-          this.syncingCnode = false;
-          this.activeCnode = true;
-        }
-      }else {
-        if(this.toggleStartCnode) this.getSyncInfo = setTimeout(() => {  ipcRenderer.send('req:get-network'); }, 10000);
-      }
-    })
-  },
-
   data: () => ({
-    toggleStartCnode: false,
-    bootingCnode: false,
-    syncingCnode: false,
-    activeCnode: false,
-    syncingProgress: 0,
-    getSyncInfo: null,
     links: ['Wallets', 'Staking', 'Voting'],
-    activePage: 'Wallets'
+    activePage: 'Wallets',
+    walletTypes: ['Lite', 'Full Node'],
+    selectedWalletType: 0
   }),
 
   methods: {
-    startCnode: function() {
-      ipcRenderer.send('req:start-cnode', 'top');
-    },
-    stopCnode: function() {
-      ipcRenderer.send('req:stop-cnode', 'top');
-      clearTimeout(this.getSyncInfo);
-    },
     setActivePage: function(page) {
       this.activePage = page;
     }
