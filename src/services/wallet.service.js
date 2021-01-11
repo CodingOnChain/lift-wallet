@@ -1,4 +1,4 @@
-import { cli } from '../core/common';
+import { encrypt } from '../core/common';
 import { 
     getMnemonicCmd,
     getRootCmd,
@@ -7,7 +7,6 @@ import {
     getBaseAddrCmd,
     getPaymentAddrCmd } from '../core/cardano-addresses.js';
 import { getUtxos } from '../core/dandelion.js'
-import axios from 'axios';
 import util from 'util';
 import path from 'path';
 import fs from 'fs';
@@ -15,13 +14,19 @@ import { exec } from 'child_process'
 
 const cmd = util.promisify(exec);
 
-const walletPath = path.resolve(__dirname, '..', '..', '..', 'cardano', 'wallets');
+const walletPath = path.resolve(__dirname, '..', 'cardano', 'wallets');
 
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const addressFile = 'payment.addr';
 
+export async function setupWalletDir() {
+    if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
+        fs.mkdirSync(path.resolve(walletPath, 'testnet'))
 
+    if(!fs.existsSync(path.resolve(walletPath, 'mainnet')))
+        fs.mkdirSync(path.resolve(walletPath, 'mainnet'))
+}
 
 export async function getMnemonic(){
     const { stdout, stderr } = await cmd(getMnemonicCmd(24));
@@ -30,10 +35,11 @@ export async function getMnemonic(){
     return stdout.replace('\n', '');
 }
 
-export async function createWallet(network, mnemonic, name, passphrase) {
+export async function createWallet(network, name, mnemonic, passphrase) {
 
     //if we already have a wallet for this network with this name
     //  prevent the wallet creation.
+    console.log(walletPath);
     const walletDir = path.resolve(walletPath, network, name);
     if(fs.existsSync(walletDir)) throw "Wallet already exists";
 
@@ -77,6 +83,10 @@ export async function createWallet(network, mnemonic, name, passphrase) {
     fs.mkdirSync(walletDir);
     fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv);
     fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub);
+    encrypt(
+        path.resolve(walletDir, accountPrvFile), 
+        path.resolve(walletDir, accountPubFile),
+        passphrase);
     fs.writeFileSync(path.resolve(walletDir, addressFile), addresses);
 }
 
@@ -84,7 +94,7 @@ export async function getWallets(network) {
     const networkPath = path.resolve(walletPath, network);
     const walletDirs = getDirectories(networkPath);
     const wallets = [];
-    walletDirs.forEach(w => {
+    walletDirs.forEach(async w => {
         wallets.push({
             name: w,
             balance: await getBalance(network, w)

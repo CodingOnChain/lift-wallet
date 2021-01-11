@@ -5,6 +5,7 @@ import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { 
+  setupWalletDir,
   getMnemonic, 
   getAddresses, 
   getBalance,
@@ -77,6 +78,7 @@ app.on('ready', async () => {
     }
   }
   createWindow()
+  setupWalletDir();
 })
 
 ///Cardano Operations
@@ -132,6 +134,7 @@ ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
 
 ipcMain.on('req:add-wallet', async (event, args) => {
   try{
+    console.log('adding wallet', args)
     await createWallet(args.network, args.name, args.mnemonic, args.passphrase);
     const balance = await getBalance(args.network, args.name);
     const wallet = {

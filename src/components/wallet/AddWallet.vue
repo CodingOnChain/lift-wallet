@@ -156,7 +156,8 @@
             walletForm: {
                 name: '',
                 mnemonic: '',
-                passphrase: ''
+                passphrase: '',
+                network: 'testnet'
             },
             rules: {
                 name:[
