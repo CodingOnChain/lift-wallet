@@ -3,15 +3,14 @@
         <v-row no-gutters>
             <v-col>
                 <v-card flat v-if="wallet != null">
-                    <v-card-title>Total: {{ displayADA(wallet.balance.total.quantity) }}</v-card-title>
+                    <v-card-title>Total: {{ displayADA(wallet.balance) }}</v-card-title>
                 </v-card>
             </v-col>
         </v-row>
         <v-row no-gutters>
             <v-col>
                 <v-card flat v-if="wallet != null">
-                    <WalletSyncing v-bind:progress="syncProgress" v-if="isSyncing" />
-                    <v-sheet v-if="!isSyncing" height="100%" width="100%">
+                    <v-sheet height="100%" width="100%">
                         <v-tabs v-model="tabIndex" centered grow background-color="primary" dark>
                             <v-tab>Transactions</v-tab>
                             <v-tab>Receive</v-tab>
@@ -97,10 +96,10 @@
                                         <thead>
                                             <tr>
                                             <th class="text-left">
-                                                Addresses
+                                                Index
                                             </th>
                                             <th class="text-left">
-                                                State
+                                                Address
                                             </th>
                                             </tr>
                                         </thead>
@@ -109,8 +108,8 @@
                                             v-for="item in addresses"
                                             :key="item.id"
                                             >
-                                            <td>{{ item.id }}</td>
-                                            <td>{{ item.state }}</td>
+                                            <td>{{ item.index }}</td>
+                                            <td>{{ item.address }}</td>
                                             </tr>
                                         </tbody>
                                         </template>
@@ -186,14 +185,10 @@
 <script>
   const { ipcRenderer } = require('electron')
   import { validationMixin } from 'vuelidate'
-  import WalletSyncing from './wallet-details/WalletSyncing'
 
   export default {
     name: 'WalletDetails',
     props: ['walletId','focus'],
-    components: {
-        WalletSyncing  
-    },
     mixins: [validationMixin],
 
     validations: {
@@ -342,26 +337,29 @@
             }
         },
         setAddresses(_, args) {
+            console.log(args);
             this.addresses = args.addresses;
         },
-        updateWallet(_, args) {                
-            this.setWallet(args.wallet);
-            console.log('got wallet', this.walletId)
-            if(this.wallet != null && !this.isSyncing) {
-                ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
-                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { walletId: this.walletId })
+        updateWallet(_, args) { 
+            //args.isSuccessful needs to be handled
+            this.setWallet(args.data);
+            console.log('got wallet', this.wallet)
+            if(this.wallet != null) {
+                //ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
+                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' })
             }
         },
         setWallet(wallet) {
+            console.log(wallet)
             this.wallet = wallet;
         },
         displayADA(lovelaces) {
             return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`
         },
         pollWallet() {
-            ipcRenderer.send('req:get-wallet', { walletId: this.walletId })
+            ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' })
             this.getWalletInterval = setInterval(() => {  
-                ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
+                ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' });
             }, 5000)
         },
         getFee() {

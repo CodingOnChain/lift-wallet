@@ -154,9 +154,9 @@
             walletFormValid: true,
             showPassphrase: false,
             walletForm: {
-                name: '',
-                mnemonic: '',
-                passphrase: '',
+                name: 'Perdix 1',
+                mnemonic: 'inject upper vintage abuse subject country seat brown idea clerk impose social vivid spike poem good custom common enroll degree similar heart able reflect',
+                passphrase: '!23Perdix!23',
                 network: 'testnet'
             },
             rules: {
@@ -186,10 +186,10 @@
 
             ipcRenderer.on('res:add-wallet', (_, args) => {
                 console.log('new wallet', args);
-                if(!args.error) {
+                if(args.isSuccessful) {
                     this.e6 = 1;
                     this.newMnemonic = '';
-                    this.$emit('added-wallet', { wallet: args.wallet });
+                    this.$emit('added-wallet', { wallet: args.data });
                 }else {
                     //err
                 }

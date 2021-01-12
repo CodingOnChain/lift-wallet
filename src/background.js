@@ -9,13 +9,12 @@ import {
   getMnemonic, 
   getAddresses, 
   getBalance,
+  getWallets,
   createWallet } from './services/wallet.service.js';
 import { 
   cardanoPath, 
   cardanoNodeOptions,  
   getNetworkInfo, 
-  getWallets,
-  getWallet,
   getTransactions,
   validateAddress,
   getTransactionFee,
@@ -125,6 +124,7 @@ ipcMain.on('req:get-network', async (event, args) => {
 ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
   try{
     console.info("get phrase")
+
     const recoveryPhrase = await getMnemonic();
     event.reply('res:generate-recovery-phrase', { isSuccessful: true, data: recoveryPhrase });
   }catch(e) {
@@ -148,7 +148,8 @@ ipcMain.on('req:add-wallet', async (event, args) => {
 })
 
 ipcMain.on('req:get-wallets', async (event, args) => {
-  const wallets = await getWallets();
+
+  const wallets = await getWallets(args.network);
   event.reply('res:get-wallets', { wallets: wallets });
 })
 
@@ -166,7 +167,7 @@ ipcMain.on('req:get-wallet', async (event, args) => {
 })
 
 ipcMain.on('req:get-addresses', async (event, args) => {
-  const addresses = await getAddresses(args.walletId);
+  const addresses = await getAddresses(args.network, args.name);
   event.reply('res:get-addresses', { addresses: addresses });
 })
 
@@ -220,8 +221,8 @@ ipcMain.on('req:send-transaction', async (event, args) => {
 })
 
 ipcMain.on('req:get-transactions', async (event, args) => {
-  const transactions = await getTransactions(args.walletId);
-  event.reply('res:get-transactions', { transactions: transactions });
+  //const transactions = await getTransactions(args.walletId);
+  event.reply('res:get-transactions', { transactions: [] });
 })
 
 // Exit cleanly on request from parent process in development mode.

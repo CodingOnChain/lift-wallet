@@ -33,7 +33,7 @@
         >
           <NoWallet v-if="!hasWallets && !addingWallet" />
           <AddWallet v-if="addingWallet" v-on:cancel-add="cancelAdd" v-on:added-wallet="newWalletAdded" />
-          <WalletDetails v-if="render && hasWallets && !addingWallet" v-bind:focus="enableDetails" v-bind:walletId="selectedWalletId" />
+          <WalletDetails v-if="hasWallets && !addingWallet" v-bind:focus="enableDetails" v-bind:walletId="selectedWalletId" />
         </v-sheet>
       </v-col>
     </v-row>
@@ -64,7 +64,7 @@
       },
       selectedWalletIndex: function(newVal, oldVal) {
         if(newVal != undefined && oldVal != newVal) {
-          this.selectedWalletId = this.wallets[newVal].id;
+          this.selectedWalletId = this.wallets[newVal].name;
           console.log(newVal)
         }
       }
@@ -99,7 +99,7 @@
         this.wallets = args.wallets;
         if(this.wallets.length > 0 && !this.selectedWalletIndex) {
           this.selectedWalletIndex = 0
-          this.selectedWalletId = this.wallets[this.selectedWalletIndex].id;
+          this.selectedWalletId = this.wallets[this.selectedWalletIndex].name;
         }
       })
 
@@ -114,7 +114,7 @@
       },
       getWallets: function() {
         console.log('get wallets');
-        ipcRenderer.send('req:get-wallets');
+        ipcRenderer.send('req:get-wallets', {network: 'testnet'});
       },
       getMnemonic: function() {
         ipcRenderer.send('req:generate-recovery-phrase');
@@ -126,6 +126,7 @@
         this.addingWallet = false;
       },
       newWalletAdded: function(e) {
+        console.log(e);
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
         this.addingWallet = false;

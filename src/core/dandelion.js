@@ -17,7 +17,7 @@ function getSubmitApiUrl(network) {
 function getGraphqlAddresses(addresses) {
     let result = '[';
     addresses.forEach(a => {
-        result += `"${a}"`;
+        result += `"${a}",`;
     })
     result += ']';
     return result;

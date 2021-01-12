@@ -19,6 +19,7 @@ const walletPath = path.resolve(__dirname, '..', 'cardano', 'wallets');
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const addressFile = 'payment.addr';
+const changeFile = 'change.addr';
 
 export async function setupWalletDir() {
     if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
@@ -39,41 +40,54 @@ export async function createWallet(network, name, mnemonic, passphrase) {
 
     //if we already have a wallet for this network with this name
     //  prevent the wallet creation.
-    console.log(walletPath);
     const walletDir = path.resolve(walletPath, network, name);
     if(fs.existsSync(walletDir)) throw "Wallet already exists";
 
     //root key
-    const { rootKey, rootKeyErr } = await cmd(getRootCmd(mnemonic));
-    if(rootKeyErr) throw rootKeyErr;
-    
+    const rootKey = await cmd(getRootCmd(mnemonic));
+    if(rootKey.stderr) throw rootKey.stderr;
+
     //account private
-    const { accountPrv, accountPrvErr } = await cmd(getChildCmd(rootKey, "1852H/1815H/0H"));
-    if(accountPrvErr) throw accountPrvErr;
+    const accountPrv = await cmd(getChildCmd(rootKey.stdout, "1852H/1815H/0H"));
+    if(accountPrv.stderr) throw accountPrv.stderr;
     
     //account public
-    const { accountPub, accountPubErr } = await cmd(getPublicCmd(accountPrv));
-    if(accountPubErr) throw accountPubErr;
+    const accountPub = await cmd(getPublicCmd(accountPrv.stdout));
+    if(accountPub.stderr) throw accountPub.stderr;
     
     //stake public
-    const { stakePub, stakePubErr } = await cmd(getChildCmd(accountPub, "2/0"));
-    if(stakePubErr) throw stakePubErr;
+    const stakePub = await cmd(getChildCmd(accountPub.stdout, "2/0"));
+    if(stakePub.stderr) throw stakePub.stderr;
 
     const addresses = [];
+    const changes = [];
     for(let i = 0; i < 20; i++) {
         //public payment key 
-        const { paymentPub, paymentPubErr } = await cmd(getChildCmd(accountPub, `0/${i}`));
-        if(paymentPubErr) throw paymentPubErr;
+        const paymentPub = await cmd(getChildCmd(accountPub.stdout, `0/${i}`));
+        if(paymentPub.stderr) throw paymentPub.stderr;
 
         //enterprise address
-        const { baseAddr, baseAddrErr } = await cmd(getBaseAddrCmd(paymentPub, network));
-        if(baseAddrErr) throw baseAddrErr;
+        const basePaymentAddr = await cmd(getBaseAddrCmd(paymentPub.stdout, network));
+        if(basePaymentAddr.stderr) throw basePaymentAddr.stderr;
 
-        //enterprise address
-        const { paymentAddr, paymentAddrErr } = await cmd(getPaymentAddrCmd(baseAddr, stakePub));
-        if(paymentAddrErr) throw paymentAddrErr;
+        //payment address
+        const paymentAddr = await cmd(getPaymentAddrCmd(basePaymentAddr.stdout, stakePub.stdout));
+        if(paymentAddr.stderr) throw paymentAddr.stderr;
+        
+        //public change key 
+        const changePub = await cmd(getChildCmd(accountPub.stdout, `1/${i}`));
+        if(changePub.stderr) throw changePub.stderr;
 
-        addresses.push({ index: i, address: paymentAddr });
+        //enterprise change address
+        const baseChangeAddr = await cmd(getBaseAddrCmd(changePub.stdout, network));
+        if(baseChangeAddr.stderr) throw baseChangeAddr.stderr;
+
+        //change address
+        const changeAddr = await cmd(getPaymentAddrCmd(baseChangeAddr.stdout, stakePub.stdout));
+        if(changeAddr.stderr) throw changeAddr.stderr;
+
+        addresses.push({ index: i, address: paymentAddr.stdout });
+        changes.push({ index: i, address: changeAddr.stdout });
     }
     
     //keys/addresses to save
@@ -81,26 +95,27 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     //account pub
     //10 - payment addresses
     fs.mkdirSync(walletDir);
-    fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv);
-    fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub);
+    fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv.stdout);
+    fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub.stdout);
     encrypt(
         path.resolve(walletDir, accountPrvFile), 
         path.resolve(walletDir, accountPubFile),
         passphrase);
-    fs.writeFileSync(path.resolve(walletDir, addressFile), addresses);
+    fs.writeFileSync(path.resolve(walletDir, addressFile), JSON.stringify(addresses));
+    fs.writeFileSync(path.resolve(walletDir, changeFile), JSON.stringify(changes));
 }
 
 export async function getWallets(network) {
     const networkPath = path.resolve(walletPath, network);
     const walletDirs = getDirectories(networkPath);
-    const wallets = [];
-    walletDirs.forEach(async w => {
+    let wallets = [];
+    for(let i = 0; i < walletDirs.length; i++) {
+        const balance = await getBalance(network, walletDirs[i]);
         wallets.push({
-            name: w,
-            balance: await getBalance(network, w)
+            name: walletDirs[i],
+            balance: balance
         });
-    })
-
+    }
     return wallets;
 }
 
@@ -112,7 +127,6 @@ export async function getAddresses(network, name) {
 export async function getBalance(network, name) {
     const walletDir = path.resolve(walletPath, network, name);
     const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, addressFile)))
-
     const addressUtxos = await getUtxos(network, addresses.map((a) => a.address));
     return getTotalUtxoBalance(addressUtxos);
 }
@@ -124,7 +138,8 @@ function getTotalUtxoBalance(utxos) {
 }
 
 function getDirectories (source) {
-  fs.readdirSync(source, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+  return fs.readdirSync(source)
+    .filter(f => {
+        return fs.statSync(path.resolve(source, f)).isDirectory();
+    });
 }

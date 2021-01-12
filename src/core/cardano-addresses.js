@@ -14,27 +14,39 @@ export function getMnemonicCmd(size){
 export function getRootCmd(mnemonic) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
     if(process.platform == 'win32')
-        return `"${mnemonic}" | ${addressCli} key from-recovery-phrase Shelley`;
+        return `echo ${mnemonic} | ${addressCli} key from-recovery-phrase Shelley`;
     else
         return `${addressCli} key from-recovery-phrase Shelley < <(echo '${mnemonic}')`;
 }
 
 export function getChildCmd(stdIn, derivation) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `"${stdIn}" | ${addressCli} key child ${derivation}`;
+    if(process.platform == 'win32')
+        return `echo ${stdIn}| ${addressCli} key child ${derivation}`;
+    else
+        return `${addressCli} key child ${derivation} < <(echo '${stdIn}')`;
 }
 
 export function getPublicCmd(prvKey) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `"${prvKey}" | ${addressCli} key public --with-chain-code`;
+    if(process.platform == 'win32')
+        return `echo ${prvKey}| ${addressCli} key public --with-chain-code`;
+    else
+        return `${addressCli} key public --with-chain-code < <(echo '${prvKey}')`;
 }
 
 export function getBaseAddrCmd(pubKey, network){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `"${pubKey}" | ${addressCli} address payment --network-tag ${network}`;
+    if(process.platform == 'win32')
+        return `echo ${pubKey}| ${addressCli} address payment --network-tag ${network}`;
+    else
+        return `${addressCli} address payment --network-tag ${network} < <(echo '${pubKey}')`;
 }
 
 export function getPaymentAddrCmd(baseAddr, stakePub){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `"${baseAddr}" | ${addressCli} address delegation "${stakePub}"`;
+    if(process.platform == 'win32')
+        return `echo ${baseAddr}| ${addressCli} address delegation "${stakePub}"`;
+    else
+        return `${addressCli} address delegation "${stakePub}" < <(echo '${baseAddr}')`;
 }
