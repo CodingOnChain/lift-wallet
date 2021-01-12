@@ -148,7 +148,6 @@ ipcMain.on('req:add-wallet', async (event, args) => {
 })
 
 ipcMain.on('req:get-wallets', async (event, args) => {
-
   const wallets = await getWallets(args.network);
   event.reply('res:get-wallets', { wallets: wallets });
 })

@@ -13,40 +13,25 @@ export function getMnemonicCmd(size){
 
 export function getRootCmd(mnemonic) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    if(process.platform == 'win32')
-        return `echo ${mnemonic} | ${addressCli} key from-recovery-phrase Shelley`;
-    else
-        return `${addressCli} key from-recovery-phrase Shelley < <(echo '${mnemonic}')`;
+    return `echo ${mnemonic} | ${addressCli} key from-recovery-phrase Shelley`;
 }
 
 export function getChildCmd(stdIn, derivation) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    if(process.platform == 'win32')
-        return `echo ${stdIn}| ${addressCli} key child ${derivation}`;
-    else
-        return `${addressCli} key child ${derivation} < <(echo '${stdIn}')`;
+    return `echo ${stdIn}| ${addressCli} key child ${derivation}`;
 }
 
 export function getPublicCmd(prvKey) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    if(process.platform == 'win32')
-        return `echo ${prvKey}| ${addressCli} key public --with-chain-code`;
-    else
-        return `${addressCli} key public --with-chain-code < <(echo '${prvKey}')`;
+    return `echo ${prvKey}| ${addressCli} key public --with-chain-code`;
 }
 
 export function getBaseAddrCmd(pubKey, network){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    if(process.platform == 'win32')
-        return `echo ${pubKey}| ${addressCli} address payment --network-tag ${network}`;
-    else
-        return `${addressCli} address payment --network-tag ${network} < <(echo '${pubKey}')`;
+    return `echo ${pubKey}| ${addressCli} address payment --network-tag ${network}`;
 }
 
 export function getPaymentAddrCmd(baseAddr, stakePub){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    if(process.platform == 'win32')
-        return `echo ${baseAddr}| ${addressCli} address delegation "${stakePub}"`;
-    else
-        return `${addressCli} address delegation "${stakePub}" < <(echo '${baseAddr}')`;
+    return `echo ${baseAddr}| ${addressCli} address delegation "${stakePub}"`;
 }

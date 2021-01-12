@@ -20,6 +20,10 @@ const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const addressFile = 'payment.addr';
 const changeFile = 'change.addr';
+const draftTxFile = 'draft.tx';
+const rawTxFile = 'raw.tx';
+const signedTxFile = 'signed.tx';
+const txBinaryFile = 'binary.tx';
 
 export async function setupWalletDir() {
     if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
@@ -129,6 +133,34 @@ export async function getBalance(network, name) {
     const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, addressFile)))
     const addressUtxos = await getUtxos(network, addresses.map((a) => a.address));
     return getTotalUtxoBalance(addressUtxos);
+}
+
+export async function getFee() {
+
+}
+
+export async function getTransactions(network, name, amount, toAddress) {
+    const walletDir = path.resolve(walletPath, network, name);
+    const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, addressFile)))
+    const addressUtxos = await getUtxos(network, addresses.map((a) => a.address));
+
+    const changes = JSON.parse(fs.readFileSync(path.resolve(walletDir, changeFile)))
+//this goes in cardano-cli.js
+    let txDraft = 'cardano-cli transaction build-raw --allegra-era --fee 0 --ttl 0';
+    let totalUsed = 0;
+    let utxoInCount = 0;
+    for(let u of addressUtxos)
+    {
+        totalUsed += parseInt(u.value);
+        txDraft += ` --tx-in ${u.txHash}#${u.index}`
+        utxoInCount++;
+        if(totalUsed >= amount)
+            break;
+    }
+    txDraft += ` --tx-out ${toAddress}+${amount}`;
+    txDraft += ` --tx-out ${changes[0].address}+${totalUsed - amount}`;
+    txDraft += ` --out-file ${draftTxFile}`;
+    await cmd(txDraft);
 }
 
 function getTotalUtxoBalance(utxos) {
