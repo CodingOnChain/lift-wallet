@@ -35,7 +35,7 @@ export function decrypt(prvFile, pubFile, password) {
 
         const decipher = crypto.createDecipheriv(algorithm, key, pubData.slice(0, 16));
         const decrypted = decipher.update(prvData.toString(), 'hex', 'utf8') + decipher.final('utf8'); //deciphered text
-        fs.writeFileSync(prvFile, decrypted);
+        return decrypted;
     } catch (exception) {
         throw exception.message;
     }

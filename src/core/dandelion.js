@@ -6,6 +6,32 @@ export async function getUtxos(network, addresses) {
     return utxosResult.data.data.utxos;
 }
 
+export async function getProtocolParams(network) {
+    var protocolParamsQuery = "{ genesis { shelley { protocolParams { a0 decentralisationParam eMax extraEntropy keyDeposit maxBlockBodySize maxBlockHeaderSize maxTxSize minFeeA minFeeB minPoolCost minUTxOValue nOpt poolDeposit protocolVersion rho tau }  }  } }"
+    var protocolParamsResult = await axios.post(getGraphqlUrl(network), { query: protocolParamsQuery });
+    return protocolParamsResult.data.data.genesis.shelley.protocolParams;
+}
+
+export async function getCurrentSlotNo(network) {
+    //gathering data for constructing a transaction
+    var tipQuery = "{ cardano { tip { slotNo } } }";
+    var tipResult = await axios.post(getGraphqlUrl(network), { query: tipQuery });
+    return tipResult.data.data.cardano.tip.slotNo;
+}
+
+export async function submitTransaction(signedTxBinary) {
+    var sendResult = await axios(
+        {
+            method: 'post',
+            url: `${getSubmitApiUrl}api/submit/tx`,
+            data: signedTxBinary,
+            headers: {
+                "Content-Type": "application/cbor"
+            }
+        });
+    return sendResult.data;
+}
+
 function getGraphqlUrl(network) {
     return `https://graphql-api.${network}.dandelion.link/`;
 }

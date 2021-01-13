@@ -1,4 +1,4 @@
-import { encrypt } from '../core/common';
+import { cli, decrypt, encrypt } from '../core/common';
 import { 
     getMnemonicCmd,
     getRootCmd,
@@ -6,11 +6,21 @@ import {
     getChildCmd,
     getBaseAddrCmd,
     getPaymentAddrCmd } from '../core/cardano-addresses.js';
-import { getUtxos } from '../core/dandelion.js'
+import { 
+    buildTxIn, 
+    buildTransaction, 
+    calculateMinFee, 
+    signTransaction } from '../core/cardano-cli.js';
+import { 
+    getProtocolParams, 
+    getUtxos, 
+    getCurrentSlotNo,
+    submitTransaction } from '../core/dandelion.js'
 import util from 'util';
 import path from 'path';
 import fs from 'fs';
 import { exec } from 'child_process'
+import lib from 'cardano-crypto.js'
 
 const cmd = util.promisify(exec);
 
@@ -19,11 +29,14 @@ const walletPath = path.resolve(__dirname, '..', 'cardano', 'wallets');
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const addressFile = 'payment.addr';
+const paymentSigningKeyFile = 'payment.skey'
 const changeFile = 'change.addr';
+const changeSigningKeyFile = 'change.skey'
+const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
 const rawTxFile = 'raw.tx';
 const signedTxFile = 'signed.tx';
-const txBinaryFile = 'binary.tx';
+const binaryTxFile = 'binary.tx';
 
 export async function setupWalletDir() {
     if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
@@ -139,28 +152,111 @@ export async function getFee() {
 
 }
 
-export async function getTransactions(network, name, amount, toAddress) {
+export async function sendTransaction(network, name, amount, toAddress, passphrase) {
     const walletDir = path.resolve(walletPath, network, name);
+
+    //tx/key file paths
+    const txDraftPath = path.resolve(walletDir, draftTxFile);
+    const txRawPath = path.resolve(walletDir, rawTxFile);
+    const txSignedPath = path.resolve(walletDir, signedTxFile);
+    const paymentSKeyPath = path.resolve(walletDir, paymentSigningKeyFile);
+    const changeSKeyPath = path.resolve(walletDir, changeSigningKeyFile);
+
+    //gather payment/change addresses for utxos
     const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, addressFile)))
+    const changes = JSON.parse(fs.readFileSync(path.resolve(walletDir, changeFile)))
+
+    //UTxOs
     const addressUtxos = await getUtxos(network, addresses.map((a) => a.address));
 
-    const changes = JSON.parse(fs.readFileSync(path.resolve(walletDir, changeFile)))
-//this goes in cardano-cli.js
-    let txDraft = 'cardano-cli transaction build-raw --allegra-era --fee 0 --ttl 0';
-    let totalUsed = 0;
-    let utxoInCount = 0;
-    for(let u of addressUtxos)
-    {
-        totalUsed += parseInt(u.value);
-        txDraft += ` --tx-in ${u.txHash}#${u.index}`
-        utxoInCount++;
-        if(totalUsed >= amount)
-            break;
-    }
-    txDraft += ` --tx-out ${toAddress}+${amount}`;
-    txDraft += ` --tx-out ${changes[0].address}+${totalUsed - amount}`;
-    txDraft += ` --out-file ${draftTxFile}`;
-    await cmd(txDraft);
+    //get draft tx-ins
+    let draftTxIns = buildTxIn(addressUtxos, amount);
+
+    //build draft transaction
+    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
+    await cli(draftTx);
+
+    //get protocol parameters
+    const protocolParamsPath = path.resolve(walletPath, network, protocolParamsFile);
+    const protocolParams = await getProtocolParams(network);
+    fs.writeFileSync(
+        protocolParamsPath, 
+        Buffer.from(JSON.stringify(protocolParams)));
+
+    //get current slot no to calculate ttl
+    const slotNo = await getCurrentSlotNo(network);
+    const ttl = slotNo + 1000;
+
+    //calculate fees
+    const calculateFee = calculateMinFee(txDraftPath, addressUtxos.length, 2, 1, 0, protocolParamsPath);
+    const feeResult = await cli(calculateFee);
+    //originally tried to just calculate the fee locally
+    //  but had issues when trying to use multiple --tx-in
+    //minFeeA * txSize + minFeeB
+    //note the output of the 'calculate-min-fee' is: 'XXXX Lovelace' 
+    //  this is why i split and take index 0
+    const fee = feeResult.stdout.split(' ')[0];
+
+    //get draft tx-ins
+    let rawTxIns = buildTxIn(addressUtxos, amount);
+
+    //build raw transaction
+    let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, txRawPath)
+    await cli(rawTx);
+
+    //create signing keys
+    //decrypt account prv
+    const accountPrv = decrypt(
+        path.resolve(walletDir, accountPrvFile), 
+        path.resolve(walletDir, accountPubFile),
+        passphrase);
+
+    //payment private/public
+    const paymentPrv = await cmd(getChildCmd(accountPrv, "0/0"));
+    if(paymentPrv.stderr) throw paymentPrv.stderr;
+    const paymentPub = await cmd(getPublicCmd(paymentPrv.stdout));
+    if(paymentPub.stderr) throw paymentPub.stderr;
+    
+    //change private/public
+    const changePrv = await cmd(getChildCmd(accountPrv, "1/0"));
+    if(changePrv.stderr) throw changePrv.stderr;
+    const changePub = await cmd(getPublicCmd(changePrv.stdout));
+    if(changePub.stderr) throw changePub.stderr;
+    
+    //payment/change signing keys
+    const paymentSigningKey = getBufferHexFromFile(paymentPrv.stdout).slice(0, 128) + getBufferHexFromFile(paymentPub.stdout)
+    const changeSigningKey = getBufferHexFromFile(changePrv.stdout).slice(0, 128) + getBufferHexFromFile(changePub.stdout)
+    
+    fs.writeFileSync(paymentSKeyPath, `{ 
+        "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
+        "description": "Payment Signing Key", 
+        "cborHex": "5880${paymentSigningKey}"
+    }`);
+    fs.writeFileSync(changeSKeyPath, `{ 
+        "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
+        "description": "Change Signing Key", 
+        "cborHex": "5880${changeSigningKey}"
+    }`);
+
+    const signedTx = signTransaction(network, 1097911063, paymentSKeyPath, changeSKeyPath, txRawPath, txSignedPath);
+    await (signedTx);
+
+    //send transaction 
+    //get signed tx binary
+    var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
+    var dataBinary = getBinaryFromHexString(dataHex)
+
+    //submit transaction to dandelion
+    const transactionId = await submitTransaction(dataBinary);
+
+    //clean up
+    fs.unlinkSync(txDraftPath);
+    fs.unlinkSync(txRawPath);
+    fs.unlinkSync(txSignedPath);
+    fs.unlinkSync(paymentSKeyPath);
+    fs.unlinkSync(changeSKeyPath);
+
+    return transactionId;
 }
 
 function getTotalUtxoBalance(utxos) {
@@ -174,4 +270,12 @@ function getDirectories (source) {
     .filter(f => {
         return fs.statSync(path.resolve(source, f)).isDirectory();
     });
+}
+
+function getBufferHexFromFile(hex) {
+    return lib.bech32.decode(hex).data.toString('hex');
+}
+
+function getBinaryFromHexString(hexString) {
+    return new Uint8Array(hexString.match(/.{1,2}/g).map(b => parseInt(b, 16)));
 }
