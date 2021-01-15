@@ -10,15 +10,15 @@ import {
   getAddresses, 
   getBalance,
   getWallets,
-  createWallet } from './services/wallet.service.js';
+  getFee,
+  sendTransaction,
+  createWallet,
+  getTransactions } from './services/wallet.service.js';
 import { 
   cardanoPath, 
   cardanoNodeOptions,  
   getNetworkInfo, 
-  getTransactions,
-  validateAddress,
-  getTransactionFee,
-  createTransactions } from './cardano'
+  validateAddress } from './cardano'
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Scheme must be registered before the app is ready
@@ -84,7 +84,7 @@ app.on('ready', async () => {
 let cnode = null;
 let walletApi = null;
 
-ipcMain.on('req:start-cnode', (event, args) => {
+ipcMain.on('req:start-cnode', (event) => {
   //start cardano-node
   if(cnode == null) {
     cnode = spawn(
@@ -103,12 +103,12 @@ ipcMain.on('req:start-cnode', (event, args) => {
   }
 })
 
-ipcMain.on('req:stop-cnode', (event, args) => {
-  if(!!cnode) {
+ipcMain.on('req:stop-cnode', (event) => {
+  if(cnode) {
     cnode.kill();
     cnode = null;
   }
-  if(!!walletApi) {
+  if(walletApi) {
     walletApi.kill();
     walletApi = null
   }
@@ -116,12 +116,12 @@ ipcMain.on('req:stop-cnode', (event, args) => {
   event.reply('res:stop-cnode');
 })
 
-ipcMain.on('req:get-network', async (event, args) => {
+ipcMain.on('req:get-network', async (event) => {
   const networkInfo = await getNetworkInfo();
   event.reply('res:get-network', { network: networkInfo != null ? networkInfo.data : null })
 })
 
-ipcMain.on('req:generate-recovery-phrase', async (event, args) => {
+ipcMain.on('req:generate-recovery-phrase', async (event) => {
   try{
     console.info("get phrase")
 
@@ -176,51 +176,18 @@ ipcMain.on('req:validate-address', async (event, args) => {
 })
 
 ipcMain.on('req:get-fee', async (event, args) => {
-  const transaction = {
-    payments: [
-      {
-        address: args.address,
-        amount: {
-          quantity: args.amount,
-          unit: "lovelace"
-        }
-      }
-    ],
-    time_to_live: {
-      quantity: 500,
-      unit: "second"
-    }
-  };
-
-  const fee = await getTransactionFee(args.walletId, transaction);
+  const fee = await getFee(args.network, args.wallet, args.amount, args.address);
   event.reply('res:get-fee', { fee: fee });
 })
 
 ipcMain.on('req:send-transaction', async (event, args) => {
-  const transaction = {
-    passphrase: args.passphrase,
-    payments: [
-      {
-        address: args.address,
-        amount: {
-          quantity: args.amount,
-          unit: "lovelace"
-        }
-      }
-    ],
-    //metadata: ,
-    time_to_live: {
-      quantity: 500,
-      unit: "second"
-    }
-  };
-
-  const result = await createTransactions(args.walletId, transaction);
+  const result = await sendTransaction(args.network, args.wallet, args.amount, args.address, args.passphrase);
   event.reply('res:send-transaction', { transaction: result });
 })
 
 ipcMain.on('req:get-transactions', async (event, args) => {
   //const transactions = await getTransactions(args.walletId);
+  await getTransactions(args.network, args.wallet);
   event.reply('res:get-transactions', { transactions: [] });
 })
 
@@ -241,6 +208,6 @@ if (isDevelopment) {
 
 
 app.on('quit', () => {
-  if(!!cnode) cnode.kill();
-  if(!!walletApi) walletApi.kill();
+  if(cnode) cnode.kill();
+  if(walletApi) walletApi.kill();
 })

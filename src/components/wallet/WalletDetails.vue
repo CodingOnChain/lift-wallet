@@ -313,22 +313,42 @@
     },
     methods: {
         transactionResult(_, args) {
-            console.log(args.transaction);
-            if(args.transaction.code == 'wrong_encryption_passphrase') {
-                this.sendForm.validPassphrase = false;
-                this.$v.passphrase.$touch();
-            } else if(args.transaction.code == 'utxo_too_small') {
-                this.sendForm.validAmount = false;
-                this.$v.amount.$touch();
+            console.log('transaction result', args.transaction);
+            if(args.transaction.error){
+                alert(args.transaction.error);
+            }else {
+                this.sendForm = {
+                    address: '',
+                    amount: 0,
+                    amountFormatted: '0.000000',
+                    fee: 0,
+                    feeFormatted: '0.000000',
+                    total: 0,
+                    totalFormatted: '0.000000',
+                    passphrase: '',
+                    validAddress: true,
+                    validPassphrase: true,
+                    validAmount: true
+                };
+                this.$v.$reset();
+                this.tabIndex = 0;
             }
+
+            // if(args.transaction.code == 'wrong_encryption_passphrase') {
+            //     this.sendForm.validPassphrase = false;
+            //     this.$v.passphrase.$touch();
+            // } else if(args.transaction.code == 'utxo_too_small') {
+            //     this.sendForm.validAmount = false;
+            //     this.$v.amount.$touch();
+            // }
         },
         setTransactions(_, args) {
             this.transactions = args.transactions;
         },
         setFee(_, args) {
             console.log('fees',args);
-            if(args.fee.estimated_max != undefined) {
-                const fee = args.fee.estimated_max.quantity/1000000
+            if(args.fee != undefined) {
+                const fee = args.fee/1000000
 
                 this.sendForm.validAddress = true;
                 this.setSendAdaFee(fee);
@@ -345,7 +365,7 @@
             this.setWallet(args.data);
             console.log('got wallet', this.wallet)
             if(this.wallet != null) {
-                //ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
+                ipcRenderer.send('req:get-transactions', { network: 'testnet', wallet: this.walletId })
                 if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' })
             }
         },
@@ -366,7 +386,7 @@
             if(this.sendForm.address.length > 0)
             {
                 const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                ipcRenderer.send('req:get-fee', {walletId: this.walletId, address: this.sendForm.address, amount: amount})
+                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount})
             }
             
         },
@@ -415,8 +435,7 @@
             this.$v.$touch()
             if (!this.$v.$invalid) {
                 console.log('valid')
-
-                ipcRenderer.send('req:send-transaction', {walletId: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
+                ipcRenderer.send('req:send-transaction', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
             }
         }
     }

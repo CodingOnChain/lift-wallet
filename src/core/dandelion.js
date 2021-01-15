@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export async function getUtxos(network, addresses) {
-    var utxos = `{ utxos( order_by: { value: desc } where: { address: { _in: ${getGraphqlAddresses(addresses)} }} ) { address index txHash value } }`
+    var utxos = `{ utxos( order_by: { value: desc } where: { address: { _in: ${getGraphqlList(addresses)} }} ) { address index txHash value } }`
     var utxosResult = await axios.post(getGraphqlUrl(network), { query: utxos });
     return utxosResult.data.data.utxos;
 }
@@ -19,17 +19,43 @@ export async function getCurrentSlotNo(network) {
     return tipResult.data.data.cardano.tip.slotNo;
 }
 
-export async function submitTransaction(signedTxBinary) {
+export async function submitTransaction(network, signedTxBinary) {
     var sendResult = await axios(
         {
             method: 'post',
-            url: `${getSubmitApiUrl}api/submit/tx`,
+            url: `${getSubmitApiUrl(network)}api/submit/tx`,
             data: signedTxBinary,
             headers: {
                 "Content-Type": "application/cbor"
             }
         });
     return sendResult.data;
+}
+
+export async function getTransactionsByAddresses(network, addresses) {
+    const payload = { 
+        data: {
+            addresses: addresses
+        }
+    };
+    console.log(payload)
+    var sendResult = await axios(
+        {
+            method: 'post',
+            url: `${getPostgrestApiUrl(network)}rpc/get_tx_history_for_addresses`,
+            data: payload,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    return sendResult.data;
+}
+
+export async function getTransactionsDetails(network, transactions) {
+    //gathering data for constructing a transaction
+    var transactionQuery = `{ transactions( where: { hash: { _in: ${getGraphqlList(transactions)} } } ) { hash fee deposit inputs { address value } outputs { address value } totalOutput includedAt } }`
+    var transactionResult = await axios.post(getGraphqlUrl(network), { query: transactionQuery });
+    return transactionResult.data.data.transactions;
 }
 
 function getGraphqlUrl(network) {
@@ -40,9 +66,13 @@ function getSubmitApiUrl(network) {
     return `https://submit-api.${network}.dandelion.link/`;
 }
 
-function getGraphqlAddresses(addresses) {
+function getPostgrestApiUrl(network) {
+    return `https://postgrest-api.${network}.dandelion.link/`;
+}
+
+function getGraphqlList(list) {
     let result = '[';
-    addresses.forEach(a => {
+    list.forEach(a => {
         result += `"${a}",`;
     })
     result += ']';
