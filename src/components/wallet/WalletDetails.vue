@@ -17,101 +17,51 @@
                             <v-tab>Send</v-tab>
 
                             <v-tab-item>
-                                <v-expansion-panels>
-                                    <v-expansion-panel
-                                            v-for="(item,i) in transactions"
-                                            :key="i"
-                                            class="bordered-panel"
-                                            >
-                                        <v-expansion-panel-header class="pl-5 pr-5 pt-0 pb-0">
-                                            <v-row>
-                                                <v-col sm="12">
-                                                    <v-row>
-                                                        <v-col sm="12" v-if="item.status == 'in_ledger'" class="pt-0 pb-2">
-                                                            <v-chip small label color="danger" v-if="item.direction == 'outgoing'">
-                                                                Sent
-                                                            </v-chip>
-                                                            <v-chip small label color="success" v-if="item.direction == 'incoming'">
-                                                                Received
-                                                            </v-chip>
-                                                        </v-col>
-                                                        <v-col sm="12" v-if="item.status == 'pending'" class="pt-0 pb-2">
-                                                            <v-chip small label color="accent">
-                                                                Pending
-                                                            </v-chip>
-                                                        </v-col>
-                                                        <v-col sm="12" v-if="item.status == 'expired'" class="pt-0 pb-2">
-                                                            <v-chip small label color="error">
-                                                                Expired
-                                                            </v-chip>
-                                                        </v-col>
-                                                    </v-row>
-                                                    <v-row>
-                                                        <v-col sm="12" class="pt-0 pb-2">
-                                                            {{displayADA(item.amount.quantity)}}
-                                                        </v-col>
-                                                    </v-row>
-                                                </v-col>
-                                            </v-row>
-                                        </v-expansion-panel-header>
-                                        <v-expansion-panel-content class="pa-0">
-                                            <v-sheet class="pa-5" color="primary lighten-5" max-width="100vw">
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Transaction Id</p>
-                                                        <p class="text-body-2">{{item.id}}</p>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-divider></v-divider>
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Inputs</p>
-                                                        <div class="pa-0" v-for="(input,inputIndex) in item.inputs" :key="inputIndex">
-                                                           <p class="text-caption">{{input.id}}</p>
-                                                        </div>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-divider></v-divider>
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Outputs</p>
-                                                        <div class="pa-0" v-for="(output,outputIndex) in item.outputs" :key="outputIndex">
-                                                            <p class="text-caption">
-                                                                {{output.address}}<br/>
-                                                                {{displayADA(output.amount.quantity)}}
-                                                            </p>
-                                                        </div>
-                                                    </v-col>
-                                                </v-row>
-                                            </v-sheet>
-                                        </v-expansion-panel-content>
-                                    </v-expansion-panel>
-                                </v-expansion-panels>
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <tbody>
+                                            <tr v-for="tx in transactions"
+                                                :key="tx.hash"
+                                                >
+                                            <td class="pa-4">
+                                                {{ tx.amount }} ADA<br/>
+                                                <v-chip small label :color="tx.direction == 'Sent' ? 'info' : 'success'">
+                                                    {{tx.direction}}
+                                                </v-chip>
+                                            </td>
+                                            <td class="pa-4">
+                                                <a target="_blank" @click="navigateToTx(`https://explorer.cardano-testnet.iohkdev.io/en/transaction?id=${tx.hash}`)">{{ tx.hash }}</a>
+                                            </td>
+                                            <td class="pa-4">{{ getFormattedDate(tx.datetime) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
                             </v-tab-item>
 
                             <v-tab-item>
                                 <v-card>
                                     <v-simple-table>
                                         <template v-slot:default>
-                                        <thead>
-                                            <tr>
-                                            <th class="text-left">
-                                                Index
-                                            </th>
-                                            <th class="text-left">
-                                                Address
-                                            </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr
-                                            v-for="item in addresses"
-                                            :key="item.id"
-                                            >
-                                            <td>{{ item.index }}</td>
-                                            <td>{{ item.address }}</td>
-                                            </tr>
-                                        </tbody>
+                                            <thead>
+                                                <tr>
+                                                <th class="text-left">
+                                                    Index
+                                                </th>
+                                                <th class="text-left">
+                                                    Address
+                                                </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr
+                                                v-for="item in addresses"
+                                                :key="item.id"
+                                                >
+                                                <td>{{ item.index }}</td>
+                                                <td>{{ item.address }}</td>
+                                                </tr>
+                                            </tbody>
                                         </template>
                                     </v-simple-table>
                                 </v-card>
@@ -183,7 +133,8 @@
 </template>
 
 <script>
-  const { ipcRenderer } = require('electron')
+  const { ipcRenderer, shell } = require('electron')
+  import dayjs from 'dayjs'
   import { validationMixin } from 'vuelidate'
 
   export default {
@@ -437,6 +388,12 @@
                 console.log('valid')
                 ipcRenderer.send('req:send-transaction', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
             }
+        },
+        getFormattedDate(txDate){
+            return dayjs(txDate).format('MMM D, YYYY h:mm A')
+        },
+        navigateToTx(url) {
+            shell.openExternal(url)
         }
     }
   }

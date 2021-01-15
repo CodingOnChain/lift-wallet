@@ -16,6 +16,7 @@
     "axios": "^0.21.0",
     "cardano-crypto.js": "^6.0.0",
     "core-js": "^3.6.5",
+    "dayjs": "^1.10.3",
     "vue": "^2.6.11",
     "vuelidate": "^0.7.6",
     "vuetify": "^2.2.11"

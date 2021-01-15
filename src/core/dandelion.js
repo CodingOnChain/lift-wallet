@@ -38,7 +38,7 @@ export async function getTransactionsByAddresses(network, addresses) {
             addresses: addresses
         }
     };
-    console.log(payload)
+    
     var sendResult = await axios(
         {
             method: 'post',

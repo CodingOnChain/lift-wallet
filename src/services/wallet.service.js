@@ -169,7 +169,7 @@ export async function getFee(network, name, amount, toAddress) {
         [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
 
     //get draft tx-ins
-    let draftTxIns = buildTxIn(addressUtxos, amount);
+    let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
     //build draft transaction
     let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
@@ -215,7 +215,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
             [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
 
         //get draft tx-ins
-        let draftTxIns = buildTxIn(addressUtxos, amount);
+        let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
         let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
@@ -243,7 +243,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         const ttl = slotNo + 1000;
 
         //get draft tx-ins
-        let rawTxIns = buildTxIn(addressUtxos, amount);
+        let rawTxIns = buildTxIn(addressUtxos, amount, fee);
 
         //build raw transaction
         let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, txRawPath)
@@ -361,7 +361,6 @@ export async function getTransactions(network, name) {
         }
     });
     transactionHistory.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    console.log(transactionHistory);
     
     return transactionHistory;
 }

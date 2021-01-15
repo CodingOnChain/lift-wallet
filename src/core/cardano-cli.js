@@ -24,7 +24,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     let totalUsed = 0;
     for(let txIn of txIns)
     {
-        totalUsed += txIn.value
+        totalUsed += parseInt(txIn.value)
         tx += ` --tx-in ${txIn.txHash}#${txIn.index}`;
     }
     tx += ` --tx-out ${toAddress}+${parseInt(amount)}`;

@@ -187,8 +187,8 @@ ipcMain.on('req:send-transaction', async (event, args) => {
 
 ipcMain.on('req:get-transactions', async (event, args) => {
   //const transactions = await getTransactions(args.walletId);
-  await getTransactions(args.network, args.wallet);
-  event.reply('res:get-transactions', { transactions: [] });
+  const transactions = await getTransactions(args.network, args.wallet);
+  event.reply('res:get-transactions', { transactions: transactions });
 })
 
 // Exit cleanly on request from parent process in development mode.
