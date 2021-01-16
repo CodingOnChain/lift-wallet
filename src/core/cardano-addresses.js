@@ -8,30 +8,30 @@ export const cardanoPath = isDevelopment
 
 export function getMnemonicCmd(size){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `${addressCli} recovery-phrase generate --size ${size}`;
+    return `"${addressCli}" recovery-phrase generate --size ${size}`;
 }
 
 export function getRootCmd(mnemonic) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `echo ${mnemonic} | ${addressCli} key from-recovery-phrase Shelley`;
+    return `echo ${mnemonic} | "${addressCli}" key from-recovery-phrase Shelley`;
 }
 
 export function getChildCmd(stdIn, derivation) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `echo ${stdIn}| ${addressCli} key child ${derivation}`;
+    return `echo ${stdIn}| "${addressCli}" key child ${derivation}`;
 }
 
 export function getPublicCmd(prvKey) {
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `echo ${prvKey}| ${addressCli} key public --with-chain-code`;
+    return `echo ${prvKey}| "${addressCli}" key public --with-chain-code`;
 }
 
 export function getBaseAddrCmd(pubKey, network){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `echo ${pubKey}| ${addressCli} address payment --network-tag ${network}`;
+    return `echo ${pubKey}| "${addressCli}" address payment --network-tag ${network}`;
 }
 
 export function getPaymentAddrCmd(baseAddr, stakePub){
     const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
-    return `echo ${baseAddr}| ${addressCli} address delegation "${stakePub}"`;
+    return `echo ${baseAddr}| "${addressCli}" address delegation "${stakePub}"`;
 }

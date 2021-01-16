@@ -26,7 +26,10 @@ import lib from 'cardano-crypto.js'
 
 const cmd = util.promisify(exec);
 
-const walletPath = path.resolve(__dirname, '..', 'cardano', 'wallets');
+const isDevelopment = process.env.NODE_ENV !== 'production'
+const walletPath = isDevelopment 
+    ? path.resolve(__dirname, '..', 'cardano', 'wallets') 
+    : path.resolve(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share"), 'lift-wallet', 'wallets');
 
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
@@ -40,6 +43,11 @@ const rawTxFile = 'raw.tx';
 const signedTxFile = 'signed.tx';
 
 export async function setupWalletDir() {
+    if(!fs.existsSync(walletPath)){
+        console.log(walletPath)
+        fs.mkdirSync(walletPath);
+    }
+
     if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
         fs.mkdirSync(path.resolve(walletPath, 'testnet'))
 
