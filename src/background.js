@@ -186,6 +186,7 @@ ipcMain.on('req:send-transaction', async (event, args) => {
 })
 
 ipcMain.on('req:get-transactions', async (event, args) => {
+  
   //const transactions = await getTransactions(args.walletId);
   const transactions = await getTransactions(args.network, args.wallet);
   event.reply('res:get-transactions', { transactions: transactions });

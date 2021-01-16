@@ -17,7 +17,21 @@
                             <v-tab>Send</v-tab>
 
                             <v-tab-item>
-                                <v-simple-table>
+                                <Loader v-if="transactions == null" />
+                                <v-row no-gutters v-if="transactions != null && transactions.length == 0">
+                                    <v-col
+                                        md="6"
+                                        offset-md="3"
+                                    >
+                                        <v-card
+                                            class="pa-2 text-center"
+                                            flat
+                                        >
+                                            <v-card-subtitle>Doesn't look like you have any transactions</v-card-subtitle>
+                                        </v-card>
+                                    </v-col>
+                                </v-row>
+                                <v-simple-table v-if="transactions != null && transactions.length > 0">
                                     <template v-slot:default>
                                         <tbody>
                                             <tr v-for="tx in transactions"
@@ -25,7 +39,7 @@
                                                 >
                                             <td class="pa-4">
                                                 {{ tx.amount }} ADA<br/>
-                                                <v-chip small label :color="tx.direction == 'Sent' ? 'info' : 'success'">
+                                                <v-chip small label :color="tx.direction == 'Sent' ? 'error' : 'success'">
                                                     {{tx.direction}}
                                                 </v-chip>
                                             </td>
@@ -80,6 +94,7 @@
                                                 @input="$v.address.$touch()"
                                                 @blur="$v.address.$touch()"
                                                 @focus="addressFocusIn"
+                                                :disabled="isSendingAda"
                                                 ></v-text-field>
 
                                              
@@ -92,6 +107,7 @@
                                                 @focus="sendAdaFocusIn"
                                                 :hint="`Est. Fee: ${sendForm.feeFormatted}`"
                                                 persistent-hint
+                                                :disabled="isSendingAda"
                                                 required
                                                 >
                                             </v-text-field>
@@ -109,6 +125,7 @@
                                                 :error-messages="passphraseErrors"
                                                 label="Passphrase"
                                                 required
+                                                :disabled="isSendingAda"
                                                 @click:append="showPassphrase = !showPassphrase"
                                                 @input="$v.passphrase.$touch()"
                                                 @blur="$v.passphrase.$touch()"
@@ -117,9 +134,14 @@
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions>
-                                            <v-btn color="primary" :disabled="$v.$invalid" @click="submitSendAda">
+                                            <v-btn 
+                                                color="primary" 
+                                                v-if="!isSendingAda"
+                                                :disabled="$v.$invalid" 
+                                                @click="submitSendAda">
                                                 Submit
                                             </v-btn>
+                                            <Loader v-if="isSendingAda" />
                                         </v-card-actions>
                                     </v-form>
                                 </v-card>
@@ -136,12 +158,13 @@
   const { ipcRenderer, shell } = require('electron')
   import dayjs from 'dayjs'
   import { validationMixin } from 'vuelidate'
+  import Loader from '../Loader'
 
   export default {
     name: 'WalletDetails',
     props: ['walletId','focus'],
     mixins: [validationMixin],
-
+    components: { Loader },
     validations: {
       address: {  },
       amount: {  },
@@ -151,10 +174,11 @@
         wallet: null,
         tabIndex: 0,
         getWalletInterval: null,
-        transactions: [],
+        transactions: null,
         addresses: [],
         sendFormValid: false,
         showPassphrase: false,
+        isSendingAda: false,
         sendForm: {
             address: '',
             amount: 0,
@@ -175,7 +199,8 @@
                 console.log('focus false')
                 clearInterval(this.getWalletInterval)
             }else {
-                this.transactions = [];
+                this.transactions = null;
+                this.isSendingAda = false;
                 this.addresses = [];
                 clearInterval(this.getWalletInterval)
                 console.log('focus true')
@@ -187,7 +212,8 @@
                 clearInterval(this.getWalletInterval);
                 this.getWalletInterval = null;
                 this.tabIndex = 0;
-                this.transactions = [];
+                this.transactions = null;
+                this.isSendingAda = false;
                 this.addresses = [];
                 console.log('new wallet id')
                 this.pollWallet();
@@ -247,6 +273,8 @@
         console.log('destroy')
         clearInterval(this.getWalletInterval)
         this.getWalletInterval = null;
+        this.transactions = null;
+        this.isSendingAda = false;
         ipcRenderer.off('res:get-transactions', this.setTransactions);
         ipcRenderer.off('res:get-fee', this.setFee);
         ipcRenderer.off('res:get-addresses', this.setAddresses);
@@ -264,6 +292,7 @@
     },
     methods: {
         transactionResult(_, args) {
+            this.isSendingAda = false;
             console.log('transaction result', args.transaction);
             if(args.transaction.error){
                 alert(args.transaction.error);
@@ -386,6 +415,7 @@
             this.$v.$touch()
             if (!this.$v.$invalid) {
                 console.log('valid')
+                this.isSendingAda = true;
                 ipcRenderer.send('req:send-transaction', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
             }
         },

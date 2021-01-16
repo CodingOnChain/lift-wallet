@@ -13,7 +13,7 @@ export function buildTxIn(addressUtxos, amount, fee) {
     {
         totalUsed += parseInt(u.value);
         txIn.push({ txHash: u.txHash, index: u.index, value: u.value });
-        if(totalUsed >= amount + fee)
+        if(totalUsed >= parseInt(amount) + parseInt(fee))
             break;
     }
     return txIn;

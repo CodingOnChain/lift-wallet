@@ -16,7 +16,7 @@
 
 
         <v-spacer></v-spacer>
-        <v-btn
+        <!-- <v-btn
           v-for="link in links"
           :key="link"
           color="primary"
@@ -26,20 +26,22 @@
           class="mr-2"
         >
           {{ link }}
-        </v-btn>
+        </v-btn> -->
         <v-btn-toggle
-          v-model="selectedWalletType"
+          v-model="network"
           mandatory
         >
           <v-btn 
-            :color="selectedWalletType == 0 ? 'accent' : 'default'"
-            :style="{ color: selectedWalletType == 0 ? 'white' : 'black' }">
-            Lite
+            :color="selectedNetwork == 0 ? 'accent' : 'default'"
+            :style="{ color: selectedNetwork == 0 ? 'white' : 'black' }"
+            disabled>
+            Testnet
           </v-btn>
           <v-btn 
-            :color="selectedWalletType == 1 ? 'accent' : 'default'"
-            :style="{ color: selectedWalletType == 1 ? 'white' : 'black' }">
-            Full
+            :color="selectedNetwork == 1 ? 'accent' : 'default'"
+            :style="{ color: selectedNetwork == 1 ? 'white' : 'black' }"
+            disabled>
+            Mainnet
           </v-btn>
         </v-btn-toggle>
       </v-container>
@@ -64,8 +66,8 @@ export default {
   data: () => ({
     links: ['Wallets', 'Staking', 'Voting'],
     activePage: 'Wallets',
-    walletTypes: ['Lite', 'Full Node'],
-    selectedWalletType: 0
+    network: ['Testnet', 'Mainnet'],
+    selectedNetwork: 0
   }),
 
   methods: {
