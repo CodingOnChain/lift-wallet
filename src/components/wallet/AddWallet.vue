@@ -7,6 +7,7 @@
         </v-row>
 
         
+        
         <v-stepper
             v-model="e6"
             vertical
@@ -103,6 +104,7 @@
                                                 :counter="50"
                                                 :rules="rules.name"
                                                 label="Name"
+                                                :disabled="isSubmitting"
                                                 required
                                                 >
                                             </v-text-field>
@@ -111,6 +113,7 @@
                                                 v-model="walletForm.mnemonic"
                                                 :rules="rules.mnemonic"
                                                 label="Mnemonic"
+                                                :disabled="isSubmitting"
                                                 required
                                                 >
                                             </v-text-field>
@@ -122,14 +125,20 @@
                                                 :rules="rules.passphrase"
                                                 label="Passphrase"
                                                 required
+                                                :disabled="isSubmitting"
                                                 @click:append="showPassphrase = !showPassphrase"
                                                 >
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions>
-                                            <v-btn color="primary" @click="submitAddWalletForm" :disabled="!walletFormValid">
+                                            <v-btn 
+                                                color="primary" 
+                                                v-if="!isSubmitting"
+                                                @click="submitAddWalletForm" 
+                                                :disabled="!walletFormValid">
                                                 Submit
                                             </v-btn>
+                                            <Loader v-if="isSubmitting" />
                                         </v-card-actions>
                                     </v-form>
                                 </v-card>
@@ -146,17 +155,22 @@
 
 <script>
     const { ipcRenderer } = require('electron')
+    import Loader from '../Loader'
+
     export default {
         name: "AddWallet",
+        components: { Loader },
         data: () => ({
             e6: 1,
             newMnemonic: '',
             walletFormValid: true,
             showPassphrase: false,
+            isSubmitting: false,
             walletForm: {
                 name: '',
                 mnemonic: '',
-                passphrase: ''
+                passphrase: '',
+                network: 'testnet'
             },
             rules: {
                 name:[
@@ -175,20 +189,21 @@
         mounted() {
             ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
                 console.log('phrase',args);
-                if(!args.error) {
-                    this.newMnemonic = args.phrase;
+                if(args.isSuccessful) {
+                    this.newMnemonic = args.data;
                     this.e6 = 2;
                 }else {
-                    //err
+                    console.log(args.data)
                 }
             })
 
             ipcRenderer.on('res:add-wallet', (_, args) => {
+                this.isSubmitting = false;
                 console.log('new wallet', args);
-                if(!args.error) {
+                if(args.isSuccessful) {
                     this.e6 = 1;
                     this.newMnemonic = '';
-                    this.$emit('added-wallet', { wallet: args.wallet });
+                    this.$emit('added-wallet', { wallet: args.data });
                 }else {
                     //err
                 }
@@ -208,6 +223,7 @@
                 this.$emit('cancel-add');
             },
             submitAddWalletForm: function() {
+                this.isSubmitting = true;
                 ipcRenderer.send('req:add-wallet', this.walletForm);
             }
         }

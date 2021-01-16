@@ -6,9 +6,14 @@ dist
 cardano/configs
 cardano/darwin
 cardano/win32
+cardano/db-test
+cardano/wallets-test
 cardano/db
 cardano/wallets
 cardano/socket
 cardano/sockets
+cardano/lift-db
 #Electron-builder output
 /dist_electron
+.env
+.env.*

@@ -3,116 +3,79 @@
         <v-row no-gutters>
             <v-col>
                 <v-card flat v-if="wallet != null">
-                    <v-card-title>Total: {{ displayADA(wallet.balance.total.quantity) }}</v-card-title>
+                    <v-card-title>Total: {{ displayADA(wallet.balance) }}</v-card-title>
                 </v-card>
             </v-col>
         </v-row>
         <v-row no-gutters>
             <v-col>
                 <v-card flat v-if="wallet != null">
-                    <WalletSyncing v-bind:progress="syncProgress" v-if="isSyncing" />
-                    <v-sheet v-if="!isSyncing" height="100%" width="100%">
+                    <v-sheet height="100%" width="100%">
                         <v-tabs v-model="tabIndex" centered grow background-color="primary" dark>
                             <v-tab>Transactions</v-tab>
                             <v-tab>Receive</v-tab>
                             <v-tab>Send</v-tab>
 
                             <v-tab-item>
-                                <v-expansion-panels>
-                                    <v-expansion-panel
-                                            v-for="(item,i) in transactions"
-                                            :key="i"
-                                            class="bordered-panel"
-                                            >
-                                        <v-expansion-panel-header class="pl-5 pr-5 pt-0 pb-0">
-                                            <v-row>
-                                                <v-col sm="12">
-                                                    <v-row>
-                                                        <v-col sm="12" v-if="item.status == 'in_ledger'" class="pt-0 pb-2">
-                                                            <v-chip small label color="danger" v-if="item.direction == 'outgoing'">
-                                                                Sent
-                                                            </v-chip>
-                                                            <v-chip small label color="success" v-if="item.direction == 'incoming'">
-                                                                Received
-                                                            </v-chip>
-                                                        </v-col>
-                                                        <v-col sm="12" v-if="item.status == 'pending'" class="pt-0 pb-2">
-                                                            <v-chip small label color="accent">
-                                                                Pending
-                                                            </v-chip>
-                                                        </v-col>
-                                                        <v-col sm="12" v-if="item.status == 'expired'" class="pt-0 pb-2">
-                                                            <v-chip small label color="error">
-                                                                Expired
-                                                            </v-chip>
-                                                        </v-col>
-                                                    </v-row>
-                                                    <v-row>
-                                                        <v-col sm="12" class="pt-0 pb-2">
-                                                            {{displayADA(item.amount.quantity)}}
-                                                        </v-col>
-                                                    </v-row>
-                                                </v-col>
-                                            </v-row>
-                                        </v-expansion-panel-header>
-                                        <v-expansion-panel-content class="pa-0">
-                                            <v-sheet class="pa-5" color="primary lighten-5" max-width="100vw">
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Transaction Id</p>
-                                                        <p class="text-body-2">{{item.id}}</p>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-divider></v-divider>
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Inputs</p>
-                                                        <div class="pa-0" v-for="(input,inputIndex) in item.inputs" :key="inputIndex">
-                                                           <p class="text-caption">{{input.id}}</p>
-                                                        </div>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-divider></v-divider>
-                                                <v-row dense>
-                                                    <v-col>
-                                                        <p class="text-subtitle-2">Outputs</p>
-                                                        <div class="pa-0" v-for="(output,outputIndex) in item.outputs" :key="outputIndex">
-                                                            <p class="text-caption">
-                                                                {{output.address}}<br/>
-                                                                {{displayADA(output.amount.quantity)}}
-                                                            </p>
-                                                        </div>
-                                                    </v-col>
-                                                </v-row>
-                                            </v-sheet>
-                                        </v-expansion-panel-content>
-                                    </v-expansion-panel>
-                                </v-expansion-panels>
+                                <Loader v-if="transactions == null" />
+                                <v-row no-gutters v-if="transactions != null && transactions.length == 0">
+                                    <v-col
+                                        md="6"
+                                        offset-md="3"
+                                    >
+                                        <v-card
+                                            class="pa-2 text-center"
+                                            flat
+                                        >
+                                            <v-card-subtitle>Doesn't look like you have any transactions</v-card-subtitle>
+                                        </v-card>
+                                    </v-col>
+                                </v-row>
+                                <v-simple-table v-if="transactions != null && transactions.length > 0">
+                                    <template v-slot:default>
+                                        <tbody>
+                                            <tr v-for="tx in transactions"
+                                                :key="tx.hash"
+                                                >
+                                            <td class="pa-4">
+                                                {{ tx.amount }} ADA<br/>
+                                                <v-chip small label :color="tx.direction == 'Sent' ? 'error' : 'success'">
+                                                    {{tx.direction}}
+                                                </v-chip>
+                                            </td>
+                                            <td class="pa-4">
+                                                <a target="_blank" @click="navigateToTx(`https://explorer.cardano-testnet.iohkdev.io/en/transaction?id=${tx.hash}`)">{{ tx.hash }}</a>
+                                            </td>
+                                            <td class="pa-4">{{ getFormattedDate(tx.datetime) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
                             </v-tab-item>
 
                             <v-tab-item>
                                 <v-card>
                                     <v-simple-table>
                                         <template v-slot:default>
-                                        <thead>
-                                            <tr>
-                                            <th class="text-left">
-                                                Addresses
-                                            </th>
-                                            <th class="text-left">
-                                                State
-                                            </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr
-                                            v-for="item in addresses"
-                                            :key="item.id"
-                                            >
-                                            <td>{{ item.id }}</td>
-                                            <td>{{ item.state }}</td>
-                                            </tr>
-                                        </tbody>
+                                            <thead>
+                                                <tr>
+                                                <th class="text-left">
+                                                    Index
+                                                </th>
+                                                <th class="text-left">
+                                                    Address
+                                                </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr
+                                                v-for="item in addresses"
+                                                :key="item.id"
+                                                >
+                                                <td>{{ item.index }}</td>
+                                                <td>{{ item.address }}</td>
+                                                </tr>
+                                            </tbody>
                                         </template>
                                     </v-simple-table>
                                 </v-card>
@@ -131,6 +94,7 @@
                                                 @input="$v.address.$touch()"
                                                 @blur="$v.address.$touch()"
                                                 @focus="addressFocusIn"
+                                                :disabled="isSendingAda"
                                                 ></v-text-field>
 
                                              
@@ -143,6 +107,7 @@
                                                 @focus="sendAdaFocusIn"
                                                 :hint="`Est. Fee: ${sendForm.feeFormatted}`"
                                                 persistent-hint
+                                                :disabled="isSendingAda"
                                                 required
                                                 >
                                             </v-text-field>
@@ -160,6 +125,7 @@
                                                 :error-messages="passphraseErrors"
                                                 label="Passphrase"
                                                 required
+                                                :disabled="isSendingAda"
                                                 @click:append="showPassphrase = !showPassphrase"
                                                 @input="$v.passphrase.$touch()"
                                                 @blur="$v.passphrase.$touch()"
@@ -168,9 +134,14 @@
                                             </v-text-field>
                                         </v-card-text>
                                         <v-card-actions>
-                                            <v-btn color="primary" :disabled="$v.$invalid" @click="submitSendAda">
+                                            <v-btn 
+                                                color="primary" 
+                                                v-if="!isSendingAda"
+                                                :disabled="$v.$invalid" 
+                                                @click="submitSendAda">
                                                 Submit
                                             </v-btn>
+                                            <Loader v-if="isSendingAda" />
                                         </v-card-actions>
                                     </v-form>
                                 </v-card>
@@ -184,18 +155,16 @@
 </template>
 
 <script>
-  const { ipcRenderer } = require('electron')
+  const { ipcRenderer, shell } = require('electron')
+  import dayjs from 'dayjs'
   import { validationMixin } from 'vuelidate'
-  import WalletSyncing from './wallet-details/WalletSyncing'
+  import Loader from '../Loader'
 
   export default {
     name: 'WalletDetails',
     props: ['walletId','focus'],
-    components: {
-        WalletSyncing  
-    },
     mixins: [validationMixin],
-
+    components: { Loader },
     validations: {
       address: {  },
       amount: {  },
@@ -205,10 +174,11 @@
         wallet: null,
         tabIndex: 0,
         getWalletInterval: null,
-        transactions: [],
+        transactions: null,
         addresses: [],
         sendFormValid: false,
         showPassphrase: false,
+        isSendingAda: false,
         sendForm: {
             address: '',
             amount: 0,
@@ -229,7 +199,8 @@
                 console.log('focus false')
                 clearInterval(this.getWalletInterval)
             }else {
-                this.transactions = [];
+                this.transactions = null;
+                this.isSendingAda = false;
                 this.addresses = [];
                 clearInterval(this.getWalletInterval)
                 console.log('focus true')
@@ -241,7 +212,8 @@
                 clearInterval(this.getWalletInterval);
                 this.getWalletInterval = null;
                 this.tabIndex = 0;
-                this.transactions = [];
+                this.transactions = null;
+                this.isSendingAda = false;
                 this.addresses = [];
                 console.log('new wallet id')
                 this.pollWallet();
@@ -301,6 +273,8 @@
         console.log('destroy')
         clearInterval(this.getWalletInterval)
         this.getWalletInterval = null;
+        this.transactions = null;
+        this.isSendingAda = false;
         ipcRenderer.off('res:get-transactions', this.setTransactions);
         ipcRenderer.off('res:get-fee', this.setFee);
         ipcRenderer.off('res:get-addresses', this.setAddresses);
@@ -318,22 +292,43 @@
     },
     methods: {
         transactionResult(_, args) {
-            console.log(args.transaction);
-            if(args.transaction.code == 'wrong_encryption_passphrase') {
-                this.sendForm.validPassphrase = false;
-                this.$v.passphrase.$touch();
-            } else if(args.transaction.code == 'utxo_too_small') {
-                this.sendForm.validAmount = false;
-                this.$v.amount.$touch();
+            this.isSendingAda = false;
+            console.log('transaction result', args.transaction);
+            if(args.transaction.error){
+                alert(args.transaction.error);
+            }else {
+                this.sendForm = {
+                    address: '',
+                    amount: 0,
+                    amountFormatted: '0.000000',
+                    fee: 0,
+                    feeFormatted: '0.000000',
+                    total: 0,
+                    totalFormatted: '0.000000',
+                    passphrase: '',
+                    validAddress: true,
+                    validPassphrase: true,
+                    validAmount: true
+                };
+                this.$v.$reset();
+                this.tabIndex = 0;
             }
+
+            // if(args.transaction.code == 'wrong_encryption_passphrase') {
+            //     this.sendForm.validPassphrase = false;
+            //     this.$v.passphrase.$touch();
+            // } else if(args.transaction.code == 'utxo_too_small') {
+            //     this.sendForm.validAmount = false;
+            //     this.$v.amount.$touch();
+            // }
         },
         setTransactions(_, args) {
             this.transactions = args.transactions;
         },
         setFee(_, args) {
             console.log('fees',args);
-            if(args.fee.estimated_max != undefined) {
-                const fee = args.fee.estimated_max.quantity/1000000
+            if(args.fee != undefined) {
+                const fee = args.fee/1000000
 
                 this.sendForm.validAddress = true;
                 this.setSendAdaFee(fee);
@@ -342,33 +337,36 @@
             }
         },
         setAddresses(_, args) {
+            console.log(args);
             this.addresses = args.addresses;
         },
-        updateWallet(_, args) {                
-            this.setWallet(args.wallet);
-            console.log('got wallet', this.walletId)
-            if(this.wallet != null && !this.isSyncing) {
-                ipcRenderer.send('req:get-transactions', { walletId: this.walletId })
-                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { walletId: this.walletId })
+        updateWallet(_, args) { 
+            //args.isSuccessful needs to be handled
+            this.setWallet(args.data);
+            console.log('got wallet', this.wallet)
+            if(this.wallet != null) {
+                ipcRenderer.send('req:get-transactions', { network: 'testnet', wallet: this.walletId })
+                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' })
             }
         },
         setWallet(wallet) {
+            console.log(wallet)
             this.wallet = wallet;
         },
         displayADA(lovelaces) {
             return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`
         },
         pollWallet() {
-            ipcRenderer.send('req:get-wallet', { walletId: this.walletId })
+            ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' })
             this.getWalletInterval = setInterval(() => {  
-                ipcRenderer.send('req:get-wallet', { walletId: this.walletId });
+                ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' });
             }, 5000)
         },
         getFee() {
             if(this.sendForm.address.length > 0)
             {
                 const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                ipcRenderer.send('req:get-fee', {walletId: this.walletId, address: this.sendForm.address, amount: amount})
+                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount})
             }
             
         },
@@ -417,9 +415,15 @@
             this.$v.$touch()
             if (!this.$v.$invalid) {
                 console.log('valid')
-
-                ipcRenderer.send('req:send-transaction', {walletId: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
+                this.isSendingAda = true;
+                ipcRenderer.send('req:send-transaction', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
             }
+        },
+        getFormattedDate(txDate){
+            return dayjs(txDate).format('MMM D, YYYY h:mm A')
+        },
+        navigateToTx(url) {
+            shell.openExternal(url)
         }
     }
   }
