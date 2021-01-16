@@ -3,7 +3,7 @@
 # LIFT Wallet
 [![GitHub license](https://img.shields.io/github/license/nothingalike/lift-wallet)](https://github.com/nothingalike/lift-wallet/blob/master/LICENSE)
 
-A Cardano Cryptocurrency wallet. This wallet will run a full node on your computer. It ultilizes `cardano-node` and `cardano-wallet`. 
+A Cardano Cryptocurrency Lite wallet. It ultilizes `cardano-cli` and `cardano-address`. 
 
 
 ## Still in Development. 
