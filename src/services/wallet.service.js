@@ -180,7 +180,7 @@ export async function getFee(network, name, amount, toAddress) {
     let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
     //build draft transaction
-    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
+    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, null, txDraftPath)
     await cli(draftTx);
 
     //get protocol parameters
@@ -201,7 +201,7 @@ export async function getFee(network, name, amount, toAddress) {
     return feeResult.stdout.split(' ')[0];
 }
 
-export async function sendTransaction(network, name, amount, toAddress, passphrase) {
+export async function sendTransaction(network, name, amount, toAddress, passphrase, metadataPath) {
     const walletDir = path.resolve(walletPath, network, name);
 
     //tx/key file paths
@@ -226,7 +226,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
-        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
+        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath)
         await cli(draftTx);
 
         //get protocol parameters
@@ -254,8 +254,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let rawTxIns = buildTxIn(addressUtxos, amount, fee);
 
         //build raw transaction
-        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, txRawPath)
-        console.log(rawTx);
+        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, metadataPath, txRawPath)
         await cli(rawTx);
 
         //create signing keys
@@ -297,12 +296,14 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
 
         //send transaction 
         //get signed tx binary
-        var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
-        var dataBinary = getBinaryFromHexString(dataHex)
+        // var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
+        // var dataBinary = getBinaryFromHexString(dataHex)
+        var signedtxContents = JSON.parse(fs.readFileSync(txSignedPath));
 
         //submit transaction to dandelion
-        result.transactionId = await submitTransaction(network, dataBinary);
+        result.transactionId = await submitTransaction(network, signedtxContents);
     }catch(err) {
+        console.log(err);
         if(err.response.data != undefined) {
             console.log(err.response.data);
             result.error = err.response.data;
@@ -390,6 +391,6 @@ function getBufferHexFromFile(hex) {
     return lib.bech32.decode(hex).data.toString('hex');
 }
 
-function getBinaryFromHexString(hexString) {
-    return new Uint8Array(hexString.match(/.{1,2}/g).map(b => parseInt(b, 16)));
-}
+// function getBinaryFromHexString(hexString) {
+//     return new Uint8Array(hexString.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+// }

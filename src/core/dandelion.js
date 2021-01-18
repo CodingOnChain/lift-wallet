@@ -23,10 +23,10 @@ export async function submitTransaction(network, signedTxBinary) {
     var sendResult = await axios(
         {
             method: 'post',
-            url: `${getSubmitApiUrl(network)}api/submit/tx`,
+            url: `${getOpenFaasUrl()}function/${network}-cardano-cli`,
             data: signedTxBinary,
             headers: {
-                "Content-Type": "application/cbor"
+                "Content-Type": "application/json"
             }
         });
     return sendResult.data;
@@ -68,6 +68,10 @@ function getSubmitApiUrl(network) {
 
 function getPostgrestApiUrl(network) {
     return `https://postgrest-api.${network}.dandelion.link/`;
+}
+
+function getOpenFaasUrl() {
+    return `http://openfaas.dandelion.link/`;
 }
 
 function getGraphqlList(list) {

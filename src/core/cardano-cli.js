@@ -19,7 +19,7 @@ export function buildTxIn(addressUtxos, amount, fee) {
     return txIn;
 }
 
-export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, outputFile){
+export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile){
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
@@ -32,6 +32,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
     if(change < 0) change = 0;
     tx += ` --tx-out ${changeAddress}+${change}`;
+    if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
     return tx;
 }
