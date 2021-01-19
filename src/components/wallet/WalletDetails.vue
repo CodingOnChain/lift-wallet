@@ -132,6 +132,11 @@
                                                 @focus="passphraseFocusIn"
                                                 >
                                             </v-text-field>
+
+                                            <v-file-input
+                                                v-model="sendForm.metadataFile"
+                                                label="Metadata File">
+                                            </v-file-input>
                                         </v-card-text>
                                         <v-card-actions>
                                             <v-btn 
@@ -188,6 +193,7 @@
             total: 0,
             totalFormatted: '0.000000',
             passphrase: '',
+            metadataFile: null,
             validAddress: true,
             validPassphrase: true,
             validAmount: true
@@ -416,7 +422,19 @@
             if (!this.$v.$invalid) {
                 console.log('valid')
                 this.isSendingAda = true;
-                ipcRenderer.send('req:send-transaction', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: this.sendForm.amount*1000000, passphrase: this.sendForm.passphrase})
+                let metadata = null;
+                if(this.sendForm.metadataFile != null) metadata = this.sendForm.metadataFile.path;
+                console.log(metadata)
+                ipcRenderer.send(
+                    'req:send-transaction', 
+                    { 
+                        network: 'testnet', 
+                        wallet: this.walletId, 
+                        address: this.sendForm.address, 
+                        amount: this.sendForm.amount*1000000, 
+                        passphrase: this.sendForm.passphrase,
+                        metadata: metadata    
+                    })
             }
         },
         getFormattedDate(txDate){

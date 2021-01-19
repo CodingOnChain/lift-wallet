@@ -19,8 +19,9 @@ export function buildTxIn(addressUtxos, amount, fee) {
     return txIn;
 }
 
-export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, outputFile){
-    let tx = `cardano-cli transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
+export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile){
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
     for(let txIn of txIns)
     {
@@ -31,12 +32,14 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
     if(change < 0) change = 0;
     tx += ` --tx-out ${changeAddress}+${change}`;
+    if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
     return tx;
 }
 
 export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byronWitness, protocolParamsFile) {
-    let txFee = 'cardano-cli transaction calculate-min-fee';
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    let txFee = `"${cardanoCli}" transaction calculate-min-fee`;
     txFee += ` --tx-body-file "${txBody}"`;
     txFee += ` --tx-in-count ${utxoInCount}`;
     txFee += ` --tx-out-count ${utxoOutCount}`;
@@ -47,10 +50,11 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
 }
 
 export function signTransaction(network, magic, paymentSigningFile, changeSigningFile, rawTxBody, signTxFile) {
-    //sign the transaction
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    
     if(network == 'testnet') network = 'testnet-magic';
 
-    let txSign = 'cardano-cli transaction sign';
+    let txSign = `"${cardanoCli}" transaction sign`;
     txSign += ` --${network}`;
     if(magic != null) txSign += ` ${magic}`;
     txSign += ` --signing-key-file "${paymentSigningFile}"`;
