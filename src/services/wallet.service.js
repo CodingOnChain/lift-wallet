@@ -27,9 +27,10 @@ import lib from 'cardano-crypto.js'
 const cmd = util.promisify(exec);
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const appPath = path.resolve(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share"), 'lift-wallet');
 const walletPath = isDevelopment 
     ? path.resolve(__dirname, '..', 'cardano', 'wallets') 
-    : path.resolve(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share"), 'lift-wallet', 'wallets');
+    : path.resolve(appPath , 'wallets');
 
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
@@ -43,8 +44,13 @@ const rawTxFile = 'raw.tx';
 const signedTxFile = 'signed.tx';
 
 export async function setupWalletDir() {
+    if(!isDevelopment) {
+        if(!fs.existsSync(appPath)) {
+            fs.mkdirSync(appPath);
+        }
+    }
+
     if(!fs.existsSync(walletPath)){
-        console.log(walletPath)
         fs.mkdirSync(walletPath);
     }
 
@@ -303,7 +309,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         //submit transaction to dandelion
         result.transactionId = await submitTransaction(network, signedtxContents);
     }catch(err) {
-        console.log(err);
+        console.error(err);
         if(err.response.data != undefined) {
             console.log(err.response.data);
             result.error = err.response.data;
