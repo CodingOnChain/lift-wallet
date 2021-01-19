@@ -12,7 +12,7 @@ export function buildTxIn(addressUtxos, amount, fee) {
     for(let u of addressUtxos)
     {
         totalUsed += parseInt(u.value);
-        txIn.push({ txHash: u.txHash, index: u.index, value: u.value });
+        txIn.push(u);
         if(totalUsed >= parseInt(amount) + parseInt(fee))
             break;
     }
@@ -49,7 +49,7 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
     return txFee;
 }
 
-export function signTransaction(network, magic, paymentSigningFile, changeSigningFile, rawTxBody, signTxFile) {
+export function signTransaction(network, magic, signingKeyPaths, rawTxBody, signTxFile) {
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     
     if(network == 'testnet') network = 'testnet-magic';
@@ -57,8 +57,11 @@ export function signTransaction(network, magic, paymentSigningFile, changeSignin
     let txSign = `"${cardanoCli}" transaction sign`;
     txSign += ` --${network}`;
     if(magic != null) txSign += ` ${magic}`;
-    txSign += ` --signing-key-file "${paymentSigningFile}"`;
-    txSign += ` --signing-key-file "${changeSigningFile}"`;
+
+    signingKeyPaths.forEach(sk => {
+        txSign += ` --signing-key-file "${sk}"`;
+    })
+    
     txSign += ` --tx-body-file "${rawTxBody}"`;
     txSign += ` --out-file "${signTxFile}"`;
     return txSign;
