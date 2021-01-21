@@ -10,13 +10,6 @@ module.exports = {
       builderOptions: {
         appId: "com.electron.lift-wallet",
         productName: "LIFT Wallet",
-        win: {
-          target: "nsis",
-          extraFiles: [
-            "cardano/win32/**/*",
-            "cardano/configs/**/*"
-          ]
-        },
         nsis: {
           oneClick: false,
           perMachine: true,
@@ -26,6 +19,20 @@ module.exports = {
           target: "dmg",
           extraFiles: [
             "cardano/darwin/**/*",
+            "cardano/configs/**/*"
+          ]
+        },
+        linux: {
+          target: "AppImage",
+          extraFiles: [
+            "cardano/linux/**/*",
+            "cardano/configs/**/*"
+          ]
+        },
+        win: {
+          target: "nsis",
+          extraFiles: [
+            "cardano/win32/**/*",
             "cardano/configs/**/*"
           ]
         }

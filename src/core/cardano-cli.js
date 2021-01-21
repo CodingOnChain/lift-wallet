@@ -12,15 +12,16 @@ export function buildTxIn(addressUtxos, amount, fee) {
     for(let u of addressUtxos)
     {
         totalUsed += parseInt(u.value);
-        txIn.push({ txHash: u.txHash, index: u.index, value: u.value });
+        txIn.push(u);
         if(totalUsed >= parseInt(amount) + parseInt(fee))
             break;
     }
     return txIn;
 }
 
-export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, outputFile){
-    let tx = `cardano-cli transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
+export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile){
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
     for(let txIn of txIns)
     {
@@ -31,12 +32,14 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
     if(change < 0) change = 0;
     tx += ` --tx-out ${changeAddress}+${change}`;
+    if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
     return tx;
 }
 
 export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byronWitness, protocolParamsFile) {
-    let txFee = 'cardano-cli transaction calculate-min-fee';
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    let txFee = `"${cardanoCli}" transaction calculate-min-fee`;
     txFee += ` --tx-body-file "${txBody}"`;
     txFee += ` --tx-in-count ${utxoInCount}`;
     txFee += ` --tx-out-count ${utxoOutCount}`;
@@ -46,15 +49,19 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
     return txFee;
 }
 
-export function signTransaction(network, magic, paymentSigningFile, changeSigningFile, rawTxBody, signTxFile) {
-    //sign the transaction
+export function signTransaction(network, magic, signingKeyPaths, rawTxBody, signTxFile) {
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    
     if(network == 'testnet') network = 'testnet-magic';
 
-    let txSign = 'cardano-cli transaction sign';
+    let txSign = `"${cardanoCli}" transaction sign`;
     txSign += ` --${network}`;
     if(magic != null) txSign += ` ${magic}`;
-    txSign += ` --signing-key-file "${paymentSigningFile}"`;
-    txSign += ` --signing-key-file "${changeSigningFile}"`;
+
+    signingKeyPaths.forEach(sk => {
+        txSign += ` --signing-key-file "${sk}"`;
+    })
+    
     txSign += ` --tx-body-file "${rawTxBody}"`;
     txSign += ` --out-file "${signTxFile}"`;
     return txSign;

@@ -27,7 +27,11 @@ import lib from 'cardano-crypto.js'
 
 const cmd = util.promisify(exec);
 
-const walletPath = path.resolve(__dirname, '..', 'cardano', 'wallets');
+const isDevelopment = process.env.NODE_ENV !== 'production'
+const appPath = path.resolve(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share"), 'lift-wallet');
+const walletPath = isDevelopment
+    ? path.resolve(__dirname, '..', 'cardano', 'wallets')
+    : path.resolve(appPath , 'wallets');
 
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
@@ -36,13 +40,22 @@ const paymentSigningKeyFile = 'payment.skey';
 const extendedVerificationKeyFile = 'payment.evkey';
 const verificationKeyFile = 'payment.vkey';
 const changeFile = 'change.addr';
-const changeSigningKeyFile = 'change.skey'
 const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
 const rawTxFile = 'raw.tx';
 const signedTxFile = 'signed.tx';
 
 export async function setupWalletDir() {
+    if(!isDevelopment) {
+        if(!fs.existsSync(appPath)) {
+            fs.mkdirSync(appPath);
+        }
+    }
+
+    if(!fs.existsSync(walletPath)){
+        fs.mkdirSync(walletPath);
+    }
+
     if(!fs.existsSync(path.resolve(walletPath, 'testnet')))
         fs.mkdirSync(path.resolve(walletPath, 'testnet'))
 
@@ -199,7 +212,7 @@ export async function getFee(network, name, amount, toAddress) {
     let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
     //build draft transaction
-    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
+    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, null, txDraftPath)
     await cli(draftTx);
 
     //get protocol parameters
@@ -220,15 +233,14 @@ export async function getFee(network, name, amount, toAddress) {
     return feeResult.stdout.split(' ')[0];
 }
 
-export async function sendTransaction(network, name, amount, toAddress, passphrase) {
+export async function sendTransaction(network, name, amount, toAddress, passphrase, metadataPath) {
     const walletDir = path.resolve(walletPath, network, name);
 
     //tx/key file paths
     const txDraftPath = path.resolve(walletDir, draftTxFile);
     const txRawPath = path.resolve(walletDir, rawTxFile);
     const txSignedPath = path.resolve(walletDir, signedTxFile);
-    const paymentSKeyPath = path.resolve(walletDir, paymentSigningKeyFile);
-    const changeSKeyPath = path.resolve(walletDir, changeSigningKeyFile);
+    const signingKeyPaths = [];
 
     let result = { transactionId: null, error: null };
     try {
@@ -245,7 +257,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
-        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, txDraftPath)
+        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath)
         await cli(draftTx);
 
         //get protocol parameters
@@ -273,8 +285,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let rawTxIns = buildTxIn(addressUtxos, amount, fee);
 
         //build raw transaction
-        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, txRawPath)
-        console.log(rawTx);
+        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, metadataPath, txRawPath)
         await cli(rawTx);
 
         //create signing keys
@@ -284,44 +295,68 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
             path.resolve(walletDir, accountPubFile),
             passphrase);
 
-        //payment private/public
-        const paymentPrv = await cmd(getChildCmd(accountPrv, "0/0"));
-        if(paymentPrv.stderr) throw paymentPrv.stderr;
-        const paymentPub = await cmd(getPublicCmd(paymentPrv.stdout));
-        if(paymentPub.stderr) throw paymentPub.stderr;
-        
-        //change private/public
-        const changePrv = await cmd(getChildCmd(accountPrv, "1/0"));
-        if(changePrv.stderr) throw changePrv.stderr;
-        const changePub = await cmd(getPublicCmd(changePrv.stdout));
-        if(changePub.stderr) throw changePub.stderr;
-        
-        //payment/change signing keys
-        const paymentSigningKey = getBufferHexFromFile(paymentPrv.stdout).slice(0, 128) + getBufferHexFromFile(paymentPub.stdout)
-        const changeSigningKey = getBufferHexFromFile(changePrv.stdout).slice(0, 128) + getBufferHexFromFile(changePub.stdout)
-        
-        fs.writeFileSync(paymentSKeyPath, `{ 
-            "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
-            "description": "Payment Signing Key", 
-            "cborHex": "5880${paymentSigningKey}"
-        }`);
-        fs.writeFileSync(changeSKeyPath, `{ 
-            "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
-            "description": "Change Signing Key", 
-            "cborHex": "5880${changeSigningKey}"
-        }`);
+        for(let i = 0; i < draftTxIns.length; i++) {
+            const txIn = draftTxIns[i];
+            //figure out if it is external or internal address
+            const payment = addresses.find(a => a.address == txIn.address)
+            const change = changes.find(c => c.address == txIn.address)
 
-        const signedTx = signTransaction(network, 1097911063, paymentSKeyPath, changeSKeyPath, txRawPath, txSignedPath);
+            if(payment != undefined)
+            {
+                //payment private/public
+                const paymentPrv = await cmd(getChildCmd(accountPrv, `0/${payment.index}`));
+                if(paymentPrv.stderr) throw paymentPrv.stderr;
+                const paymentPub = await cmd(getPublicCmd(paymentPrv.stdout));
+                if(paymentPub.stderr) throw paymentPub.stderr;
+                
+                //payment signing keys
+                const paymentSigningKey = getBufferHexFromFile(paymentPrv.stdout).slice(0, 128) + getBufferHexFromFile(paymentPub.stdout)
+                const paymentSigningKeyFile = `payment.${payment.index}.skey`
+                const paymentSKeyPath = path.resolve(walletDir, paymentSigningKeyFile);
+        
+                fs.writeFileSync(paymentSKeyPath, `{ 
+                    "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
+                    "description": "Payment Signing Key", 
+                    "cborHex": "5880${paymentSigningKey}"
+                }`);
+                signingKeyPaths.push(paymentSKeyPath)
+            }else if(change != undefined) {
+                //change private/public
+                const changePrv = await cmd(getChildCmd(accountPrv, `1/${change.index}`));
+                if(changePrv.stderr) throw changePrv.stderr;
+                const changePub = await cmd(getPublicCmd(changePrv.stdout));
+                if(changePub.stderr) throw changePub.stderr;    
+
+                //change signing keys
+                const changeSigningKey = getBufferHexFromFile(changePrv.stdout).slice(0, 128) + getBufferHexFromFile(changePub.stdout)
+                const changeSigningKeyFile = `change.${change.index}.skey`
+                const changeSKeyPath = path.resolve(walletDir, changeSigningKeyFile);
+                
+                fs.writeFileSync(changeSKeyPath, `{ 
+                    "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32", 
+                    "description": "Change Signing Key", 
+                    "cborHex": "5880${changeSigningKey}"
+                }`);
+                signingKeyPaths.push(changeSKeyPath)
+            }else {
+                //wtf?
+                console.log('Unable to find address from tx input');
+            }
+        }     
+
+        const signedTx = signTransaction(network, 1097911063, signingKeyPaths, txRawPath, txSignedPath);
         await cli(signedTx);
 
         //send transaction 
         //get signed tx binary
-        var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
-        var dataBinary = getBinaryFromHexString(dataHex)
+        // var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
+        // var dataBinary = getBinaryFromHexString(dataHex)
+        var signedtxContents = JSON.parse(fs.readFileSync(txSignedPath));
 
         //submit transaction to dandelion
-        result.transactionId = await submitTransaction(network, dataBinary);
+        result.transactionId = await submitTransaction(network, signedtxContents);
     }catch(err) {
+        console.error(err);
         if(err.response.data != undefined) {
             console.log(err.response.data);
             result.error = err.response.data;
@@ -336,8 +371,10 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
     if(fs.existsSync(txDraftPath)) fs.unlinkSync(txDraftPath);
     if(fs.existsSync(txRawPath)) fs.unlinkSync(txRawPath);
     if(fs.existsSync(txSignedPath)) fs.unlinkSync(txSignedPath);
-    if(fs.existsSync(paymentSKeyPath)) fs.unlinkSync(paymentSKeyPath);
-    if(fs.existsSync(changeSKeyPath)) fs.unlinkSync(changeSKeyPath);
+    
+    signingKeyPaths.forEach(sk => {
+        if(fs.existsSync(sk)) fs.unlinkSync(sk);
+    })
 
     return result;
 }
