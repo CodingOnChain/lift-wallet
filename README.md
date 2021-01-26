@@ -22,7 +22,7 @@ Proceed with caution.
     ``` bash
       git clone https://github.com/nothingalike/lift-wallet.git
     ```
-    the proyect should look like this (windows)
+    the project should look like this (windows)
         ![alt text](https://user-images.githubusercontent.com/35784914/105702298-5963c100-5eea-11eb-876f-6f83572664b7.PNG)
         
 2. Create a folder in the root of the project called `cardano`
