@@ -28,8 +28,8 @@ Proceed with caution.
 2. Create a folder in the root of the project called `cardano`
         ![alt text](https://user-images.githubusercontent.com/35784914/105702285-57016700-5eea-11eb-8eb0-ff942a16ea90.PNG)
         
-2. Inside the new folder `cardano`, create a folder to your corresponding platform according to node's `process.platform`. Current list is [here]
-(https://nodejs.org/api/process.html#process_process_platform). (Example: Windows = win32, Mac = darwin)`\
+2. Inside the new folder `cardano`, create a folder to your corresponding platform according to node's `process.platform`. Current list is [here](https://nodejs.org/api/process.html#process_process_platform). 
+(Example: Windows = win32, Mac = darwin)`\
         ![alt text](https://user-images.githubusercontent.com/35784914/105702289-58329400-5eea-11eb-94ae-b514c1ccb757.PNG)
         
 3. Inside your platform folder, paste your `cardano-wallet` binaries you downloaded during the Prerequisites.
