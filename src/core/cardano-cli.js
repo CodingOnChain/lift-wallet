@@ -66,3 +66,17 @@ export function signTransaction(network, magic, signingKeyPaths, rawTxBody, sign
     txSign += ` --out-file "${signTxFile}"`;
     return txSign;
 }
+
+export function createPaymentVerificationKey(paymentSigningFile, extendedVerificationKeyFile, verificationKeyFile) {
+
+    // build evkey+vkey
+    let cmd = `cardano-cli key verification-key`
+    cmd += ` --signing-key-file "${paymentSigningFile}"`;
+    cmd += ` --verification-key-file "${extendedVerificationKeyFile}"`;
+    cmd += `&&`;
+    cmd += `cardano-cli key non-extended-key`;
+    cmd += ` --extended-verification-key-file ${extendedVerificationKeyFile}`;
+    cmd += ` --verification-key-file ${verificationKeyFile}`;
+
+    return cmd
+}
