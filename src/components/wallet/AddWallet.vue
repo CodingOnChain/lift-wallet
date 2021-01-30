@@ -155,6 +155,8 @@
 
 <script>
     const { ipcRenderer } = require('electron')
+    import { mapActions } from 'vuex';
+    import * as walletTypes from '../../store/wallet/types';
     import Loader from '../Loader'
 
     export default {
@@ -187,6 +189,7 @@
             }
         }),
         mounted() {
+            this.setUpWallet();
             ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
                 console.log('phrase',args);
                 if(args.isSuccessful) {
@@ -210,6 +213,10 @@
             })
         },
         methods: {
+             ...mapActions({
+                setUpWallet: walletTypes.NAMESPACE + walletTypes.SET_UP_WALLET,            
+                getNewNemonic: walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,            
+            }),
             getNewMnemonic: function() {
                 ipcRenderer.send('req:generate-recovery-phrase');
             },

@@ -19,7 +19,8 @@
     "dayjs": "^1.10.3",
     "vue": "^2.6.11",
     "vuelidate": "^0.7.6",
-    "vuetify": "^2.2.11"
+    "vuetify": "^2.2.11",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
