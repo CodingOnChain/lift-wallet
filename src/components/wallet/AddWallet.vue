@@ -197,7 +197,7 @@
             }
         }),
         mounted() {
-             this.setUpWallet();
+            this.setUpWallet();
             ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
                 console.log('phrase',args);
                 if(args.isSuccessful) {
