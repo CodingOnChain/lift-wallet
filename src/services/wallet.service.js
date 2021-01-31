@@ -9,7 +9,8 @@ import {
 import { 
     buildTxIn, 
     buildTransaction, 
-    calculateMinFee, 
+    calculateMinFee,
+    createPaymentVerificationKey,
     signTransaction } from '../core/cardano-cli.js';
 import { 
     getProtocolParams, 
@@ -35,6 +36,9 @@ const walletPath = isDevelopment
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const paymentFile = 'payment.addr';
+const paymentSigningKeyFile = 'payment.skey';
+const extendedVerificationKeyFile = 'payment.evkey';
+const verificationKeyFile = 'payment.vkey';
 const changeFile = 'change.addr';
 const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
@@ -84,7 +88,24 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     //account public
     const accountPub = await cmd(getPublicCmd(accountPrv.stdout));
     if(accountPub.stderr) throw accountPub.stderr;
-    
+
+    //payment priv/pub keys (needed to get verification keys)
+    const paymentPrv = await cmd(getChildCmd(accountPrv.stdout, "0/0"));
+    if(paymentPrv.stderr) throw paymentPrv.stderr;
+    const paymentPub = await cmd(getChildCmd(accountPub.stdout, "0/0"));
+    if(paymentPub.stderr) throw paymentPub.stderr;
+    //payment signiing key (needed to get verification keys)
+    const paymentSKeyPath = path.resolve(walletDir, paymentSigningKeyFile);
+    const paymentSigningKey = getBufferHexFromFile(paymentPrv.stdout).slice(0, 128) + getBufferHexFromFile(paymentPub.stdout);
+    const paymentSKey = `{
+        "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32",
+        "description": "Payment Signing Key",
+        "cborHex": "5880${paymentSigningKey}"
+    }`
+    // public [extended] verification key
+    const extendedVerificationKeyPath = path.resolve(walletDir, extendedVerificationKeyFile);
+    const verificationKeyPath = path.resolve(walletDir, verificationKeyFile);
+
     //stake public
     const stakePub = await cmd(getChildCmd(accountPub.stdout, "2/0"));
     if(stakePub.stderr) throw stakePub.stderr;
@@ -125,6 +146,13 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     //account pub
     //10 - payment addresses
     fs.mkdirSync(walletDir);
+    // write publicVerificationKey now that wallet dir exists
+    fs.writeFileSync(path.resolve(walletDir, paymentSKeyPath), paymentSKey);
+    let paymentVerificationKey = createPaymentVerificationKey(paymentSKeyPath, extendedVerificationKeyPath, verificationKeyPath);
+    await cli(paymentVerificationKey);
+    //// cleanup paymentskey
+    if (fs.existsSync(paymentSKeyPath)) fs.unlinkSync(paymentSKeyPath);
+
     fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv.stdout);
     fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub.stdout);
     encrypt(
