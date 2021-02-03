@@ -181,7 +181,8 @@
                 ],
                 mnemonic:[
                     v => !!v || 'Mnemonic is required',
-                    v => (v && v.split(" ").length >= 15) || 'Mnemonic must be greater than 15 words',
+                    v => (v && !!(v.split(" ").length == 12 || v.split(" ").length == 15 || v.split(" ").length == 21 || v.split(" ").length == 24)) 
+                    || 'Mnemonic must have 12,15,21 or 24 words'
                 ],
                 passphrase:[
                     v => !!v || 'Passphrase is required',
