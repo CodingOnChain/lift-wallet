@@ -181,7 +181,6 @@ ipcMain.on('req:get-fee', async (event, args) => {
 })
 
 ipcMain.on('req:send-transaction', async (event, args) => {
-
   const result = await sendTransaction(args.network, args.wallet, args.amount, args.address, args.passphrase, args.metadata);
   event.reply('res:send-transaction', { transaction: result });
 })

@@ -406,9 +406,9 @@ export async function getTransactions(network, name) {
 
         if(inputFound.length > 0) {
             let inputSum = 0;
-            inputFound.forEach(i => inputSum += i.value);
+            inputFound.forEach(i => inputSum += parseInt(i.value));
             let outputSum = 0;
-            outputFound.forEach(i => outputSum += i.value);
+            outputFound.forEach(i => outputSum += parseInt(i.value));
             
             transactionHistory.push({
                 hash: td.hash,
