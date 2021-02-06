@@ -11,6 +11,7 @@ import {
     buildTransaction, 
     calculateMinFee,
     createPaymentVerificationKey,
+    createExtendedVerificationKey,
     signTransaction } from '../core/cardano-cli.js';
 import { 
     getProtocolParams, 
@@ -89,6 +90,7 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     const accountPub = await cmd(getPublicCmd(accountPrv.stdout));
     if(accountPub.stderr) throw accountPub.stderr;
 
+    ///TODO: We maybe want to think about moving this to be on-demand.
     //payment priv/pub keys (needed to get verification keys)
     const paymentPrv = await cmd(getChildCmd(accountPrv.stdout, "0/0"));
     if(paymentPrv.stderr) throw paymentPrv.stderr;
@@ -148,8 +150,10 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     fs.mkdirSync(walletDir);
     // write publicVerificationKey now that wallet dir exists
     fs.writeFileSync(path.resolve(walletDir, paymentSKeyPath), paymentSKey);
-    let paymentVerificationKey = createPaymentVerificationKey(paymentSKeyPath, extendedVerificationKeyPath, verificationKeyPath);
+    let paymentVerificationKey = createPaymentVerificationKey(paymentSKeyPath, extendedVerificationKeyPath);
     await cli(paymentVerificationKey);
+    let extendedVerificationKey = createExtendedVerificationKey(extendedVerificationKeyPath, verificationKeyPath)
+    await cli(extendedVerificationKey);
     //// cleanup paymentskey
     if (fs.existsSync(paymentSKeyPath)) fs.unlinkSync(paymentSKeyPath);
 
@@ -402,9 +406,9 @@ export async function getTransactions(network, name) {
 
         if(inputFound.length > 0) {
             let inputSum = 0;
-            inputFound.forEach(i => inputSum += i.value);
+            inputFound.forEach(i => inputSum += parseInt(i.value));
             let outputSum = 0;
-            outputFound.forEach(i => outputSum += i.value);
+            outputFound.forEach(i => outputSum += parseInt(i.value));
             
             transactionHistory.push({
                 hash: td.hash,
