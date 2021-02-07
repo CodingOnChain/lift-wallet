@@ -65,6 +65,9 @@ export async function setupWalletDir() {
 }
 
 export async function getMnemonic(){
+    //right now we are hardcoding 24 words
+    //  lets pass in a number. maybe we use a set of word lengths
+    //  12, 15, 18, 21, 24
     const { stdout, stderr } = await cmd(getMnemonicCmd(24));
     if(stderr) throw stderr;
 
