@@ -167,13 +167,20 @@ export async function getWallets(network) {
     const networkPath = path.resolve(walletPath, network);
     const walletDirs = getDirectories(networkPath);
     let wallets = [];
-    for(let i = 0; i < walletDirs.length; i++) {
-        const balance = await getBalance(network, walletDirs[i]);
-        wallets.push({
-            name: walletDirs[i],
-            balance: balance
-        });
-    }
+        for(let i = 0; i < walletDirs.length; i++) {
+            var balance=null;
+            try{
+                balance = await getBalance(network, walletDirs[i]);                                
+            }catch(e){
+                console.log(e.message);
+            } 
+            if(balance!=null){
+                wallets.push({
+                    name: walletDirs[i],
+                    balance: balance
+                });
+            }
+        }
     return wallets;
 }
 
