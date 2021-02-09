@@ -12,7 +12,6 @@ Proceed with caution.
 
 ## Prerequisites
  - Go to the [cardano-wallet](https://github.com/input-output-hk/cardano-wallet/releases) release page. Download your system's cooresponding binaries. 
- - Go to the [Cardano Configuration](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html) file page. Download the config, shelley genesis, byron genesis, and topology files. Don't rename the files.
  - You need [Node.js ](https://nodejs.org/es/) installed
  - You need [GIT](https://git-scm.com/)  installed
 
@@ -43,11 +42,6 @@ End Result:
 
 ```bash
 ├── cardano
-│   ├── configs
-│   │   ├── mainnet-config.json
-│   │   ├── mainnet-byron-genesis.json
-│   │   ├── mainnet-shelley-genesis.json
-│   │   ├── mainnet-topology.json
 │   ├── (platform: win32, darwin, linux, etc)
 │   │   ├── *binaries from cardano-wallet release
 ```
