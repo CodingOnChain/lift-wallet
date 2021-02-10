@@ -122,7 +122,7 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
     txFee += ` --tx-out-count ${utxoOutCount}`;
     txFee += ` --witness-count ${witness}`;
     txFee += ` --byron-witness-count ${byronWitness}`;
-    txFee += ` --protocol-params-file ${protocolParamsFile}`;
+    txFee += ` --protocol-params-file "${protocolParamsFile}"`;
     return txFee;
 }
 
@@ -157,8 +157,8 @@ export function createPaymentVerificationKey(paymentSigningFile, extendedVerific
 export function createExtendedVerificationKey(extendedVerificationKeyFile, verificationKeyFile) {
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     var cmd = `${cardanoCli} key non-extended-key`;
-    cmd += ` --extended-verification-key-file ${extendedVerificationKeyFile}`;
-    cmd += ` --verification-key-file ${verificationKeyFile}`;
+    cmd += ` --extended-verification-key-file "${extendedVerificationKeyFile}"`;
+    cmd += ` --verification-key-file "${verificationKeyFile}"`;
 
     return cmd
 }
