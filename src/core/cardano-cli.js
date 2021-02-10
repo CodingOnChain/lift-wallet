@@ -1,4 +1,5 @@
 import path from 'path'
+import { cli } from './common.js';
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -32,6 +33,82 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
     if(change < 0) change = 0;
     tx += ` --tx-out ${changeAddress}+${change}`;
+    if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
+    tx += ` --out-file "${outputFile}"`;
+    return tx;
+}
+
+export function getAddressKeyHash(verificationKeyPath) {
+
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+
+    let cmd = `${cardanoCli}`;
+    cmd += ` address key-hash`;
+    cmd += ` --payment-verification-key-file "${verificationKeyPath}"`;
+
+    return cmd;
+
+}
+
+export async function createMonetaryPolicy(assetPath, verificationKeyPath) {
+
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+
+    const policyVkeyFile = path.resolve(assetPath, 'policy.vkey');
+    const policySkeyFile = path.resolve(assetPath, 'policy.skey');
+    const policyScriptFile = path.resolve(assetPath, 'policyScript.json');
+
+    const keyHashCmd = getAddressKeyHash(verificationKeyPath);
+    const keyHash = await cli(keyHashCmd);
+
+    const policyScript = `{
+        "keyHash": "${keyHash}",
+        "type": "sig"
+    }`
+
+    fs.writeFileSync(path.resolve(assetPath, policyScriptFile), policyScript);
+
+    let cmd = `${cardanoCli}`;
+    cmd += ` address key-gen`;
+    cmd += ` --verification-key-file "${policyVkey}"`;
+    cmd += ` --signing-key-file "${policySkey}"`;
+
+    return cmd;
+
+}
+
+export function getPolicyId(assetPath) {
+
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    
+    let cmd = `${cardanoCli}`
+    cmd += ` transaction policyid`;
+    cmd += ` --script-file "${assetPath}/policyScript.json"`;
+
+    return cmd;
+
+}
+
+export function mintingTransaction(era, fee, ttl, toAddress, assetId, assetName, mintAmount, txIns, metadataPath, outputFile){
+
+    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+
+    signingKeyPaths.forEach(sk => {
+        txSign += ` --signing-key-file "${sk}"`;
+    })
+
+    let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
+    let totalValue = 0;
+    for(let txIn of txIns)
+    {
+        totalValue += parseInt(txIn.value)
+        tx += ` --tx-in ${txIn.txHash}#${txIn.index}`;
+    }
+    let ownOutput = parseInt(totalValue) - parseInt(fee);
+
+    // TODO: get full balance
+    tx += ` --tx-out ${toAddress}+${ownOutput} lovelace+${mintAmount} ${policyId}.${assetName}`;
+    tx += ` --mint="${mintAmount} ${policyId}.${assetName}"`;
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
     return tx;

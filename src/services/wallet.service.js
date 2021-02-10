@@ -12,6 +12,8 @@ import {
     calculateMinFee,
     createPaymentVerificationKey,
     createExtendedVerificationKey,
+    createMonetaryPolicy,
+    getPolicyId,
     signTransaction } from '../core/cardano-cli.js';
 import { 
     getProtocolParams, 
@@ -30,9 +32,14 @@ const cmd = util.promisify(exec);
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const appPath = path.resolve(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share"), 'lift-wallet');
+
 const walletPath = isDevelopment
     ? path.resolve(__dirname, '..', 'cardano', 'wallets')
     : path.resolve(appPath , 'wallets');
+    
+const assetPath = isDevelopment
+    ? path.resolve(__dirname, '..', 'cardano', 'assets')
+    : path.resolve(appPath , 'assets');
 
 const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
@@ -62,6 +69,17 @@ export async function setupWalletDir() {
 
     if(!fs.existsSync(path.resolve(walletPath, 'mainnet')))
         fs.mkdirSync(path.resolve(walletPath, 'mainnet'))
+
+
+    if(!fs.existsSync(assetPath)){
+        fs.mkdirSync(assetPath);
+    }
+
+    if(!fs.existsSync(path.resolve(assetPath, 'testnet')))
+        fs.mkdirSync(path.resolve(assetPath, 'testnet'))
+
+    if(!fs.existsSync(path.resolve(assetPath, 'mainnet')))
+        fs.mkdirSync(path.resolve(assetPath, 'mainnet'))
 }
 
 export async function getMnemonic(){
@@ -245,6 +263,64 @@ export async function getFee(network, name, amount, toAddress) {
     //note the output of the 'calculate-min-fee' is: 'XXXX Lovelace' 
     //  this is why i split and take index 0
     return feeResult.stdout.split(' ')[0];
+}
+
+//add ability to send custom ada amount and to address
+export async function mintToken(network, walletName, assetName, tokenAmount, passphrase, metadataPath) {
+    const walletDir = path.resolve(walletPath, network, walletName);
+
+    //if we already have a policy for an asset with this name
+    const assetDir = path.resolve(assetPath, network, assetName);
+    //const newAsset = !fs.existsSync(assetDir);
+    const newAsset = true;
+    
+    const txDraftPath = path.resolve(assetDir, draftTxFile);
+    const txRawPath = path.resolve(assetDir, rawTxFile);
+    const txSignedPath = path.resolve(assetDir, signedTxFile);
+
+    //Step 1) Create a Token Policy
+    if(newAsset)
+    {
+      //fs.mkdirSync(assetDir);
+      const verificationKeyPath = path.resolve(walletDir, verificationKeyFile);
+      let monetaryPolicy = createMonetaryPolicy(assetPath, verificationKeyPath);
+      await cli(monetaryPolicy);
+    }
+
+    //Step 2) Get Protocol Params
+    const protocolParamsPath = path.resolve(walletPath, network, protocolParamsFile);
+    const protocolParams = await getProtocolParams(network);
+    fs.writeFileSync(
+        protocolParamsPath, 
+        Buffer.from(JSON.stringify(protocolParams)));
+
+    //Step 3) Get UTXOs
+    const addressUtxos = await getUtxos(
+        network, 
+        [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
+    
+    //Step 3.1) Get Address
+    const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, paymentFile)))
+    
+
+    //Step 4) Build Draft Tx
+    const assetId = await cli(getPolicyId(assetDir));
+    console.log("assetId", assetId)
+    let draftTx = mintingTransaction('mary-era', 0, 0, addresses[0].address, assetId, assetName, mintAmount, draftTxIns, metadataPath, txDraftPath);
+    await cli(draftTx);
+
+    //Step 5) Calculute Fees
+    const calculateFee = calculateMinFee(txDraftPath, addressUtxos.length, 2, 1, 0, protocolParamsPath);
+    const feeResult = await cli(calculateFee);
+
+    //Step 6) Build Raw Tx
+
+    //Step 7) Sign Tx
+
+    //Step 8) Submit Tx
+
+
+
 }
 
 export async function sendTransaction(network, name, amount, toAddress, passphrase, metadataPath) {

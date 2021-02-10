@@ -12,6 +12,7 @@ import {
   getWallets,
   getFee,
   sendTransaction,
+  mintToken,
   createWallet,
   getTransactions } from './services/wallet.service.js';
 import { 
@@ -147,6 +148,7 @@ ipcMain.on('req:add-wallet', async (event, args) => {
   }
 })
 
+
 ipcMain.on('req:get-wallets', async (event, args) => {
   const wallets = await getWallets(args.network);
   event.reply('res:get-wallets', { wallets: wallets });
@@ -189,6 +191,12 @@ ipcMain.on('req:get-transactions', async (event, args) => {
   //const transactions = await getTransactions(args.walletId);
   const transactions = await getTransactions(args.network, args.wallet);
   event.reply('res:get-transactions', { transactions: transactions });
+})
+
+//minting assets
+ipcMain.on('req:mint-asset', async (event, args) => {
+  const result = await mintToken(args.network, args.walletName, args.assetName, args.assetAmount, args.passphrase, args.metadata);
+  event.reply('res:mint-asset', { transaction: result });
 })
 
 // Exit cleanly on request from parent process in development mode.
