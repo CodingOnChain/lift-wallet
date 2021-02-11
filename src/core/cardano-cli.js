@@ -1,5 +1,6 @@
 import path from 'path'
 import { cli } from './common.js';
+import fs from 'fs'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -34,6 +35,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     if(change < 0) change = 0;
     tx += ` --tx-out ${changeAddress}+${change}`;
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
+    
     tx += ` --out-file "${outputFile}"`;
     return tx;
 }
@@ -50,52 +52,49 @@ export function getAddressKeyHash(verificationKeyPath) {
 
 }
 
-export async function createMonetaryPolicy(assetPath, verificationKeyPath) {
+export async function createMonetaryPolicy(assetDir, verificationKeyPath) {
 
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
 
-    const policyVkeyFile = path.resolve(assetPath, 'policy.vkey');
-    const policySkeyFile = path.resolve(assetPath, 'policy.skey');
-    const policyScriptFile = path.resolve(assetPath, 'policyScript.json');
+    const policyVkeyPath = path.resolve(assetDir, 'policy.vkey');
+    const policySkeyPath = path.resolve(assetDir, 'policy.skey');
+    const policyScriptPath = path.resolve(assetDir, 'policyScript.json');
 
     const keyHashCmd = getAddressKeyHash(verificationKeyPath);
-    const keyHash = await cli(keyHashCmd);
+    const keyHashCmdOutput = await cli(keyHashCmd);;
+    const keyHash = keyHashCmdOutput.stdout.replace(/[\n\r]/g, '');
 
     const policyScript = `{
         "keyHash": "${keyHash}",
         "type": "sig"
-    }`
+    }`;
 
-    fs.writeFileSync(path.resolve(assetPath, policyScriptFile), policyScript);
+    fs.writeFileSync(policyScriptPath, policyScript);
 
     let cmd = `${cardanoCli}`;
     cmd += ` address key-gen`;
-    cmd += ` --verification-key-file "${policyVkey}"`;
-    cmd += ` --signing-key-file "${policySkey}"`;
+    cmd += ` --verification-key-file "${policyVkeyPath}"`;
+    cmd += ` --signing-key-file "${policySkeyPath}"`;
 
     return cmd;
 
 }
 
-export function getPolicyId(assetPath) {
+export function getPolicyId(assetDir) {
 
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     
     let cmd = `${cardanoCli}`
     cmd += ` transaction policyid`;
-    cmd += ` --script-file "${assetPath}/policyScript.json"`;
+    cmd += ` --script-file "${assetDir}/policyScript.json"`;
 
     return cmd;
 
 }
 
-export function mintingTransaction(era, fee, ttl, toAddress, assetId, assetName, mintAmount, txIns, metadataPath, outputFile){
+export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetName, mintAmount, txIns, metadataPath, outputFile){
 
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
-
-    signingKeyPaths.forEach(sk => {
-        txSign += ` --signing-key-file "${sk}"`;
-    })
 
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalValue = 0;
@@ -107,8 +106,8 @@ export function mintingTransaction(era, fee, ttl, toAddress, assetId, assetName,
     let ownOutput = parseInt(totalValue) - parseInt(fee);
 
     // TODO: get full balance
-    tx += ` --tx-out ${toAddress}+${ownOutput} lovelace+${mintAmount} ${policyId}.${assetName}`;
-    tx += ` --mint="${mintAmount} ${policyId}.${assetName}"`;
+    tx += ` --tx-out "${toAddress}+${ownOutput} lovelace+${mintAmount} ${assetId}.${assetName}"`;
+    tx += ` --mint="${mintAmount} ${assetId}.${assetName}"`;
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
     return tx;
@@ -126,7 +125,7 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
     return txFee;
 }
 
-export function signTransaction(network, magic, signingKeyPaths, rawTxBody, signTxFile) {
+export function signTransaction(network, magic, signingKeyPaths, rawTxBody, signTxFile, policyScriptPath,  policySkeyPath) {
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     
     if(network == 'testnet') network = 'testnet-magic';
@@ -138,6 +137,8 @@ export function signTransaction(network, magic, signingKeyPaths, rawTxBody, sign
     signingKeyPaths.forEach(sk => {
         txSign += ` --signing-key-file "${sk}"`;
     })
+    if(policySkeyPath != null) txSign += ` --signing-key-file "${policySkeyPath}"`;
+    if(policyScriptPath != null) txSign += ` --script-file "${policyScriptPath}"`;
     
     txSign += ` --tx-body-file "${rawTxBody}"`;
     txSign += ` --out-file "${signTxFile}"`;
