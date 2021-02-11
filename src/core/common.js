@@ -43,6 +43,7 @@ export function decrypt(prvFile, pubFile, password) {
 
 export function hex_to_ascii(str1)
 {
+   str1 = str1.replace('\\x', '');
    var hex  = str1.toString();
    var str = '';
    for (var n = 0; n < hex.length; n += 2) {

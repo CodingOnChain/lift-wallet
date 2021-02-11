@@ -23,7 +23,7 @@ export async function submitTransaction(network, signedTxBinary) {
 
     var transactionQuery = "mutation submitTransaction( $transaction: String! ) { submitTransaction(transaction: $transaction) { hash } }";
     var transactionResult = await axios.post(getGraphqlUrl(network), { query: transactionQuery, variables: { transaction: signedTxBinary.cborHex } });
-
+    console.log(transactionResult.data.data.submitTransaction.hash);
     return transactionResult.data.data.submitTransaction.hash;
 }
 

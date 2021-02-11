@@ -1,4 +1,4 @@
-import { cli, decrypt, encrypt } from '../core/common';
+import { cli, decrypt, encrypt, hex_to_ascii } from '../core/common';
 import { 
     getMnemonicCmd,
     getRootCmd,
@@ -394,8 +394,9 @@ export async function mintToken(network, walletName, assetName, tokenAmount, pas
         var signedtxContents = JSON.parse(fs.readFileSync(txSignedPath));
 
         //submit transaction to dandelion
-        result = await submitTransaction(network, signedtxContents);
-
+        result = await submitTransaction(network, signedtxContents, true);
+        console.log(result);
+        
     }catch(err) {
         console.error(err);
         if(err.response.data != undefined) {
@@ -418,9 +419,6 @@ export async function mintToken(network, walletName, assetName, tokenAmount, pas
     })
 
     return result;
-
-
-
 }
 
 export async function refreshProtocolParametersFile(network) {

@@ -352,6 +352,7 @@
         ipcRenderer.on('res:get-addresses', this.setAddresses);
         ipcRenderer.on('res:get-wallet', this.updateWallet);
         ipcRenderer.on('res:send-transaction', this.transactionResult)
+        ipcRenderer.on('res:mint-asset', this.transactionResult)
     },
     methods: {
         sendToken(){
@@ -375,6 +376,12 @@
                     validAddress: true,
                     validPassphrase: true,
                     validAmount: true
+                };
+                this.mintForm = {
+                    asset: 'lift',
+                    amount: 1,
+                    passphrase: '',
+                    metadataFile: null,
                 };
                 this.$v.$reset();
                 this.tabIndex = 0;

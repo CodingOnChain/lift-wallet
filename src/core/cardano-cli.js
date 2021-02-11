@@ -1,5 +1,5 @@
 import path from 'path'
-import { cli } from './common.js';
+import { cli, hex_to_ascii } from './common.js';
 import fs from 'fs'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -13,11 +13,23 @@ export function buildTxIn(addressUtxos, amount, fee) {
     let totalUsed = 0;
     for(let u of addressUtxos)
     {
+        u.assets = [];
         totalUsed += parseInt(u.value);
+        u.assets.push({ quantity: parseInt(u.value), assetName: 'lovelace' });
+        
+        for(let t of u.tokens) 
+        {
+            u.assets.push({ 
+                quantity: parseInt(t.quantity),
+                assetName: `${t.policyId}.${hex_to_ascii(t.assetName)}`
+            });
+        }
+
         txIn.push(u);
         if(totalUsed >= parseInt(amount) + parseInt(fee))
             break;
     }
+
     return txIn;
 }
 
@@ -98,18 +110,53 @@ export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetNam
 
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalValue = 0;
+    let totalAssets = [];
     for(let txIn of txIns)
     {
         totalValue += parseInt(txIn.value)
         tx += ` --tx-in ${txIn.txHash}#${txIn.index}`;
+        console.log(txIn.assets);
+        for(let asset of txIn.assets) {
+            //see if we have already added an asset to our total list
+            var existingAsset = totalAssets.find(c => c.assetName == asset.assetName);
+            //if we haven't add it to the list as the initial value
+            if(existingAsset == undefined) {
+                totalAssets.push({
+                    quantity: parseInt(asset.quantity),
+                    assetName: asset.assetName
+                });
+            }else { //if we have already added the asset, lets just increment the quantity from another UTXO
+                existingAsset.quantity += parseInt(asset.quantity);
+            }
+        }
     }
     let ownOutput = parseInt(totalValue) - parseInt(fee);
 
-    // TODO: get full balance
-    tx += ` --tx-out "${toAddress}+${ownOutput} lovelace+${mintAmount} ${assetId}.${assetName}"`;
+    tx += ` --tx-out "${toAddress}`
+    let mintingTokenExists = false;
+    //accommodate X number of assets
+    console.log(totalAssets);
+    for(let asset of totalAssets) {
+        if(asset.assetName == 'lovelace')
+            asset.quantity -= parseInt(fee);
+
+        if(asset.assetName == `${assetId}.${assetName}`){
+             asset.quantity += parseInt(mintAmount);
+             mintingTokenExists = true;
+        }
+
+        tx += `+${asset.quantity} ${asset.assetName}`;
+    }
+    if(!mintingTokenExists)
+        tx += `+${mintAmount} ${assetId}.${assetName}"`;
+    else 
+        tx += '"';
+
     tx += ` --mint="${mintAmount} ${assetId}.${assetName}"`;
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
+
+    console.log(tx);
     return tx;
 }
 

@@ -104,6 +104,7 @@ ipcMain.on('req:start-cnode', (event) => {
   }
 })
 
+
 ipcMain.on('req:stop-cnode', (event) => {
   if(cnode) {
     cnode.kill();
@@ -132,6 +133,7 @@ ipcMain.on('req:generate-recovery-phrase', async (event) => {
     event.reply('res:generate-recovery-phrase', { isSuccessful: false, data: e.toString() });
   }
 })
+
 
 ipcMain.on('req:add-wallet', async (event, args) => {
   try{
@@ -213,7 +215,6 @@ if (isDevelopment) {
     })
   }
 }
-
 
 app.on('quit', () => {
   if(cnode) cnode.kill();
