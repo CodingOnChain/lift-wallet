@@ -246,8 +246,8 @@
             validAmount: true
         },
         mintForm: {
-            asset: '',
-            amount: 0,
+            asset: 'lift',
+            amount: 1,
             passphrase: '',
             metadataFile: null,
         } 
@@ -507,7 +507,7 @@
                         walletName: this.walletId, 
                         assetName: this.mintForm.asset, 
                         assetAmount: this.mintForm.amount, 
-                        passphrase: this.sendForm.passphrase,
+                        passphrase: this.mintForm.passphrase,
                         metadata: metadata    
                     })
         },
