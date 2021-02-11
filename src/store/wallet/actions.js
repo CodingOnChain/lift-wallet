@@ -1,6 +1,5 @@
 import * as types from './types.js';
 const { ipcRenderer } = require('electron')
-
 const actions = {
   async [types.GET_NEW_MNEMONIC] ({ state}, { wordsNumber }) {
      var wordsAmmountToBeGenerated=state.wordsNumbersAllowed.find(x => x === wordsNumber);

@@ -65,6 +65,9 @@ export async function setupWalletDir() {
 }
 
 export async function getMnemonic(){
+    //right now we are hardcoding 24 words
+    //  lets pass in a number. maybe we use a set of word lengths
+    //  12, 15, 18, 21, 24
     const { stdout, stderr } = await cmd(getMnemonicCmd(24));
     if(stderr) throw stderr;
 
@@ -171,13 +174,20 @@ export async function getWallets(network) {
     const networkPath = path.resolve(walletPath, network);
     const walletDirs = getDirectories(networkPath);
     let wallets = [];
-    for(let i = 0; i < walletDirs.length; i++) {
-        const balance = await getBalance(network, walletDirs[i]);
-        wallets.push({
-            name: walletDirs[i],
-            balance: balance
-        });
-    }
+        for(let i = 0; i < walletDirs.length; i++) {
+            var balance=null;
+            try{
+                balance = await getBalance(network, walletDirs[i]);                                
+            }catch(e){
+                console.log(e.message);
+            } 
+            if(balance!=null){
+                wallets.push({
+                    name: walletDirs[i],
+                    balance: balance
+                });
+            }
+        }
     return wallets;
 }
 

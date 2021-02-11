@@ -43,11 +43,6 @@ End Result:
 
 ```bash
 ├── cardano
-│   ├── configs
-│   │   ├── mainnet-config.json
-│   │   ├── mainnet-byron-genesis.json
-│   │   ├── mainnet-shelley-genesis.json
-│   │   ├── mainnet-topology.json
 │   ├── (platform: win32, darwin, linux, etc)
 │   │   ├── *binaries from cardano-wallet release
 ```
