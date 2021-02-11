@@ -206,24 +206,12 @@
             ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
                 console.log('phrase',args);
                 if(args.isSuccessful) {
-                    this.mnemonic = args.data;
+                    // this.mnemonic = args.data;
                     this.e6 = 2;
                 }else {
                     console.log(args.data)
                 }
-            })
-
-            ipcRenderer.on('res:add-wallet', (_, args) => {
-                this.isSubmitting = false;
-                console.log('new wallet', args);
-                if(args.isSuccessful) {
-                    this.e6 = 1;
-                    this.mnemonic = '';
-                    this.$emit('added-wallet', { wallet: args.data });
-                }else {
-                    //err
-                }
-            })
+            })          
         },
         methods: {
              ...mapActions({

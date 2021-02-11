@@ -1,28 +1,24 @@
 import * as types from './types.js';
-import path from 'path'
-import { exec } from 'child_process'
-import util from 'util';
-const cmd = util.promisify(exec);
+const { ipcRenderer } = require('electron')
 
 const actions = {
-  async [types.GET_NEW_MNEMONIC] ({ commit , state}, { wordsNumber }) {
+  async [types.GET_NEW_MNEMONIC] ({ state}, { wordsNumber }) {
      var wordsAmmountToBeGenerated=state.wordsNumbersAllowed.find(x => x === wordsNumber);
-     if(wordsAmmountToBeGenerated==null) throw 'not allowed lenght';     
-    
-     var cardanoPath= require('path').resolve('./');
-     const cardanoPath2 =  path.resolve(cardanoPath, 'cardano') ;
-     const addressCli = path.resolve('.', cardanoPath2, process.platform, 'cardano-address');
-     var cardano_words = `"${addressCli}" recovery-phrase generate --size ${wordsNumber}`;    
-    
-     const { stdout, stderr } = await cmd(cardano_words);
-     if(stderr) throw stderr;      
-    
-     var words =stdout.replace('\n', '');
-     commit(types.SET_MNEMONIC, words);       
+     if(wordsAmmountToBeGenerated==null) throw 'not allowed lenght';           
+     ipcRenderer.send('req:generate-recovery-phrase');
   },
-  [types.SET_UP_WALLET]() {
-    console.log('set up wallet');
-  }
+  [types.SET_UP_WALLET]({commit}) {
+    console.log('set up wallet');    
+    ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
+      console.log('phrase', args);
+      if (args.isSuccessful) {
+        console.log("arg data",args.data);
+        commit(types.SET_MNEMONIC, args.data);     
+      } else {
+        console.log(args.data)
+      }
+    })
+  }  
 };
 
 export default actions;
