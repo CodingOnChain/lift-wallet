@@ -162,10 +162,10 @@
 </template>
 
 <script>
-    const { ipcRenderer } = require('electron')
+    const { ipcRenderer } = require('electron');
     import { mapActions } from 'vuex';
     import * as walletTypes from '../../store/wallet/types';
-    import Loader from '../Loader'
+    import Loader from '../Loader';
 
     export default {
         name: "AddWallet",
@@ -206,9 +206,9 @@
                     this.newMnemonic = args.data;
                     this.e6 = 2;
                 }else {
-                    console.log(args.data)
+                    console.log(args.data);
                 }
-            })
+            });
 
             ipcRenderer.on('res:add-wallet', (_, args) => {
                 this.isSubmitting = false;
@@ -220,11 +220,7 @@
                 }else {
                     //err
                 }
-            })
-
-           
-        },
-        computed: {       
+            });
         },
         methods: {
             ...mapActions({
@@ -248,5 +244,5 @@
                 ipcRenderer.send('req:add-wallet', this.walletForm);
             }
         }
-    }
+    };
 </script>
