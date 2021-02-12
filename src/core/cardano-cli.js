@@ -44,8 +44,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
     }
     tx += ` --tx-out ${toAddress}+${parseInt(amount)}`;
     let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
-    if(change < 0) change = 0;
-    tx += ` --tx-out ${changeAddress}+${change}`;
+    if(change >0 )  tx += ` --tx-out ${changeAddress}+${change}`;
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     
     tx += ` --out-file "${outputFile}"`;
