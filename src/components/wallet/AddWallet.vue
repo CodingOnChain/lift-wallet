@@ -154,7 +154,6 @@
 </template>
 
 <script>
-    const { ipcRenderer } = require('electron')
     import { mapActions,mapGetters } from 'vuex';
     import * as walletTypes from '../../store/wallet/types';
     import Loader from '../Loader'
@@ -198,6 +197,7 @@
             },
           ...mapGetters({
                 mnemonic: walletTypes.NAMESPACE + walletTypes.MNEMONIC,
+                wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
                 wordsNumberAllowed: walletTypes.NAMESPACE + walletTypes.WORDS_NUMBER_ALLOWED
             })
         },        
@@ -208,6 +208,7 @@
              ...mapActions({
                 setUpWallet: walletTypes.NAMESPACE + walletTypes.SET_UP_WALLET,            
                 getNewMnemonicFromBackend: walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,            
+                addingWalletFromBackend: walletTypes.NAMESPACE + walletTypes.ADD_WALLET,            
             }),
             isWordLenghtAllowed(lenght){
                 console.log(lenght)
@@ -234,7 +235,13 @@
             },
             submitAddWalletForm: function() {
                 this.isSubmitting = true;
-                ipcRenderer.send('req:add-wallet', this.walletForm);
+                const dataTransferObject = {
+                      walletForm: this.walletForm
+                  };
+                 this.addingWalletFromBackend(dataTransferObject).then(() => {
+                          console.log('add wallet',this.wallet);
+                          this.e6 = 6                          
+                 });                  
             }
         }
     }
