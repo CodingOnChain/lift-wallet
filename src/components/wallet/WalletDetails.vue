@@ -203,12 +203,12 @@
 </template>
 
 <script>
-  const { ipcRenderer, shell } = require('electron')
+  const { ipcRenderer, shell } = require('electron');
   import { mapGetters } from 'vuex';
   import * as walletTypes from '../../store/wallet/types';
-  import dayjs from 'dayjs'
-  import { validationMixin } from 'vuelidate'
-  import Loader from '../Loader'
+  import dayjs from 'dayjs';
+  import { validationMixin } from 'vuelidate';
+  import Loader from '../Loader';
 
   export default {
     name: 'WalletDetails',
@@ -255,14 +255,14 @@
     watch: {
         focus: function(newVal) {
             if(!newVal) {
-                console.log('focus false')
-                clearInterval(this.getWalletInterval)
+                console.log('focus false');
+                clearInterval(this.getWalletInterval);
             }else {
                 this.transactions = null;
                 this.isSendingAda = false;
                 this.addresses = [];
-                clearInterval(this.getWalletInterval)
-                console.log('focus true')
+                clearInterval(this.getWalletInterval);
+                console.log('focus true');
                 this.pollWallet();
             }
         },
@@ -274,7 +274,7 @@
                 this.transactions = null;
                 this.isSendingAda = false;
                 this.addresses = [];
-                console.log('new wallet id')
+                console.log('new wallet id');
                 this.pollWallet();
             }
         }
@@ -286,7 +286,7 @@
         cssProps () {
             return {
                 '--primary-color': this.$vuetify.theme.themes.light.primary.base
-            }
+            };
         },
         isSyncing: function() {
             if(this.wallet == null) return false;
@@ -305,54 +305,53 @@
             if(this.wallet == null) return 0;
             if(this.wallet.state.progress != null
                 && this.wallet.state.progress != undefined) {
-                return this.wallet.state.progress.quantity
+                return this.wallet.state.progress.quantity;
             }
             return 0;
         },
         addressErrors: function() {
             const errors = [];
-            if (!this.$v.address.$dirty) return errors
-            this.sendForm.address.length == 0 && errors.push('Address is required.')
-            !this.sendForm.validAddress && errors.push('Address is invalid.')
+            if (!this.$v.address.$dirty) return errors;
+            this.sendForm.address.length == 0 && errors.push('Address is required.');
+            !this.sendForm.validAddress && errors.push('Address is invalid.');
             return errors;
         },
         amountErrors: function() {
             const errors = [];
-            if (!this.$v.amount.$dirty) return errors
-            this.sendForm.amount.length == 0 && errors.push('Amount is required.')
+            if (!this.$v.amount.$dirty) return errors;
+            this.sendForm.amount.length == 0 && errors.push('Amount is required.');
             !this.sendForm.validAmount && errors.push('Amount needs to be at least 1 ADA');
             return errors;
         },
         passphraseErrors: function() {
             const errors = [];
-            if (!this.$v.passphrase.$dirty) return errors
-            this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.')
-            !this.sendForm.validPassphrase && errors.push('Incorrect passphrase')
+            if (!this.$v.passphrase.$dirty) return errors;
+            this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.');
+            !this.sendForm.validPassphrase && errors.push('Incorrect passphrase');
             return errors;
         }
     },
     destroyed() {
-        console.log('destroy')
-        clearInterval(this.getWalletInterval)
+        console.log('destroy');
+        clearInterval(this.getWalletInterval);
         this.getWalletInterval = null;
         this.transactions = null;
         this.isSendingAda = false;
         ipcRenderer.off('res:get-transactions', this.setTransactions);
         ipcRenderer.off('res:get-fee', this.setFee);
         ipcRenderer.off('res:get-addresses', this.setAddresses);
-        ipcRenderer.off('res:get-wallet', this.updateWallet)
+        ipcRenderer.off('res:get-wallet', this.updateWallet);
     },
     mounted() {
-        
-        console.log('mounted poll')
+        console.log('mounted poll');
         this.pollWallet();
 
         ipcRenderer.on('res:get-transactions', this.setTransactions);
         ipcRenderer.on('res:get-fee', this.setFee);
         ipcRenderer.on('res:get-addresses', this.setAddresses);
         ipcRenderer.on('res:get-wallet', this.updateWallet);
-        ipcRenderer.on('res:send-transaction', this.transactionResult)
-        ipcRenderer.on('res:mint-asset', this.transactionResult)
+        ipcRenderer.on('res:send-transaction', this.transactionResult);
+        ipcRenderer.on('res:mint-asset', this.transactionResult);
     },
     methods: {
         sendToken(){
@@ -401,7 +400,7 @@
         setFee(_, args) {
             console.log('fees',args);
             if(args.fee != undefined) {
-                const fee = args.fee/1000000
+                const fee = args.fee/1000000;
 
                 this.sendForm.validAddress = true;
                 this.setSendAdaFee(fee);
@@ -416,43 +415,43 @@
         updateWallet(_, args) { 
             //args.isSuccessful needs to be handled
             this.setWallet(args.data);
-            console.log('got wallet', this.wallet)
+            console.log('got wallet', this.wallet);
             if(this.wallet != null) {
-                ipcRenderer.send('req:get-transactions', { network: 'testnet', wallet: this.walletId })
-                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' })
+                ipcRenderer.send('req:get-transactions', { network: 'testnet', wallet: this.walletId });
+                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' });
             }
         },
         setWallet(wallet) {
-            console.log(wallet)
+            console.log(wallet);
             this.wallet = wallet;
         },
         displayADA(lovelaces) {
-            return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`
+            return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`;
         },
         pollWallet() {
-            ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' })
+            ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' });
             this.getWalletInterval = setInterval(() => {  
                 ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' });
-            }, 5000)
+            }, 5000);
         },
         getFee() {
             if(this.sendForm.address.length > 0)
             {
                 const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount})
+                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount});
             }
             
         },
         sendAdaFocusOut: function() {
             // Recalculate the currencyValue after ignoring "$" and "," in user input
-            this.sendForm.amount = parseFloat(this.sendForm.amountFormatted.replace(/[^\d.]/g, ""))
+            this.sendForm.amount = parseFloat(this.sendForm.amountFormatted.replace(/[^\d.]/g, ""));
             // Ensure that it is not NaN. If so, initialize it to zero.
             // This happens if user provides a blank input or non-numeric input like "abc"
             if (isNaN(this.sendForm.amount)) {
-                this.sendForm.amount = 0
+                this.sendForm.amount = 0;
             }
 						// Format display value based on calculated currencyValue
-            this.sendForm.amountFormatted = this.sendForm.amount.toFixed(6)
+            this.sendForm.amountFormatted = this.sendForm.amount.toFixed(6);
             this.setSendAdaTotal();
         },
         sendAdaFocusIn: function() {
@@ -468,30 +467,30 @@
         },
         setSendAdaFee(ada) {
             // Recalculate the currencyValue after ignoring "$" and "," in user input
-            this.sendForm.fee = parseFloat(ada)
+            this.sendForm.fee = parseFloat(ada);
             // Ensure that it is not NaN. If so, initialize it to zero.
             // This happens if user provides a blank input or non-numeric input like "abc"
             if (isNaN(ada)) {
-                console.log('nan')
-                this.sendForm.fee = 0
+                console.log('nan');
+                this.sendForm.fee = 0;
             }
 						// Format display value based on calculated currencyValue
-            this.sendForm.feeFormatted = ada.toFixed(6)
+            this.sendForm.feeFormatted = ada.toFixed(6);
             this.setSendAdaTotal();
         },
         setSendAdaTotal() {
             this.sendForm.total = parseFloat(this.sendForm.amount) + parseFloat(this.sendForm.fee);
-            this.sendForm.totalFormatted = this.sendForm.total.toFixed(6)
-            console.log(this.sendForm)
+            this.sendForm.totalFormatted = this.sendForm.total.toFixed(6);
+            console.log(this.sendForm);
         },
         submitSendAda() {
-            this.$v.$touch()
+            this.$v.$touch();
             if (!this.$v.$invalid) {
-                console.log('valid')
+                console.log('valid');
                 this.isSendingAda = true;
                 let metadata = null;
                 if(this.sendForm.metadataFile != null) metadata = this.sendForm.metadataFile.path;
-                console.log(metadata)
+                console.log(metadata);
                 ipcRenderer.send(
                     'req:send-transaction', 
                     { 
@@ -501,7 +500,7 @@
                         amount: this.sendForm.amount*1000000, 
                         passphrase: this.sendForm.passphrase,
                         metadata: metadata    
-                    })
+                    });
             }
         },
         mintAsset() {
@@ -516,16 +515,16 @@
                         assetAmount: this.mintForm.amount, 
                         passphrase: this.mintForm.passphrase,
                         metadata: metadata    
-                    })
+                    });
         },
         getFormattedDate(txDate){
-            return dayjs(txDate).format('MMM D, YYYY h:mm A')
+            return dayjs(txDate).format('MMM D, YYYY h:mm A');
         },
         navigateToTx(url) {
-            shell.openExternal(url)
+            shell.openExternal(url);
         }
     }
-  }
+  };
 </script>
 
 <style scoped>
