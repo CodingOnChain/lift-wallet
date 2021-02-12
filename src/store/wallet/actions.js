@@ -6,6 +6,7 @@ const actions = {
      if(wordsAmmountToBeGenerated==null) throw 'not allowed lenght';           
      ipcRenderer.send('req:generate-recovery-phrase');
   },
+
   [types.SET_UP_WALLET]({commit}) {
     console.log('set up wallet');            
     ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
@@ -31,8 +32,8 @@ const actions = {
     console.log('add a new wallet');            
     console.log('wallet form', walletForm);            
     ipcRenderer.send('req:add-wallet', walletForm);
-  }  
-  
+  }   
+
 };
 
 export default actions;
