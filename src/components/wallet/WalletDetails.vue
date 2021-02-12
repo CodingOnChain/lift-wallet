@@ -110,10 +110,18 @@
                                                 @focus="sendAdaFocusIn"
                                                 :hint="`Est. Fee: ${sendForm.feeFormatted}`"
                                                 persistent-hint
-                                                :disabled="isSendingAda"
+                                                :disabled="isSendingAda || sendForm.readonlyAmount"
                                                 required
                                                 >
                                             </v-text-field>
+
+                                            <v-checkbox
+                                                v-model="sendForm.readonlyAmount"
+                                                class="mt-5"
+                                                label="Send All"
+                                                @change="toggleSendAll"
+                                                ></v-checkbox>
+
 
                                             <v-input
                                                 class="mt-5"
@@ -243,7 +251,8 @@
             metadataFile: null,
             validAddress: true,
             validPassphrase: true,
-            validAmount: true
+            validAmount: true,
+            readonlyAmount: false
         },
         mintForm: {
             asset: 'lift',
@@ -355,6 +364,14 @@
         ipcRenderer.on('res:mint-asset', this.transactionResult)
     },
     methods: {
+        toggleSendAll() {
+            const shouldSendAll = this.sendForm.readonlyAmount;
+            if (shouldSendAll) {
+                this.sendForm.amount = this.wallet.balance/1000000;
+                this.sendForm.amountFormatted = `${parseFloat(this.sendForm.amount).toFixed(6)}`;
+                this.getFee();
+            }
+        },
         sendToken(){
             console.log("send token");
         },
@@ -405,6 +422,16 @@
 
                 this.sendForm.validAddress = true;
                 this.setSendAdaFee(fee);
+
+                if (this.sendForm.readonlyAmount) {
+                    const availableWithoutFee = this.wallet.balance - args.fee;
+
+                    this.sendForm.amount = availableWithoutFee/1000000;
+                    this.sendForm.amountFormatted = `${parseFloat(availableWithoutFee/1000000).toFixed(6)}`;
+
+                    this.sendForm.total =  this.wallet.balance;
+                    this.sendForm.totalFormatted = `${parseFloat(this.sendForm.total/1000000).toFixed(6)}`;
+                }
             }else{
                 this.sendForm.validAddress = false;
             }
@@ -498,7 +525,7 @@
                         network: 'testnet', 
                         wallet: this.walletId, 
                         address: this.sendForm.address, 
-                        amount: this.sendForm.amount*1000000, 
+                        amount: this.sendForm.amount*1000000 , 
                         passphrase: this.sendForm.passphrase,
                         metadata: metadata    
                     })
