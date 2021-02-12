@@ -11,7 +11,7 @@ const actions = {
     ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
       console.log('phrase', args);
       if (args.isSuccessful) {
-        console.log("arg data",args.data);
+        console.log("generate recovery phrase",args.data);
         commit(types.SET_MNEMONIC, args.data);     
       } else {
         console.log(args.data)
@@ -19,15 +19,16 @@ const actions = {
     });    
     ipcRenderer.on('res:add-wallet', (_, args) => {     
       if(args.isSuccessful) {
-          commit(types.SET_WALLET, args.data);     
+        console.log("adding new wallet",args.data);
+        commit(types.SET_WALLET, args.data);     
       }else {
           console.log("adding wallet error")
       }
     });
   },  
-  [types.ADD_WALLET]({state}, { walletForm }) {
+  async [types.ADD_WALLET]({state}, { walletForm }) {
     console.log(state)
-    console.log('add wallet');            
+    console.log('add a new wallet');            
     console.log('wallet form', walletForm);            
     ipcRenderer.send('req:add-wallet', walletForm);
   }  

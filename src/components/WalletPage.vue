@@ -125,8 +125,8 @@
       cancelAdd: function() {
         this.addingWallet = false;
       },
-      newWalletAdded: function(e) {
-        console.log(e);
+      newWalletAdded: function(e) {        
+        console.log("new added wallet",e);
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
         this.addingWallet = false;
