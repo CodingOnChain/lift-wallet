@@ -350,7 +350,7 @@
         ipcRenderer.on('res:get-fee', this.setFee);
         ipcRenderer.on('res:get-addresses', this.setAddresses);
         ipcRenderer.on('res:get-wallet', this.updateWallet);
-        ipcRenderer.on('res:send-transaction', this.transactionResult)
+        ipcRenderer.on('res:send-transaction', this.transactionResult);
         ipcRenderer.on('res:mint-asset', this.transactionResult);
     },
     methods: {
@@ -515,7 +515,7 @@
                         assetAmount: this.mintForm.amount, 
                         passphrase: this.mintForm.passphrase,
                         metadata: metadata    
-                    })
+                    });
         },
         getFormattedDate(txDate){
             return dayjs(txDate).format('MMM D, YYYY h:mm A');
