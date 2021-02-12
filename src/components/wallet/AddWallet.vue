@@ -154,8 +154,8 @@
 </template>
 
 <script>
-    const { ipcRenderer } = require('electron')
-    import Loader from '../Loader'
+    const { ipcRenderer } = require('electron');
+    import Loader from '../Loader';
 
     export default {
         name: "AddWallet",
@@ -193,9 +193,9 @@
                     this.newMnemonic = args.data;
                     this.e6 = 2;
                 }else {
-                    console.log(args.data)
+                    console.log(args.data);
                 }
-            })
+            });
 
             ipcRenderer.on('res:add-wallet', (_, args) => {
                 this.isSubmitting = false;
@@ -207,7 +207,7 @@
                 }else {
                     //err
                 }
-            })
+            });
         },
         methods: {
             getNewMnemonic: function() {
@@ -227,5 +227,5 @@
                 ipcRenderer.send('req:add-wallet', this.walletForm);
             }
         }
-    }
+    };
 </script>
