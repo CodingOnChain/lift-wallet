@@ -53,7 +53,6 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
 }
 
 export function getAddressKeyHash(verificationKeyPath) {
-
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
 
     let cmd = `${cardanoCli}`;
@@ -64,17 +63,8 @@ export function getAddressKeyHash(verificationKeyPath) {
 
 }
 
-export async function createMonetaryPolicy(assetDir, verificationKeyPath) {
-
+export function createMonetaryPolicy(keyHash, policyScriptPath, policyVkeyPath, policySkeyPath) {
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
-
-    const policyVkeyPath = path.resolve(assetDir, 'policy.vkey');
-    const policySkeyPath = path.resolve(assetDir, 'policy.skey');
-    const policyScriptPath = path.resolve(assetDir, 'policyScript.json');
-
-    const keyHashCmd = getAddressKeyHash(verificationKeyPath);
-    const keyHashCmdOutput = await cli(keyHashCmd);;
-    const keyHash = keyHashCmdOutput.stdout.replace(/[\n\r]/g, '');
 
     const policyScript = `{
         "keyHash": "${keyHash}",
@@ -89,7 +79,6 @@ export async function createMonetaryPolicy(assetDir, verificationKeyPath) {
     cmd += ` --signing-key-file "${policySkeyPath}"`;
 
     return cmd;
-
 }
 
 export function getPolicyId(assetDir) {
@@ -98,7 +87,7 @@ export function getPolicyId(assetDir) {
     
     let cmd = `${cardanoCli}`
     cmd += ` transaction policyid`;
-    cmd += ` --script-file "${assetDir}/policyScript.json"`;
+    cmd += ` --script-file "${assetDir}"`;
 
     return cmd;
 
@@ -130,7 +119,6 @@ export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetNam
             }
         }
     }
-    let ownOutput = parseInt(totalValue) - parseInt(fee);
 
     tx += ` --tx-out "${toAddress}`
     let mintingTokenExists = false;
@@ -156,7 +144,6 @@ export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetNam
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     tx += ` --out-file "${outputFile}"`;
 
-    console.log(tx);
     return tx;
 }
 
