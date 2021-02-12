@@ -37,6 +37,13 @@ Proceed with caution.
         ![alt text](https://user-images.githubusercontent.com/35784914/105702293-58cb2a80-5eea-11eb-918c-6cc530645bce.PNG)
 5. Paste the configurations files you downloaded during Prerequisites into the `configs` folder.
         ![alt text](https://user-images.githubusercontent.com/35784914/105702294-58cb2a80-5eea-11eb-8323-3976125d940c.PNG)
+6. (optional) Downloaoding the binaries automatically
+```javascript
+npm run binaries:darwin
+npm run binaries:win32
+npm run binaries:linux
+#It is also possible to specify a custom release tag  as second attribute v2021-02-12
+```
 
 End Result:
 

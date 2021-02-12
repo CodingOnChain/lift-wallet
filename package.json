@@ -9,7 +9,10 @@
     "electron:build": "vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps"
+    "postuninstall": "electron-builder install-app-deps",
+    "binaries:darwin":"sh .build/binaries.sh macos64",
+    "binaries:win32":"sh .build/binaries.sh win32",
+    "binaries:linux":"sh .build/binaries.sh linux64"
   },
   "main": "background.js",
   "dependencies": {
