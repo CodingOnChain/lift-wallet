@@ -12,6 +12,7 @@ import {
   getWallets,
   getFee,
   sendTransaction,
+  mintToken,
   createWallet,
   getTransactions } from './services/wallet.service.js';
 import { 
@@ -103,6 +104,7 @@ ipcMain.on('req:start-cnode', (event) => {
   }
 })
 
+
 ipcMain.on('req:stop-cnode', (event) => {
   if(cnode) {
     cnode.kill();
@@ -132,6 +134,7 @@ ipcMain.on('req:generate-recovery-phrase', async (event) => {
   }
 })
 
+
 ipcMain.on('req:add-wallet', async (event, args) => {
   try{
     console.log('adding wallet', args)
@@ -146,6 +149,7 @@ ipcMain.on('req:add-wallet', async (event, args) => {
     event.reply('res:add-wallet', { isSuccessful: false, data: e.toString() });
   }
 })
+
 
 ipcMain.on('req:get-wallets', async (event, args) => {
   const wallets = await getWallets(args.network);
@@ -191,6 +195,12 @@ ipcMain.on('req:get-transactions', async (event, args) => {
   event.reply('res:get-transactions', { transactions: transactions });
 })
 
+//minting assets
+ipcMain.on('req:mint-asset', async (event, args) => {
+  const result = await mintToken(args.network, args.walletName, args.assetName, args.assetAmount, args.passphrase, args.metadata);
+  event.reply('res:mint-asset', { transaction: result });
+})
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
@@ -205,7 +215,6 @@ if (isDevelopment) {
     })
   }
 }
-
 
 app.on('quit', () => {
   if(cnode) cnode.kill();

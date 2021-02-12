@@ -6,6 +6,7 @@ const actions = {
   },
   [types.SET_UP_WALLET]() {
     console.log('set up wallet');
+    //ipcRenderer.on('res:mint-asset', callback);
   }
 };
 

@@ -15,7 +15,10 @@
                             <v-tab>Transactions</v-tab>
                             <v-tab>Receive</v-tab>
                             <v-tab>Send</v-tab>
-
+                            <v-tab>Mint</v-tab>
+                            
+                            
+                            
                             <v-tab-item>
                                 <Loader v-if="transactions == null" />
                                 <v-row no-gutters v-if="transactions != null && transactions.length == 0">
@@ -151,6 +154,46 @@
                                     </v-form>
                                 </v-card>
                             </v-tab-item>
+
+                            <v-tab-item>
+                                <v-card>
+                                    <v-form>
+                                        <v-card-text>
+                                            <v-text-field
+                                                v-model="mintForm.asset"
+                                                label="Asset Name"
+                                                ></v-text-field>
+
+                                             <v-text-field
+                                                v-model="mintForm.amount"
+                                                label="Amount"
+                                                ></v-text-field>
+
+                                            <v-text-field
+                                                :append-icon="showMintPassphrase ? 'mdi-eye' : 'mdi-eye-off'"
+                                                v-model="mintForm.passphrase"
+                                                :type="showMintPassphrase ? 'text' : 'password'"
+                                                label="Passphrase"
+                                                @click:append="showMintPassphrase = !showMintPassphrase"
+                                                >
+                                            </v-text-field>
+
+                                            <v-file-input
+                                                v-model="mintForm.metadataFile"
+                                                label="Metadata File">
+                                            </v-file-input>
+                                             
+                                            <v-btn 
+                                                color="primary"                                             
+                                                @click="mintAsset">
+                                                Mint
+                                            </v-btn>
+
+                                          
+                                      </v-card-text>
+                                    </v-form>
+                                </v-card>
+                            </v-tab-item>
                         </v-tabs>
                     </v-sheet>
                 </v-card>
@@ -161,6 +204,8 @@
 
 <script>
   const { ipcRenderer, shell } = require('electron')
+  import { mapGetters } from 'vuex';
+  import * as walletTypes from '../../store/wallet/types';
   import dayjs from 'dayjs'
   import { validationMixin } from 'vuelidate'
   import Loader from '../Loader'
@@ -183,6 +228,7 @@
         addresses: [],
         sendFormValid: false,
         showPassphrase: false,
+        showMintPassphrase: false,
         isSendingAda: false,
         sendForm: {
             address: '',
@@ -192,12 +238,19 @@
             feeFormatted: '0.000000',
             total: 0,
             totalFormatted: '0.000000',
+            tokenAmmount: '0.000000',
             passphrase: '',
             metadataFile: null,
             validAddress: true,
             validPassphrase: true,
             validAmount: true
-        }
+        },
+        mintForm: {
+            asset: 'lift',
+            amount: 1,
+            passphrase: '',
+            metadataFile: null,
+        } 
     }),
     watch: {
         focus: function(newVal) {
@@ -227,6 +280,9 @@
         }
     },
     computed: {
+         ...mapGetters({
+          network: walletTypes.NAMESPACE + walletTypes.NETWORK
+        }),
         cssProps () {
             return {
                 '--primary-color': this.$vuetify.theme.themes.light.primary.base
@@ -273,7 +329,7 @@
             this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.')
             !this.sendForm.validPassphrase && errors.push('Incorrect passphrase')
             return errors;
-        },
+        }
     },
     destroyed() {
         console.log('destroy')
@@ -287,6 +343,7 @@
         ipcRenderer.off('res:get-wallet', this.updateWallet)
     },
     mounted() {
+        
         console.log('mounted poll')
         this.pollWallet();
 
@@ -295,8 +352,12 @@
         ipcRenderer.on('res:get-addresses', this.setAddresses);
         ipcRenderer.on('res:get-wallet', this.updateWallet);
         ipcRenderer.on('res:send-transaction', this.transactionResult)
+        ipcRenderer.on('res:mint-asset', this.transactionResult)
     },
     methods: {
+        sendToken(){
+            console.log("send token");
+        },
         transactionResult(_, args) {
             this.isSendingAda = false;
             console.log('transaction result', args.transaction);
@@ -315,6 +376,12 @@
                     validAddress: true,
                     validPassphrase: true,
                     validAmount: true
+                };
+                this.mintForm = {
+                    asset: 'lift',
+                    amount: 1,
+                    passphrase: '',
+                    metadataFile: null,
                 };
                 this.$v.$reset();
                 this.tabIndex = 0;
@@ -436,6 +503,20 @@
                         metadata: metadata    
                     })
             }
+        },
+        mintAsset() {
+            let metadata = null;
+            if(this.mintForm.metadataFile != null) metadata = this.mintForm.metadataFile.path;
+            ipcRenderer.send(
+                    'req:mint-asset', 
+                    { 
+                        network: 'testnet', 
+                        walletName: this.walletId, 
+                        assetName: this.mintForm.asset, 
+                        assetAmount: this.mintForm.amount, 
+                        passphrase: this.mintForm.passphrase,
+                        metadata: metadata    
+                    })
         },
         getFormattedDate(txDate){
             return dayjs(txDate).format('MMM D, YYYY h:mm A')

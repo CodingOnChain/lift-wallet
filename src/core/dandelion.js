@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export async function getUtxos(network, addresses) {
-    var utxos = `{ utxos( order_by: { value: desc } where: { address: { _in: ${getGraphqlList(addresses)} }} ) { address index txHash value } }`
+    var utxos = `{ utxos( order_by: { value: desc } where: { address: { _in: ${getGraphqlList(addresses)} }} ) { address index txHash value tokens { policyId assetName quantity } } }`
     var utxosResult = await axios.post(getGraphqlUrl(network), { query: utxos });
     return utxosResult.data.data.utxos;
 }
@@ -23,7 +23,7 @@ export async function submitTransaction(network, signedTxBinary) {
 
     var transactionQuery = "mutation submitTransaction( $transaction: String! ) { submitTransaction(transaction: $transaction) { hash } }";
     var transactionResult = await axios.post(getGraphqlUrl(network), { query: transactionQuery, variables: { transaction: signedTxBinary.cborHex } });
-
+    console.log(transactionResult.data.data.submitTransaction.hash);
     return transactionResult.data.data.submitTransaction.hash;
 }
 
