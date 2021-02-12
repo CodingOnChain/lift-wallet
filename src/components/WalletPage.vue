@@ -18,7 +18,7 @@
                 :disabled="i == selectedWalletIndex || addingWallet"
               >
                 <v-list-item-title>
-                  {{wallet.name}}
+                  {{wallet.name}} 
                 </v-list-item-title>
               </v-list-item>
             </v-list-item-group>

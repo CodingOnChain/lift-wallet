@@ -43,6 +43,9 @@
             disabled>
             Mainnet
           </v-btn>
+            <div class="d-flex align-center">
+            <h6>{{ $t('lang.language') }}</h6>
+          </div>
         </v-btn-toggle>
       </v-container>
     </v-app-bar>
