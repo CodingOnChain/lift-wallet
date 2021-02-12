@@ -202,16 +202,7 @@
             })
         },        
         mounted() {          
-            this.setUpWallet();
-            ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
-                console.log('phrase',args);
-                if(args.isSuccessful) {
-                    // this.mnemonic = args.data;
-                    this.e6 = 2;
-                }else {
-                    console.log(args.data)
-                }
-            })          
+            this.setUpWallet();                  
         },
         methods: {
              ...mapActions({
@@ -228,6 +219,7 @@
                   };
                  this.getNewMnemonicFromBackend(dataTransferObject).then(() => {
                           console.log('mnemonic completed from vuex backend',this.mnemonic);
+                          this.walletForm.mnemonic=this.mnemonic;
                           this.e6 = 2                          
                  });    
             },
