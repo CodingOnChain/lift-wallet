@@ -8,4 +8,5 @@ export default {
   tokenAmount:NaN,
   passphrase:NaN,
   metadata:NaN  
+
 };

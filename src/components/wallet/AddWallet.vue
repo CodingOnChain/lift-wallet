@@ -75,7 +75,7 @@
                   >
                   <v-card-text>
                     <v-sheet class="pa-5" color="primary lighten-4" rounded="">
-                      <h3>{{ newMnemonic }}</h3>
+                      <h3>{{ mnemonic }}</h3>
                     </v-sheet>
                   </v-card-text>
                   <v-card-actions>
@@ -118,7 +118,7 @@
 
                       <v-text-field
                         v-model="walletForm.mnemonic"
-                        :rules="rules.mnemonic"
+                        :rules="wordsLengthWalletValidation"
                         label="Mnemonic"
                         :disabled="isSubmitting"
                         required
@@ -162,87 +162,104 @@
 </template>
 
 <script>
-    const { ipcRenderer } = require('electron');
-    import { mapActions } from 'vuex';
-    import * as walletTypes from '../../store/wallet/types';
-    import Loader from '../Loader';
+import { mapActions, mapGetters } from "vuex";
+import * as walletTypes from "../../store/wallet/types";
+import Loader from "../Loader";
 
-    export default {
-        name: "AddWallet",
-        components: { Loader },
-        data: () => ({
-            e6: 1,
-            newMnemonic: '',
-            walletFormValid: true,
-            showPassphrase: false,
-            isSubmitting: false,
-            walletForm: {
-                name: '',
-                mnemonic: '',
-                passphrase: '',
-                network: 'testnet'
-            },
-            rules: {
-                name:[
-                    v => !!v || 'Name is required',
-                    v => (v && v.length <= 50) || 'Name must be less than 50 characters',
-                ],
-                mnemonic:[
-                    v => !!v || 'Mnemonic is required',
-                    v => (v && !!(v.split(" ").length == 9 || v.split(" ").length == 12 || v.split(" ").length == 15 || v.split(" ").length == 18 || v.split(" ").length == 21 || v.split(" ").length == 24)) 
-                    || 'Mnemonic must have 9, 12 ,15, 18, 21 or 24 words'
-                ],
-                passphrase:[
-                    v => !!v || 'Passphrase is required',
-                    v => (v && v.length >= 10) || 'Passphrase must be greater than 10 characters',
-                ]
-            }
-        }),
-        mounted() {
-            this.setUpWallet();
-            ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
-                console.log('phrase',args);
-                if(args.isSuccessful) {
-                    this.newMnemonic = args.data;
-                    this.e6 = 2;
-                }else {
-                    console.log(args.data);
-                }
-            });
-
-            ipcRenderer.on('res:add-wallet', (_, args) => {
-                this.isSubmitting = false;
-                console.log('new wallet', args);
-                if(args.isSuccessful) {
-                    this.e6 = 1;
-                    this.newMnemonic = '';
-                    this.$emit('added-wallet', { wallet: args.data });
-                }else {
-                    //err
-                }
-            });
+export default {
+  name: "AddWallet",
+  components: { Loader },
+  data: () => ({
+    e6: 1,
+    walletFormValid: true,
+    showPassphrase: false,
+    isSubmitting: false,
+    walletForm: {
+      name: "",
+      mnemonic: "",
+      passphrase: "",
+      network: "testnet",
+    },
+    rules: {
+      name: [
+        (v) => !!v || "Name is required",
+        (v) => (v && v.length <= 50) || "Name must be less than 50 characters",
+      ],
+      passphrase: [
+        (v) => !!v || "Passphrase is required",
+        (v) =>
+          (v && v.length >= 10) ||
+          "Passphrase must be greater than 10 characters",
+      ],
+    },
+  }),
+  computed: {
+    wordsLengthWalletValidation() {
+      return [
+        (v) => !!v || "Mnemonic is required",
+        (v) => {
+          var wordsLength = v.split(" ").length;
+          var isWordLenghAllowed = this.wordsNumberAllowed.find(
+            (x) => x === wordsLength
+          );
+          if (isWordLenghAllowed) return true;
+          var stringWords = this.wordsNumberAllowed.toString();
+          return "Mnemonic must have " + stringWords + " words";
         },
-        methods: {
-            ...mapActions({
-                setUpWallet: walletTypes.NAMESPACE + walletTypes.SET_UP_WALLET,            
-                getNewNemonic: walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,            
-            }),
-            getNewMnemonic: function() {
-                ipcRenderer.send('req:generate-recovery-phrase');
-            },
-            importWords: function() {
-                this.newMnemonic = '';
-                this.e6 = 3;
-            },
-            cancelAdd: function(){
-                this.e6 = 1;
-                this.newMnemonic = '';
-                this.$emit('cancel-add');
-            },
-            submitAddWalletForm: function() {
-                this.isSubmitting = true;
-                ipcRenderer.send('req:add-wallet', this.walletForm);
-            }
-        }
-    };
+      ];
+    },
+    ...mapGetters({
+      mnemonic: walletTypes.NAMESPACE + walletTypes.MNEMONIC,
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
+      wordsNumberAllowed: walletTypes.NAMESPACE + walletTypes.WORDS_NUMBER_ALLOWED,
+    }),
+  },
+  mounted() {
+    this.setUpWallet();
+  },
+  methods: {
+    ...mapActions({
+      setUpWallet: walletTypes.NAMESPACE + walletTypes.SET_UP_WALLET,
+      getNewMnemonicFromBackend:walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,
+      addingWalletFromBackend: walletTypes.NAMESPACE + walletTypes.ADD_WALLET,
+    }),
+    isWordLenghtAllowed(lenght) {
+      console.log(lenght);
+      return false;
+    },
+    getNewMnemonic: function () {
+      const dataTransferObject = {
+        wordsNumber: 24,
+      };
+      this.getNewMnemonicFromBackend(dataTransferObject).then(() => {
+        console.log("mnemonic completed from vuex backend", this.mnemonic);
+        this.walletForm.mnemonic = this.mnemonic;
+        this.e6 = 2;
+      });
+    },
+    importWords: function () {
+      this.newMnemonic = "";
+      this.e6 = 3;
+    },
+    cancelAdd: function () {
+      this.e6 = 1;
+      this.newMnemonic = "";
+      this.$emit("cancel-add");
+    },
+    submitAddWalletForm: function () {
+      this.isSubmitting = true;
+      const dataTransferObject = {
+        walletForm: this.walletForm,
+      };
+      this.addingWalletFromBackend(dataTransferObject)
+        .then(() => {
+          console.log("add wallet", this.wallet);
+          this.e6 = 1;      
+          this.$emit("added-wallet", { wallet: this.wallet });
+          this.isSubmitting = false
+        });
+    },
+  },
+};
+
 </script>
