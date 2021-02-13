@@ -58,29 +58,7 @@
 
                             <v-tab-item>
                                 <v-card>
-                                    <v-simple-table>
-                                        <template v-slot:default>
-                                            <thead>
-                                                <tr>
-                                                <th class="text-left">
-                                                    Index
-                                                </th>
-                                                <th class="text-left">
-                                                    Address
-                                                </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr
-                                                v-for="item in addresses"
-                                                :key="item.id"
-                                                >
-                                                <td>{{ item.index }}</td>
-                                                <td>{{ item.address }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </template>
-                                    </v-simple-table>
+                                    <AddressesTable :tableItems=addresses></AddressesTable>                                    
                                 </v-card>
                             </v-tab-item>
 
@@ -217,12 +195,13 @@
   import dayjs from 'dayjs';
   import { validationMixin } from 'vuelidate';
   import Loader from '../Loader';
+  import AddressesTable from '../wallet/wallet-adresses/AddressesTable'
 
   export default {
     name: 'WalletDetails',
     props: ['walletId','focus'],
     mixins: [validationMixin],
-    components: { Loader },
+    components: { Loader,AddressesTable },
     validations: {
       address: {  },
       amount: {  },
