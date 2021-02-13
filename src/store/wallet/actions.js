@@ -1,5 +1,5 @@
 import * as types from './types.js';
-const { ipcRenderer } = require('electron')
+const { ipcRenderer } = require('electron');
 const actions = {
   async [types.GET_NEW_MNEMONIC] ({state}, { wordsNumber }) {
      var wordsAmmountToBeGenerated=state.wordsNumbersAllowed.find(x => x === wordsNumber);
@@ -15,7 +15,7 @@ const actions = {
         console.log("generate recovery phrase",args.data);
         commit(types.SET_MNEMONIC, args.data);     
       } else {
-        console.log(args.data)
+        console.log(args.data);
       }
     });    
     ipcRenderer.on('res:add-wallet', (_, args) => {     
@@ -23,12 +23,12 @@ const actions = {
         console.log("adding new wallet",args.data);
         commit(types.SET_WALLET, args.data);     
       }else {
-          console.log("adding wallet error")
+          console.log("adding wallet error");
       }
     });
   },  
   async [types.ADD_WALLET]({state}, { walletForm }) {
-    console.log(state)
+    console.log(state);
     console.log('add a new wallet');            
     console.log('wallet form', walletForm);            
     ipcRenderer.send('req:add-wallet', walletForm);
