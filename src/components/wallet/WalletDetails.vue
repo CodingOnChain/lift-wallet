@@ -467,8 +467,13 @@
         getFee() {
             if(this.sendForm.address.length > 0)
             {
-                const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount});
+                let amount;
+                if ( this.sendForm.sendAll ) {
+                  amount = this.wallet.balance;
+                } else {
+                  amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
+                }
+                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, sendAll: this.sendForm.sendAll, amount: amount});
             }
             
         },
@@ -521,13 +526,19 @@
                 let metadata = null;
                 if(this.sendForm.metadataFile != null) metadata = this.sendForm.metadataFile.path;
                 console.log(metadata);
+                let amount;
+                if ( this.sendForm.sendAll ) {
+                  amount = this.wallet.balance;
+                } else {
+                  amount = this.sendForm.amount*1000000;
+                }
                 ipcRenderer.send(
                     'req:send-transaction', 
                     { 
                         network: 'testnet', 
                         wallet: this.walletId, 
                         address: this.sendForm.address, 
-                        amount: this.sendForm.amount*1000000 , 
+                        amount: amount ,
                         sendAll: this.sendForm.sendAll,
                         passphrase: this.sendForm.passphrase,
                         metadata: metadata
