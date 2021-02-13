@@ -13,7 +13,7 @@
   export default {
     data () {
       return {    
-      }
+      };
     },
     props: {
     tableItems: Array,
@@ -33,11 +33,11 @@
             sortable: true,
             value: 'address',
           }         
-        ]
+        ];
       },
     },
     methods: {
       
     },
-  }
+  };
 </script>

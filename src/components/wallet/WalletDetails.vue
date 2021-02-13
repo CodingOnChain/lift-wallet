@@ -16,9 +16,6 @@
                             <v-tab>Receive</v-tab>
                             <v-tab>Send</v-tab>
                             <v-tab>Mint</v-tab>
-                            
-                            
-                            
                             <v-tab-item>
                                 <Loader v-if="transactions == null" />
                                 <v-row no-gutters v-if="transactions != null && transactions.length == 0">
@@ -195,7 +192,7 @@
   import dayjs from 'dayjs';
   import { validationMixin } from 'vuelidate';
   import Loader from '../Loader';
-  import AddressesTable from '../wallet/wallet-adresses/AddressesTable'
+  import AddressesTable from '../wallet/wallet-adresses/AddressesTable';
 
   export default {
     name: 'WalletDetails',
