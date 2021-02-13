@@ -219,7 +219,7 @@ export async function getBalance(network, name) {
     return getTotalUtxoBalance(addressUtxos);
 }
 
-export async function getFee(network, name, amount, toAddress) {
+export async function getFee(network, name, sendAll, amount, toAddress) {
     const walletDir = path.resolve(walletsPath, network, name);
 
     //tx/key file paths

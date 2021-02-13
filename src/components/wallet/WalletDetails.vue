@@ -386,6 +386,7 @@
                     address: '',
                     amount: 0,
                     amountFormatted: '0.000000',
+                    sendAll: false,
                     fee: 0,
                     feeFormatted: '0.000000',
                     total: 0,

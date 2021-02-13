@@ -180,7 +180,7 @@ ipcMain.on('req:validate-address', async (event, args) => {
 })
 
 ipcMain.on('req:get-fee', async (event, args) => {
-  const fee = await getFee(args.network, args.wallet, args.amount, args.address);
+  const fee = await getFee(args.network, args.wallet, args.sendAll, args.amount, args.address);
   event.reply('res:get-fee', { fee: fee });
 })
 
