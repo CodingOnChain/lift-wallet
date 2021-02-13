@@ -27,11 +27,11 @@ jobs:
         git status -sb
         mkdir release-files
         docker run -i --rm \
-          -v ${PWD}/src:/src \
+          -v ${PWD}:/src \
           -w /src \
           --entrypoint bash \
           ${BUILD_DOCKER_IMAGE} \
-          -c "npm run binaries:${PLATFORM} && npm run electron:build"
+          -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
         cp -a dist_electron/*AppImage release-files/lift-wallet-${platform}-${RELEASE_TAG}.AppImage
 
   build-macos:
@@ -58,11 +58,11 @@ jobs:
         git status -sb
         mkdir -p release-files
         docker run -i --rm \
-          -v ${PWD}/src:/src \
+          -v ${PWD}:/src \
           -w /src \
           --entrypoint bash \
           ${BUILD_DOCKER_IMAGE} \
-          -c "npm run binaries:${PLATFORM} && npm run electron:build"
+          -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
         done
         cp -a dist_electron/*dmg release-files/lift-wallet-${platform}-${RELEASE_TAG}.dmg
 
