@@ -258,7 +258,7 @@ export default {
           console.log("add wallet", this.wallet);
           this.e6 = 1;      
           this.$emit("added-wallet", { wallet: this.wallet });
-          this.isSubmitting = false
+          this.isSubmitting = false;
         });
     },
   },
