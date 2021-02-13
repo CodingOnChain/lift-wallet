@@ -10,6 +10,7 @@ cardano/db-test
 cardano/wallets-test
 cardano/db
 cardano/wallets
+cardano/assets
 cardano/socket
 cardano/sockets
 cardano/lift-db
