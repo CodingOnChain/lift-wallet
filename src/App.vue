@@ -44,6 +44,12 @@
             Mainnet
           </v-btn>
         </v-btn-toggle>
+        <div class="d-flex align-center ml-2">
+            <v-btn @click="changeLanguage">
+             <v-icon> mdi-flag</v-icon>
+            <h6>{{ $t('lang.language') }}</h6>
+          </v-btn>
+        </div>
       </v-container>
     </v-app-bar>
 
@@ -54,7 +60,7 @@
 </template>
 
 <script>
-import MainView from './components/MainView'
+import MainView from './components/MainView';
 
 export default {
   name: 'App',
@@ -71,6 +77,13 @@ export default {
   }),
 
   methods: {
+    changeLanguage(){
+      if(this.$i18n.locale=='es'){
+        this.$i18n.locale = 'en';
+      }else{
+        this.$i18n.locale = 'es';
+      }
+    },
     setActivePage: function(page) {
       this.activePage = page;
     }
