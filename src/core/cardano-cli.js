@@ -2,11 +2,19 @@ import path from 'path'
 import { cli, hex_to_ascii } from './common.js';
 import fs from 'fs'
 
+
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export const cardanoPath = isDevelopment 
     ? path.resolve(__dirname, '..', 'cardano') 
     : path.resolve(__dirname, '..', '..', 'cardano');
+
+export const cardanoPlatformPath = process.platform === 'darwin' ? 'macos64':
+    process.platform === 'win32' ? 'win64':
+    process.platform === 'linux' ? 'linux64': 
+    process.platform;
+
 
 export function buildTxIn(addressUtxos, amount, fee) {
     let txIn = [];
@@ -34,7 +42,7 @@ export function buildTxIn(addressUtxos, amount, fee) {
 }
 
 export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile, isSendAll){
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
 
@@ -60,7 +68,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
 }
 
 export function getAddressKeyHash(verificationKeyPath) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
 
     let cmd = `${cardanoCli}`;
     cmd += ` address key-hash`;
@@ -71,7 +79,7 @@ export function getAddressKeyHash(verificationKeyPath) {
 }
 
 export function createMonetaryPolicy(keyHash, policyScriptPath, policyVkeyPath, policySkeyPath) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
 
     const policyScript = `{
         "keyHash": "${keyHash}",
@@ -90,7 +98,7 @@ export function createMonetaryPolicy(keyHash, policyScriptPath, policyVkeyPath, 
 
 export function getPolicyId(assetDir) {
 
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     
     let cmd = `${cardanoCli}`
     cmd += ` transaction policyid`;
@@ -102,7 +110,7 @@ export function getPolicyId(assetDir) {
 
 export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetName, mintAmount, txIns, metadataPath, outputFile){
 
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
 
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalValue = 0;
@@ -155,7 +163,7 @@ export function buildMintTransaction(era, fee, ttl, toAddress, assetId, assetNam
 }
 
 export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byronWitness, protocolParamsFile) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     let txFee = `"${cardanoCli}" transaction calculate-min-fee`;
     txFee += ` --tx-body-file "${txBody}"`;
     txFee += ` --tx-in-count ${utxoInCount}`;
@@ -167,7 +175,7 @@ export function calculateMinFee(txBody, utxoInCount, utxoOutCount, witness, byro
 }
 
 export function signTransaction(network, magic, signingKeyPaths, rawTxBody, signTxFile, policyScriptPath,  policySkeyPath) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     
     if(network == 'testnet') network = 'testnet-magic';
 
@@ -187,7 +195,7 @@ export function signTransaction(network, magic, signingKeyPaths, rawTxBody, sign
 }
 
 export function createPaymentVerificationKey(paymentSigningFile, extendedVerificationKeyFile) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     // build evkey+vkey
     let cmd = `${cardanoCli} key verification-key`
     cmd += ` --signing-key-file "${paymentSigningFile}"`;
@@ -197,7 +205,7 @@ export function createPaymentVerificationKey(paymentSigningFile, extendedVerific
 }
 
 export function createExtendedVerificationKey(extendedVerificationKeyFile, verificationKeyFile) {
-    const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     var cmd = `${cardanoCli} key non-extended-key`;
     cmd += ` --extended-verification-key-file "${extendedVerificationKeyFile}"`;
     cmd += ` --verification-key-file "${verificationKeyFile}"`;

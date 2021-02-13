@@ -16,7 +16,8 @@ import {
   createWallet,
   getTransactions } from './services/wallet.service.js';
 import { 
-  cardanoPath, 
+  cardanoPath,
+  cardanoPlatformPath, 
   cardanoNodeOptions,  
   getNetworkInfo, 
   validateAddress } from './cardano'
@@ -89,10 +90,10 @@ ipcMain.on('req:start-cnode', (event) => {
   //start cardano-node
   if(cnode == null) {
     cnode = spawn(
-      path.resolve('.', cardanoPath, process.platform, 'cardano-node'), 
+      path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-node'), 
       ['run',...cardanoNodeOptions])
     
-    event.reply('res:start-cnode', { 'cnode': path.resolve('.', cardanoPath, process.platform, 'cardano-node') });
+    event.reply('res:start-cnode', { 'cnode': path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-node') });
 
     cnode.stdout.on('data', (data) => {
       console.info(`cnode: ${data}`);

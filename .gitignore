@@ -5,7 +5,10 @@ app
 dist
 cardano/configs
 cardano/darwin
+cardano/macos64
 cardano/win32
+cardano/win64
+cardano/linux64
 cardano/db-test
 cardano/wallets-test
 cardano/db

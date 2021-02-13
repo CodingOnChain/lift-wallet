@@ -9,7 +9,12 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export const cardanoPath = isDevelopment 
     ? path.resolve(__dirname, '..', 'cardano') 
-    : path.resolve(__dirname, '..', '..', 'cardano') ;
+    : path.resolve(__dirname, '..', '..', 'cardano');
+export const cardanoPlatformPath = process.platform === 'darwin' ? 'macos64':
+    process.platform === 'win32' ? 'win64':
+    process.platform === 'linux' ? 'linux64': 
+    process.platform;
+    
 export const dbPath = path.resolve(cardanoPath, 'db');
 export const walletDbPath = path.resolve(cardanoPath, 'wallets');
 export const socketPath = (process.platform == 'win32') ? '\\\\.\\pipe\\cardano-node-mainnet' : path.resolve(cardanoPath, 'socket');
@@ -27,7 +32,7 @@ export const cardanoNodeOptions = [
 
 export async function getPhrase() {
     try {
-        const addressCli = path.resolve('.', cardanoPath, process.platform, 'cardano-address');
+        const addressCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-address');
         const { stdout, stderr } = await exec(`${addressCli} recovery-phrase generate`)
         if(stderr) return { error: stderr, phrase: null };
         return { error: null, phrase: stdout };
