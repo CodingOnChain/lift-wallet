@@ -392,7 +392,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
-        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath)
+        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath, true)
         await cli(draftTx);
 
         //refresh protocol parameters
