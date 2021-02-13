@@ -43,10 +43,12 @@
             disabled>
             Mainnet
           </v-btn>
-            <div class="d-flex align-center">
-            <h6>{{ $t('lang.language') }}</h6>
-          </div>
         </v-btn-toggle>
+
+        <div class="d-flex align-right ml-5">
+          <h6>{{ $t('lang.language') }}</h6>
+        </div>
+
       </v-container>
     </v-app-bar>
 
@@ -57,7 +59,7 @@
 </template>
 
 <script>
-import MainView from './components/MainView'
+import MainView from './components/MainView';
 
 export default {
   name: 'App',
