@@ -41,10 +41,10 @@
 </template>
 
 <script>
-  const { ipcRenderer } = require('electron')
-  import NoWallet from './wallet/NoWallet'
-  import AddWallet from './wallet/AddWallet'
-  import WalletDetails from './wallet/WalletDetails'
+  const { ipcRenderer } = require('electron');
+  import NoWallet from './wallet/NoWallet';
+  import AddWallet from './wallet/AddWallet';
+  import WalletDetails from './wallet/WalletDetails';
 
   export default {
     name: 'WalletPage',
@@ -65,14 +65,14 @@
       selectedWalletIndex: function(newVal, oldVal) {
         if(newVal != undefined && oldVal != newVal) {
           this.selectedWalletId = this.wallets[newVal].name;
-          console.log(newVal)
+          console.log(newVal);
         }
       }
     },
     computed: {
       hasWallets: function () {
         // `this` points to the vm instance
-        return this.wallets.length > 0
+        return this.wallets.length > 0;
       },
       enableDetails: function() {
         return this.render;
@@ -98,15 +98,15 @@
         console.log('wallets',args);
         this.wallets = args.wallets;
         if(this.wallets.length > 0 && !this.selectedWalletIndex) {
-          this.selectedWalletIndex = 0
+          this.selectedWalletIndex = 0;
           this.selectedWalletId = this.wallets[this.selectedWalletIndex].name;
         }
-      })
+      });
 
       ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
         console.log('phrase',args);
         if(! args.error) this.newMnemonic = args.passphrase;
-      })
+      });
     },
     methods: {
       addWallet: function() {
@@ -125,14 +125,14 @@
       cancelAdd: function() {
         this.addingWallet = false;
       },
-      newWalletAdded: function(e) {
-        console.log(e);
+      newWalletAdded: function(e) {        
+        console.log("new added wallet",e);
         this.wallets.push(e.wallet);
         this.selectedWalletIndex = this.wallets.length - 1;
         this.addingWallet = false;
       }
     }
-  }
+  };
 </script>
 
 <style scoped>
