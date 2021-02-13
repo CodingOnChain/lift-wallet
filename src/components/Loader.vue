@@ -18,7 +18,7 @@
     data: () => ({
       
     }),
-  }
+  };
 </script>
 
 <style scoped>
