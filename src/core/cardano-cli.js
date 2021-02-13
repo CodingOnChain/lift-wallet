@@ -33,19 +33,26 @@ export function buildTxIn(addressUtxos, amount, fee) {
     return txIn;
 }
 
-export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile){
+export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile, isSendAll){
     const cardanoCli = path.resolve('.', cardanoPath, process.platform, 'cardano-cli');
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
+
     for(let txIn of txIns)
     {
         totalUsed += parseInt(txIn.value)
         tx += ` --tx-in ${txIn.txHash}#${txIn.index}`;
     }
-    tx += ` --tx-out ${toAddress}+${parseInt(amount)}`;
-    let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
-    if(change < 0) change = 0;
-    tx += ` --tx-out ${changeAddress}+${change}`;
+
+    if (isSendAll) {
+      let outputAmount = parseInt(amount) - parseInt(fee);
+      tx += ` --tx-out ${toAddress}+${outputAmount}`;
+    } else {
+      let change = parseInt(totalUsed) - parseInt(amount) - parseInt(fee);
+      if(change >0)  tx += ` --tx-out ${changeAddress}+${change}`;
+      tx += ` --tx-out ${toAddress}+${parseInt(amount)}`;
+    }
+
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
     
     tx += ` --out-file "${outputFile}"`;

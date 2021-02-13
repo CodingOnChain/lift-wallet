@@ -219,7 +219,7 @@ export async function getBalance(network, name) {
     return getTotalUtxoBalance(addressUtxos);
 }
 
-export async function getFee(network, name, amount, toAddress) {
+export async function getFee(network, name, sendAll, amount, toAddress) {
     const walletDir = path.resolve(walletsPath, network, name);
 
     //tx/key file paths
@@ -238,7 +238,7 @@ export async function getFee(network, name, amount, toAddress) {
     let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
     //build draft transaction
-    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, null, txDraftPath)
+    let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, null, txDraftPath, sendAll)
     await cli(draftTx);
 
     //get protocol parameters
@@ -368,7 +368,7 @@ export async function refreshProtocolParametersFile(network) {
 }
 
 
-export async function sendTransaction(network, name, amount, toAddress, passphrase, metadataPath) {
+export async function sendTransaction(network, name, sendAll, amount, toAddress, passphrase, metadataPath) {
     const walletDir = path.resolve(walletsPath, network, name);
 
     //tx/key file paths
@@ -392,7 +392,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
-        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath)
+        let draftTx = buildTransaction('allegra-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath, sendAll)
         await cli(draftTx);
 
         //refresh protocol parameters
@@ -416,7 +416,7 @@ export async function sendTransaction(network, name, amount, toAddress, passphra
         let rawTxIns = buildTxIn(addressUtxos, amount, fee);
 
         //build raw transaction
-        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, metadataPath, txRawPath)
+        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, metadataPath, txRawPath, sendAll)
         await cli(rawTx);
 
         await getSigningKeys(draftTxIns, passphrase, walletDir, signingKeyPaths, addresses, changes);

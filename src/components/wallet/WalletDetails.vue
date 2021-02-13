@@ -110,10 +110,18 @@
                                                 @focus="sendAdaFocusIn"
                                                 :hint="`Est. Fee: ${sendForm.feeFormatted}`"
                                                 persistent-hint
-                                                :disabled="isSendingAda"
+                                                :disabled="isSendingAda || sendForm.readonlyAmount"
                                                 required
                                                 >
                                             </v-text-field>
+
+                                            <v-checkbox
+                                                v-model="sendForm.readonlyAmount"
+                                                class="mt-5"
+                                                label="Send All"
+                                                @change="toggleSendAll"
+                                                ></v-checkbox>
+
 
                                             <v-input
                                                 class="mt-5"
@@ -243,7 +251,9 @@
             metadataFile: null,
             validAddress: true,
             validPassphrase: true,
-            validAmount: true
+            validAmount: true,
+            readonlyAmount: false,
+            sendAll: false
         },
         mintForm: {
             asset: 'lift',
@@ -354,6 +364,15 @@
         ipcRenderer.on('res:mint-asset', this.transactionResult);
     },
     methods: {
+        toggleSendAll() {
+            const shouldSendAll = this.sendForm.readonlyAmount;
+            this.sendForm.sendAll = true;
+            if (shouldSendAll) {
+                this.sendForm.amount = this.wallet.balance/1000000;
+                this.sendForm.amountFormatted = `${parseFloat(this.sendForm.amount).toFixed(6)}`;
+                this.getFee();
+            }
+        },
         sendToken(){
             console.log("send token");
         },
@@ -367,6 +386,7 @@
                     address: '',
                     amount: 0,
                     amountFormatted: '0.000000',
+                    sendAll: false,
                     fee: 0,
                     feeFormatted: '0.000000',
                     total: 0,
@@ -404,6 +424,16 @@
 
                 this.sendForm.validAddress = true;
                 this.setSendAdaFee(fee);
+
+                if (this.sendForm.readonlyAmount) {
+                    const availableWithoutFee = this.wallet.balance - args.fee;
+
+                    this.sendForm.amount = availableWithoutFee/1000000;
+                    this.sendForm.amountFormatted = `${parseFloat(availableWithoutFee/1000000).toFixed(6)}`;
+
+                    this.sendForm.total =  this.wallet.balance;
+                    this.sendForm.totalFormatted = `${parseFloat(this.sendForm.total/1000000).toFixed(6)}`;
+                }
             }else{
                 this.sendForm.validAddress = false;
             }
@@ -437,8 +467,13 @@
         getFee() {
             if(this.sendForm.address.length > 0)
             {
-                const amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, amount: amount});
+                let amount;
+                if ( this.sendForm.sendAll ) {
+                  amount = this.wallet.balance;
+                } else {
+                  amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
+                }
+                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, sendAll: this.sendForm.sendAll, amount: amount});
             }
             
         },
@@ -491,15 +526,22 @@
                 let metadata = null;
                 if(this.sendForm.metadataFile != null) metadata = this.sendForm.metadataFile.path;
                 console.log(metadata);
+                let amount;
+                if ( this.sendForm.sendAll ) {
+                  amount = this.wallet.balance;
+                } else {
+                  amount = this.sendForm.amount*1000000;
+                }
                 ipcRenderer.send(
                     'req:send-transaction', 
                     { 
                         network: 'testnet', 
                         wallet: this.walletId, 
                         address: this.sendForm.address, 
-                        amount: this.sendForm.amount*1000000, 
+                        amount: amount ,
+                        sendAll: this.sendForm.sendAll,
                         passphrase: this.sendForm.passphrase,
-                        metadata: metadata    
+                        metadata: metadata
                     });
             }
         },
