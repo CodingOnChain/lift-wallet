@@ -82,7 +82,7 @@
 
             <!-- Step 3 -->
             <v-stepper-step :complete="e6 > 3" step="3">
-                Add Wallet
+               {{ $t('lang.wallet.add_wallet') }}
             </v-stepper-step>
 
             <v-stepper-content step="3">
