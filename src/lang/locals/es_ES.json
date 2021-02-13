@@ -2,5 +2,11 @@
     "notice": {
         "msg": "Tienes un mensaje"
     },
+    "wallet": {
+        "add_wallet": "agregar billetera",
+        "add": "agregar"
+    },
+    "main": {
+    },
     "language": "Español"         
 }

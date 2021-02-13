@@ -89,9 +89,11 @@
           </v-row>
         </v-card>
       </v-stepper-content>
-
+      
       <!-- Step 3 -->
-      <v-stepper-step :complete="e6 > 3" step="3"> Add Wallet </v-stepper-step>
+      <v-stepper-step :complete="e6 > 3" step="3">
+         {{ $t('lang.wallet.add_wallet') }}
+      </v-stepper-step>
 
       <v-stepper-content step="3">
         <v-card flat>

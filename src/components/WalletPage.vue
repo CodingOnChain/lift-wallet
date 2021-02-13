@@ -6,7 +6,7 @@
 
           <v-list nav>
             <v-list-item>
-              <v-btn color="primary" block v-on:click="startNewWallet">Add</v-btn>
+              <v-btn color="primary" block v-on:click="startNewWallet">{{ $t('lang.wallet.add') }}</v-btn>
             </v-list-item>
             <v-list-item-group
               v-model="selectedWalletIndex"
