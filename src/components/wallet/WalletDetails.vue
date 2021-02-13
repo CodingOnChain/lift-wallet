@@ -252,7 +252,8 @@
             validAddress: true,
             validPassphrase: true,
             validAmount: true,
-            readonlyAmount: false
+            readonlyAmount: false,
+            sendAll: false
         },
         mintForm: {
             asset: 'lift',
@@ -365,6 +366,7 @@
     methods: {
         toggleSendAll() {
             const shouldSendAll = this.sendForm.readonlyAmount;
+            this.sendForm.sendAll = true;
             if (shouldSendAll) {
                 this.sendForm.amount = this.wallet.balance/1000000;
                 this.sendForm.amountFormatted = `${parseFloat(this.sendForm.amount).toFixed(6)}`;
@@ -525,8 +527,9 @@
                         wallet: this.walletId, 
                         address: this.sendForm.address, 
                         amount: this.sendForm.amount*1000000 , 
+                        sendAll: this.sendForm.sendAll,
                         passphrase: this.sendForm.passphrase,
-                        metadata: metadata    
+                        metadata: metadata
                     });
             }
         },
