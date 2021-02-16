@@ -2,14 +2,13 @@
 
 function cardano-wallet-get-latest-tag() {
 
-  GIT_REPO="git@github.com:input-output-hk/cardano-wallet.git"
+  GIT_REPO="https://github.com/input-output-hk/cardano-wallet.git"
   git ls-remote --tags ${GIT_REPO} | awk '{print $NF}' | tail -n1 | sed 's|refs/tags/\(v....-..-..\).*|\1|g'
 
 }
 
 function cardano-wallet-download-binaries() {
 
-  GIT_REPO="git@github.com:input-output-hk/cardano-wallet.git"
   PLATFORM="$1"
   TAG="$2" && test -z "${TAG}" && TAG=$(cardano-wallet-get-latest-tag)
   REQUIRED_BINARIES="cardano-address cardano-cli bech32"
