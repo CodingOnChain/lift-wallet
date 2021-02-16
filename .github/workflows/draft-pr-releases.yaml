@@ -51,6 +51,7 @@ jobs:
         brew services start docker-machine
         sudo chown root:wheel /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
         sudo chmod u+s /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+        mkdir -p ~/.docker/machine/cache
         curl -Lo ~/.docker/machine/cache/boot2docker.iso ${BOOT2DOCKER_ISO_URL}
         while ! docker-machine create --driver xhyve default; do
           docker-machine rm -f default
