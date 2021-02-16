@@ -32,6 +32,7 @@ jobs:
       env:
         MATRIX_OS: ${{ matrix.os }}
         RELEASE_TAG: "PR-${{ steps.metadata.outputs.PR_NUMBER }}"
+      shell: bash
       run: |
         pwd
         npm i
