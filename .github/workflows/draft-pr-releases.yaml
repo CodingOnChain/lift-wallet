@@ -57,6 +57,7 @@ jobs:
         ls -hal
         git status -sb
         mkdir -p release-files
+        brew services start docker-machine
         docker run -i --rm \
           -v ${PWD}:/src \
           -w /src \
