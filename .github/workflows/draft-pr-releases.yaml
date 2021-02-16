@@ -34,6 +34,12 @@ jobs:
           ${NODEJS_DOCKER_IMAGE}:${NODEJS_VERSION} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
         cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: release-files
+        path: release-files
+        retention-days: 7
 
   build-macos:
     name: Build macos release artifacts
@@ -68,6 +74,12 @@ jobs:
         npm run binaries:${PLATFORM}
         npm run electron:build
         cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: release-files
+        path: release-files
+        retention-days: 7
 
   draft-release:
     name: Draft release artifacts
@@ -80,6 +92,10 @@ jobs:
       run: |
         echo "::set-output name=commit::$(echo ${GITHUB_SHA} | head -c7)"
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
+    - name: Download release artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: release-files
     - name: Release PR draft
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
