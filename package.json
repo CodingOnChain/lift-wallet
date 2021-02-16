@@ -11,7 +11,7 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "binaries:macos":"bash -ec 'source baids/[0-9]* && cardano-wallet-download-binaries macos64'",
-    "binaries:windows":"bash -ec 'source baids/[0-9]* && cardano-wallet-download-binaries win64'",
+    "binaries:windows":"bash -ec 'source baids/[0-9]* && echo @@@@@@@ $SHELL; cardano-wallet-download-binaries win64'",
     "binaries:linux":"bash -ec 'source baids/[0-9]* && cardano-wallet-download-binaries linux64'"
   },
   "main": "background.js",

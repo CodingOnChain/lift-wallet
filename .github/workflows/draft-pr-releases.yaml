@@ -10,8 +10,8 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
-          - macos-latest
+        #  - ubuntu-latest
+        #  - macos-latest
           - windows-latest
         node_version:
           - 14
@@ -35,6 +35,8 @@ jobs:
       shell: bash
       run: |
         pwd
+        which bash
+        export PATH=${PATH}:$(dirname $(which bash))
         npm i
         case "${MATRIX_OS}" in
           ubuntu*) PLATFORM=linux;;
