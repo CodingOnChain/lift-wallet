@@ -101,7 +101,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_TAG: "pull-request-${{ steps.metadata.outputs.pr_number }}"
-        RELEASE_NAME: "Release ${{ steps.metadata.outputs.pr_number }}-${{ steps.metadata.outputs.commit }}"
+        RELEASE_NAME: "Release PR#${{ steps.metadata.outputs.pr_number }}-${{ steps.metadata.outputs.commit }}"
         RELEASE_NOTES: "Automatic release from GH action on this project."
       run: |
         sudo apt install -y npm tree
