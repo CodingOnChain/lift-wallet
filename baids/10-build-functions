@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+function cardano-wallet-get-latest-tag() {
+
+  GIT_REPO="git@github.com:input-output-hk/cardano-wallet.git"
+  git ls-remote --tags ${GIT_REPO} | awk '{print $NF}' | tail -n1 | sed 's|refs/tags/\(v....-..-..\).*|\1|g'
+
+}
+
+function cardano-wallet-download-binaries() {
+
+  GIT_REPO="git@github.com:input-output-hk/cardano-wallet.git"
+  PLATFORM="$1"
+  TAG="$2" && test -z "${TAG}" && TAG=$(cardano-wallet-get-latest-tag)
+  REQUIRED_BINARIES="cardano-address cardano-cli bech32"
+
+  TMP_DIR="/tmp/cardano-wallet" && mkdir -p "${TMP_DIR}"
+  PLATFORM_DIR="cardano/${PLATFORM}" && mkdir -p "${PLATFORM_DIR}"
+
+  case "${PLATFORM}" in
+    win*) 
+      RELEASE_URL="https://github.com/input-output-hk/cardano-wallet/releases/download/${TAG}/cardano-wallet-${TAG}-${PLATFORM}.zip"
+      wget -q -O "${TMP_DIR}/cardano-wallet-${TAG}-${PLATFORM}.zip" "${RELEASE_URL}" 
+      unzip -j "${TMP_DIR}/cardano-wallet-${TAG}-${PLATFORM}.zip" -d "${TMP_DIR}"
+      rm -f "${TMP_DIR}/cardano-wallet-${TAG}-${PLATFORM}.zip"
+      for bin in ${REQUIRED_BINARIES}
+      do
+        mv "${TMP_DIR}/${bin}.exe" "${PLATFORM_DIR}/${bin}.exe"
+      done
+    ;;
+    *)
+      RELEASE_URL="https://github.com/input-output-hk/cardano-wallet/releases/download/${TAG}/cardano-wallet-${TAG}-${PLATFORM}.tar.gz"
+      wget -qO- "${RELEASE_URL}" | tar -xvz --strip-components 1 -C "${TMP_DIR}"
+      for bin in ${REQUIRED_BINARIES}
+      do
+        mv "${TMP_DIR}/${bin}" "${PLATFORM_DIR}/"
+      done
+    ;;
+  esac
+
+
+
+  rm -rf "${TMP_DIR}"
+
+}

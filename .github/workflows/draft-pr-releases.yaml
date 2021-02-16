@@ -19,7 +19,7 @@ jobs:
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
     - name: Build
       env:
-        PLATFORM: darwin
+        PLATFORM: linux
         RELEASE_TAG: "pr-${{ steps.metadata.outputs.pr_number }}"
       run: |
         pwd
@@ -32,7 +32,7 @@ jobs:
           --entrypoint bash \
           ${BUILD_DOCKER_IMAGE} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
-        cp -a dist_electron/*AppImage release-files/lift-wallet-${platform}-${RELEASE_TAG}.AppImage
+        cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage
 
   build-macos:
     name: Build macos release artifacts
@@ -50,7 +50,7 @@ jobs:
         sudo docker --version
     - name: Build
       env:
-        PLATFORM: darwin
+        PLATFORM: macos
         RELEASE_TAG: "pr-${{ steps.metadata.outputs.pr_number }}"
       run: |
         pwd
@@ -64,7 +64,7 @@ jobs:
           ${BUILD_DOCKER_IMAGE} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
         done
-        cp -a dist_electron/*dmg release-files/lift-wallet-${platform}-${RELEASE_TAG}.dmg
+        cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg
 
   draft-release:
     name: Draft release artifacts
