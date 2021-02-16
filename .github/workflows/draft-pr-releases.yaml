@@ -46,8 +46,8 @@ jobs:
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
     - name: Install docker
       run: |
-        sudo brew install docker-machine docker docker-machine-driver-xhyve
-        sudo brew services start docker-machine
+        brew install docker-machine docker docker-machine-driver-xhyve
+        brew services start docker-machine
         while ! docker-machine create --driver xhyve default; do
           docker-machine rm -f default
           sleep 1;
