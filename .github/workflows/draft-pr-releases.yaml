@@ -46,8 +46,9 @@ jobs:
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
     - name: Install docker
       run: |
-        brew install docker-machine docker
+        brew install docker-machine docker docker-machine-driver-xhyve
         sudo docker --version
+        sudo docker-machine create default
     - name: Build
       env:
         PLATFORM: macos
@@ -58,6 +59,7 @@ jobs:
         git status -sb
         mkdir -p release-files
         brew services start docker-machine
+        docker-machine ls
         eval "$(docker-machine env default)"
         until docker ps; do sleep 0.5; done
         docker run -i --rm \
