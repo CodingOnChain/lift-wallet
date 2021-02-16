@@ -103,8 +103,9 @@ jobs:
         RELEASE_NAME: "Release ${{ steps.metadata.outputs.pr_number }}-${{ steps.metadata.outputs.commit }}"
         RELEASE_NOTES: "Automatic release from GH action on this project."
       run: |
-        sudo apt install -y npm
+        sudo apt install -y npm tree
         sudo npm install -g publish-release
+        tree /home/runner/work/lift-wallet/lift-wallet
         set -x
         GITHUB_OWNER=$(echo ${GITHUB_REPOSITORY} | awk -F/ '{print $1}')
         GITHUB_REPO=$(echo ${GITHUB_REPOSITORY} | awk -F/ '{print $2}')
