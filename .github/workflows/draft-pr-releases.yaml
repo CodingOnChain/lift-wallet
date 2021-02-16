@@ -5,6 +5,7 @@ on:
 
 env:
   BUILD_DOCKER_IMAGE: node:14
+  BOOT2DOCKER_ISO_URL: https://github.com/boot2docker/boot2docker/releases/download/v19.03.12/boot2docker.iso
 
 jobs:
   build-linux:
@@ -50,6 +51,7 @@ jobs:
         brew services start docker-machine
         sudo chown root:wheel /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
         sudo chmod u+s /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+        curl -Lo ~/.docker/machine/cache/boot2docker.iso ${BOOT2DOCKER_ISO_URL}
         while ! docker-machine create --driver xhyve default; do
           docker-machine rm -f default
           sleep 1;
