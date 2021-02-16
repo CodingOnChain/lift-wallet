@@ -41,7 +41,10 @@ jobs:
         case "${MATRIX_OS}" in
           ubuntu*) PLATFORM=linux;;
           macos*) PLATFORM=macos;;
-          windows*) PLATFORM=windows;;
+          windows*)
+            PLATFORM=windows
+            choco install wget --no-progress
+          ;;
         esac
         npm run binaries:${PLATFORM}
         npm run electron:build
