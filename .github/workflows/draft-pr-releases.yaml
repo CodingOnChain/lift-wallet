@@ -10,8 +10,8 @@ jobs:
     strategy:
       matrix:
         os:
-        #  - ubuntu-latest
-        #  - macos-latest
+          - ubuntu-latest
+          - macos-latest
           - windows-latest
         node_version:
           - 14
@@ -30,6 +30,7 @@ jobs:
         architecture: ${{ matrix.architecture }}
     - name: Build artifacts for ${{ matrix.os }}-${{ matrix.architecture }}
       env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         MATRIX_OS: ${{ matrix.os }}
         RELEASE_TAG: "PR-${{ steps.metadata.outputs.PR_NUMBER }}"
       shell: bash
