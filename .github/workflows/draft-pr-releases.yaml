@@ -58,6 +58,7 @@ jobs:
         git status -sb
         mkdir -p release-files
         brew services start docker-machine
+        eval "$(docker-machine env default)"
         until docker ps; do sleep 0.5; done
         docker run -i --rm \
           -v ${PWD}:/src \
