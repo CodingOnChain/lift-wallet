@@ -24,8 +24,6 @@ jobs:
         RELEASE_TAG: "pr-${{ steps.metadata.outputs.pr_number }}"
       run: |
         pwd
-        ls -hal
-        git status -sb
         mkdir release-files
         docker run -i --rm \
           -v ${PWD}:/src \
@@ -33,6 +31,7 @@ jobs:
           --entrypoint bash \
           ${NODEJS_DOCKER_IMAGE}:${NODEJS_VERSION} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
+        find cardano
         cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage
     - name: Upload built artifacts
       uses: actions/upload-artifact@v2
@@ -73,6 +72,7 @@ jobs:
         npm i
         npm run binaries:${PLATFORM}
         npm run electron:build
+        find cardano
         cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg
     - name: Upload built artifacts
       uses: actions/upload-artifact@v2
