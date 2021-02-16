@@ -55,6 +55,7 @@ jobs:
       env:
         PLATFORM: macos
         RELEASE_TAG: "pr-${{ steps.metadata.outputs.pr_number }}"
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         pwd
         ls -hal
