@@ -96,6 +96,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: release-files
+        path: release-files
     - name: Release PR draft
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -105,7 +106,6 @@ jobs:
       run: |
         sudo apt install -y npm tree
         sudo npm install -g publish-release
-        tree /home/runner/work/lift-wallet/lift-wallet
         set -x
         GITHUB_OWNER=$(echo ${GITHUB_REPOSITORY} | awk -F/ '{print $1}')
         GITHUB_REPO=$(echo ${GITHUB_REPOSITORY} | awk -F/ '{print $2}')
