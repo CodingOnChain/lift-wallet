@@ -102,3 +102,5 @@ jobs:
           --name "${RELEASE_NAME}" \
           --notes "${RELEASE_NOTES}" \
           --assets $(ls release-files/* | xargs echo | sed 's| |,|g')
+
+
