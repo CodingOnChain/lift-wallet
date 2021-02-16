@@ -47,13 +47,11 @@ jobs:
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
     - name: Install docker
       run: |
-        brew install docker-machine docker docker-machine-driver-xhyve
+        brew install docker-machine docker
         brew services start docker-machine
-        sudo chown root:wheel /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
-        sudo chmod u+s /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
         mkdir -p ~/.docker/machine/cache
         curl -Lo ~/.docker/machine/cache/boot2docker.iso ${BOOT2DOCKER_ISO_URL}
-        while ! docker-machine create --driver xhyve default; do
+        while ! docker-machine create default; do
           docker-machine rm -f default
           sleep 1;
         done
