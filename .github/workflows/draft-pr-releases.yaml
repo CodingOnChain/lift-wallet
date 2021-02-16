@@ -4,8 +4,8 @@ on:
     types: [opened, synchronize]
 
 env:
-  BUILD_DOCKER_IMAGE: node:14
-  BOOT2DOCKER_ISO_URL: https://github.com/boot2docker/boot2docker/releases/download/v19.03.12/boot2docker.iso
+  NODEJS_VERSION: 14
+  NODEJS_DOCKER_IMAGE: node
 
 jobs:
   build-linux:
@@ -31,7 +31,7 @@ jobs:
           -v ${PWD}:/src \
           -w /src \
           --entrypoint bash \
-          ${BUILD_DOCKER_IMAGE} \
+          ${NODEJS_DOCKER_IMAGE}:${NODEJS_VERSION} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
         cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage
 
@@ -45,18 +45,12 @@ jobs:
       run: |
         echo "::set-output name=commit::$(echo ${GITHUB_SHA} | head -c7)"
         echo "::set-output name=pr_number::$(echo $GITHUB_REF | awk -F/ '{print $3}')"
-    - name: Install docker
+    - name: Install depends
       run: |
-        brew install docker-machine docker
-        brew services start docker-machine
-        mkdir -p ~/.docker/machine/cache
-        curl -Lo ~/.docker/machine/cache/boot2docker.iso ${BOOT2DOCKER_ISO_URL}
-        while ! docker-machine create default; do
-          docker-machine rm -f default
-          sleep 1;
-        done
-        docker-machine ls
-        sudo docker --version
+        brew install nvm
+        export NVM_DIR=~/.nvm
+        source $(brew --prefix nvm)/nvm.sh
+        nvm install ${NODEJS_VERSION}
     - name: Build
       env:
         PLATFORM: macos
@@ -66,14 +60,12 @@ jobs:
         ls -hal
         git status -sb
         mkdir -p release-files
-        eval "$(docker-machine env default)"
-        until docker ps; do sleep 0.5; done
-        docker run -i --rm \
-          -v ${PWD}:/src \
-          -w /src \
-          --entrypoint bash \
-          ${BUILD_DOCKER_IMAGE} \
-          -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
+        export NVM_DIR=~/.nvm
+        source $(brew --prefix nvm)/nvm.sh
+        nvm use ${NODEJS_VERSION}
+        npm i
+        npm run binaries:${PLATFORM}
+        npm run electron:build
         cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg
 
   draft-release:
