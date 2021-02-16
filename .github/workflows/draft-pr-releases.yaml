@@ -74,7 +74,6 @@ jobs:
           --entrypoint bash \
           ${BUILD_DOCKER_IMAGE} \
           -c "npm i && npm run binaries:${PLATFORM} && npm run electron:build"
-        done
         cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg
 
   draft-release:
