@@ -50,9 +50,9 @@ jobs:
         npm run binaries:${PLATFORM}
         npm run electron:build
         mkdir -p release-files
-        ( ls dist_electron/*AppImage && cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage )
-        ( ls dist_electron/*dmg && cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg )
-        ( ls dist_electron/*exe && cp -a dist_electron/*exe release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.exe )
+        ( ls dist_electron/*AppImage && cp -a dist_electron/*AppImage release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.AppImage ) || true
+        ( ls dist_electron/*dmg && cp -a dist_electron/*dmg release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.dmg ) || true
+        ( ls dist_electron/*exe && cp -a dist_electron/*exe release-files/lift-wallet-${PLATFORM}-${RELEASE_TAG}.exe ) || true
     - name: Upload built artifacts
       uses: actions/upload-artifact@v2
       with:
