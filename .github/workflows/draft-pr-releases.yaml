@@ -1,7 +1,7 @@
 name: draft-pr-releases
 on:
   pull_request:
-    types: [open, synchronize]
+    types: [opened, synchronize]
 
 env:
   BUILD_DOCKER_IMAGE: node:14
@@ -102,5 +102,4 @@ jobs:
           --name "${RELEASE_NAME}" \
           --notes "${RELEASE_NOTES}" \
           --assets $(ls release-files/* | xargs echo | sed 's| |,|g')
-
 
