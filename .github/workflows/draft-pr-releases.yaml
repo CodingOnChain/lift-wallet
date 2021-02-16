@@ -1,7 +1,7 @@
 name: draft-pr-releases
 on:
   pull_request:
-    types: [synchronize]
+    types: [open, synchronize]
 
 env:
   BUILD_DOCKER_IMAGE: node:14
