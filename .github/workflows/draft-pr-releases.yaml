@@ -93,7 +93,7 @@ jobs:
         GITHUB_REPO=$(echo ${GITHUB_REPOSITORY} | awk -F/ '{print $2}')
         git tag ${RELEASE_TAG}
         echo '{}' > package.json
-        unless publish-release \
+        until publish-release \
           --draft \
           --reuseRelease \
           --reuseDraftOnly \
