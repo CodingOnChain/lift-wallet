@@ -56,7 +56,8 @@
       "parser": "babel-eslint"
     },
     "rules": {
-      "semi": 2
+      "semi": 2,
+      "indent": ["error", 2]      
     }
   },
   "browserslist": [
