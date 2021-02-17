@@ -61,80 +61,7 @@
 
                             <v-tab-item>
                                 <v-card>
-                                    <v-form>
-                                        <v-card-text>
-                                            <v-text-field
-                                                v-model="sendForm.address"
-                                                label="Address"
-                                                @change="getFee"
-                                                :error-messages="addressErrors"
-                                                required
-                                                @input="$v.address.$touch()"
-                                                @blur="$v.address.$touch()"
-                                                @focus="addressFocusIn"
-                                                :disabled="isSendingAda"
-                                                ></v-text-field>
-
-                                             
-                                            <v-text-field
-                                                v-model="sendForm.amountFormatted"
-                                                :error-messages="amountErrors"
-                                                label="Amount (ADA)"
-                                                @input="$v.amount.$touch()"
-                                                @blur="sendAdaFocusOut" 
-                                                @focus="sendAdaFocusIn"
-                                                :hint="`Est. Fee: ${sendForm.feeFormatted}`"
-                                                persistent-hint
-                                                :disabled="isSendingAda || sendForm.readonlyAmount"
-                                                required
-                                                >
-                                            </v-text-field>
-
-                                            <v-checkbox
-                                                v-model="sendForm.readonlyAmount"
-                                                class="mt-5"
-                                                label="Send All"
-                                                @change="toggleSendAll"
-                                                ></v-checkbox>
-
-
-                                            <v-input
-                                                class="mt-5"
-                                                label="Total (ADA)"
-                                                >: {{sendForm.totalFormatted}}
-                                                </v-input>
-
-                                            <v-text-field
-                                                :append-icon="showPassphrase ? 'mdi-eye' : 'mdi-eye-off'"
-                                                v-model="sendForm.passphrase"
-                                                :type="showPassphrase ? 'text' : 'password'"
-                                                :error-messages="passphraseErrors"
-                                                label="Passphrase"
-                                                required
-                                                :disabled="isSendingAda"
-                                                @click:append="showPassphrase = !showPassphrase"
-                                                @input="$v.passphrase.$touch()"
-                                                @blur="$v.passphrase.$touch()"
-                                                @focus="passphraseFocusIn"
-                                                >
-                                            </v-text-field>
-
-                                            <v-file-input
-                                                v-model="sendForm.metadataFile"
-                                                label="Metadata File">
-                                            </v-file-input>
-                                        </v-card-text>
-                                        <v-card-actions>
-                                            <v-btn 
-                                                color="primary" 
-                                                v-if="!isSendingAda"
-                                                :disabled="$v.$invalid" 
-                                                @click="submitSendAda">
-                                                Submit
-                                            </v-btn>
-                                            <Loader v-if="isSendingAda" />
-                                        </v-card-actions>
-                                    </v-form>
+                                   <WalletSend :isSync=isSendingAda></WalletSend>              
                                 </v-card>
                             </v-tab-item>
 
@@ -193,12 +120,13 @@
   import { validationMixin } from 'vuelidate';
   import Loader from '../Loader';
   import AddressesTable from '../wallet/wallet-adresses/AddressesTable';
+  import WalletSend from '../wallet/wallet-details/WalletSend';
 
   export default {
     name: 'WalletDetails',
     props: ['walletId','focus'],
     mixins: [validationMixin],
-    components: { Loader,AddressesTable },
+    components: { Loader,AddressesTable,WalletSend },
     validations: {
       address: {  },
       amount: {  },
@@ -213,24 +141,7 @@
         sendFormValid: false,
         showPassphrase: false,
         showMintPassphrase: false,
-        isSendingAda: false,
-        sendForm: {
-            address: '',
-            amount: 0,
-            amountFormatted: '0.000000',
-            fee: 0,
-            feeFormatted: '0.000000',
-            total: 0,
-            totalFormatted: '0.000000',
-            tokenAmmount: '0.000000',
-            passphrase: '',
-            metadataFile: null,
-            validAddress: true,
-            validPassphrase: true,
-            validAmount: true,
-            readonlyAmount: false,
-            sendAll: false
-        },
+        isSendingAda: false,       
         mintForm: {
             asset: 'lift',
             amount: 1,
@@ -294,143 +205,27 @@
                 return this.wallet.state.progress.quantity;
             }
             return 0;
-        },
-        addressErrors: function() {
-            const errors = [];
-            if (!this.$v.address.$dirty) return errors;
-            this.sendForm.address.length == 0 && errors.push('Address is required.');
-            !this.sendForm.validAddress && errors.push('Address is invalid.');
-            return errors;
-        },
-        amountErrors: function() {
-            const errors = [];
-            if (!this.$v.amount.$dirty) return errors;
-            this.sendForm.amount.length == 0 && errors.push('Amount is required.');
-            !this.sendForm.validAmount && errors.push('Amount needs to be at least 1 ADA');
-            return errors;
-        },
-        passphraseErrors: function() {
-            const errors = [];
-            if (!this.$v.passphrase.$dirty) return errors;
-            this.sendForm.passphrase.length == 0 && errors.push('Passphrase is required.');
-            !this.sendForm.validPassphrase && errors.push('Incorrect passphrase');
-            return errors;
-        }
+        },      
     },
     destroyed() {
-        console.log('destroy');
-        clearInterval(this.getWalletInterval);
-        this.getWalletInterval = null;
-        this.transactions = null;
-        this.isSendingAda = false;
-        ipcRenderer.off('res:get-transactions', this.setTransactions);
-        ipcRenderer.off('res:get-fee', this.setFee);
-        ipcRenderer.off('res:get-addresses', this.setAddresses);
-        ipcRenderer.off('res:get-wallet', this.updateWallet);
+        // console.log('destroy');
+        // clearInterval(this.getWalletInterval);
+        // this.getWalletInterval = null;
+        // this.transactions = null;
+        // this.isSendingAda = false;
+        // ipcRenderer.off('res:get-transactions', this.setTransactions);
+        // ipcRenderer.off('res:get-fee', this.setFee);
+        // ipcRenderer.off('res:get-addresses', this.setAddresses);
+        // ipcRenderer.off('res:get-wallet', this.updateWallet);
     },
     mounted() {
         console.log('mounted poll');
         this.pollWallet();
-
-        ipcRenderer.on('res:get-transactions', this.setTransactions);
-        ipcRenderer.on('res:get-fee', this.setFee);
-        ipcRenderer.on('res:get-addresses', this.setAddresses);
-        ipcRenderer.on('res:get-wallet', this.updateWallet);
-        ipcRenderer.on('res:send-transaction', this.transactionResult);
-        ipcRenderer.on('res:mint-asset', this.transactionResult);
     },
-    methods: {
-        toggleSendAll() {
-            const shouldSendAll = this.sendForm.readonlyAmount;
-            this.sendForm.sendAll = true;
-            if (shouldSendAll) {
-                this.sendForm.amount = this.wallet.balance/1000000;
-                this.sendForm.amountFormatted = `${parseFloat(this.sendForm.amount).toFixed(6)}`;
-                this.getFee();
-            }
-        },
-        sendToken(){
-            console.log("send token");
-        },
+    methods: {            
         transactionResult(_, args) {
-            this.isSendingAda = false;
-            console.log('transaction result', args.transaction);
-            if(args.transaction.error){
-                alert(args.transaction.error);
-            }else {
-                this.sendForm = {
-                    address: '',
-                    amount: 0,
-                    amountFormatted: '0.000000',
-                    sendAll: false,
-                    fee: 0,
-                    feeFormatted: '0.000000',
-                    total: 0,
-                    totalFormatted: '0.000000',
-                    passphrase: '',
-                    validAddress: true,
-                    validPassphrase: true,
-                    validAmount: true
-                };
-                this.mintForm = {
-                    asset: 'lift',
-                    amount: 1,
-                    passphrase: '',
-                    metadataFile: null,
-                };
-                this.$v.$reset();
-                this.tabIndex = 0;
-            }
-
-            // if(args.transaction.code == 'wrong_encryption_passphrase') {
-            //     this.sendForm.validPassphrase = false;
-            //     this.$v.passphrase.$touch();
-            // } else if(args.transaction.code == 'utxo_too_small') {
-            //     this.sendForm.validAmount = false;
-            //     this.$v.amount.$touch();
-            // }
-        },
-        setTransactions(_, args) {
-            this.transactions = args.transactions;
-        },
-        setFee(_, args) {
-            console.log('fees',args);
-            if(args.fee != undefined) {
-                const fee = args.fee/1000000;
-
-                this.sendForm.validAddress = true;
-                this.setSendAdaFee(fee);
-
-                if (this.sendForm.readonlyAmount) {
-                    const availableWithoutFee = this.wallet.balance - args.fee;
-
-                    this.sendForm.amount = availableWithoutFee/1000000;
-                    this.sendForm.amountFormatted = `${parseFloat(availableWithoutFee/1000000).toFixed(6)}`;
-
-                    this.sendForm.total =  this.wallet.balance;
-                    this.sendForm.totalFormatted = `${parseFloat(this.sendForm.total/1000000).toFixed(6)}`;
-                }
-            }else{
-                this.sendForm.validAddress = false;
-            }
-        },
-        setAddresses(_, args) {
-            console.log(args);
-            this.addresses = args.addresses;
-        },
-        updateWallet(_, args) { 
-            //args.isSuccessful needs to be handled
-            this.setWallet(args.data);
-            console.log('got wallet', this.wallet);
-            if(this.wallet != null) {
-                ipcRenderer.send('req:get-transactions', { network: 'testnet', wallet: this.walletId });
-                if(this.addresses.length == 0) ipcRenderer.send('req:get-addresses', { name: this.walletId, network: 'testnet' });
-            }
-        },
-        setWallet(wallet) {
-            console.log(wallet);
-            this.wallet = wallet;
-        },
+         
+        },                 
         displayADA(lovelaces) {
             return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`;
         },
@@ -439,88 +234,8 @@
             this.getWalletInterval = setInterval(() => {  
                 ipcRenderer.send('req:get-wallet', { name: this.walletId, network: 'testnet' });
             }, 5000);
-        },
-        getFee() {
-            if(this.sendForm.address.length > 0)
-            {
-                let amount;
-                if ( this.sendForm.sendAll ) {
-                  amount = this.wallet.balance;
-                } else {
-                  amount = (this.sendForm.amount < 1000000) ? 1000000 : this.sendForm.amount;
-                }
-                ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: this.walletId, address: this.sendForm.address, sendAll: this.sendForm.sendAll, amount: amount});
-            }
-            
-        },
-        sendAdaFocusOut: function() {
-            // Recalculate the currencyValue after ignoring "$" and "," in user input
-            this.sendForm.amount = parseFloat(this.sendForm.amountFormatted.replace(/[^\d.]/g, ""));
-            // Ensure that it is not NaN. If so, initialize it to zero.
-            // This happens if user provides a blank input or non-numeric input like "abc"
-            if (isNaN(this.sendForm.amount)) {
-                this.sendForm.amount = 0;
-            }
-						// Format display value based on calculated currencyValue
-            this.sendForm.amountFormatted = this.sendForm.amount.toFixed(6);
-            this.setSendAdaTotal();
-        },
-        sendAdaFocusIn: function() {
-            this.sendForm.validAmount = true;
-            // Unformat display value before user starts modifying it
-            this.sendForm.amountFormatted = this.sendForm.amount.toString();
-        },
-        passphraseFocusIn: function() {
-            this.sendForm.validPassphrase = true;
-        },
-        addressFocusIn: function() {
-            this.sendForm.validAddress = true;
-        },
-        setSendAdaFee(ada) {
-            // Recalculate the currencyValue after ignoring "$" and "," in user input
-            this.sendForm.fee = parseFloat(ada);
-            // Ensure that it is not NaN. If so, initialize it to zero.
-            // This happens if user provides a blank input or non-numeric input like "abc"
-            if (isNaN(ada)) {
-                console.log('nan');
-                this.sendForm.fee = 0;
-            }
-						// Format display value based on calculated currencyValue
-            this.sendForm.feeFormatted = ada.toFixed(6);
-            this.setSendAdaTotal();
-        },
-        setSendAdaTotal() {
-            this.sendForm.total = parseFloat(this.sendForm.amount) + parseFloat(this.sendForm.fee);
-            this.sendForm.totalFormatted = this.sendForm.total.toFixed(6);
-            console.log(this.sendForm);
-        },
-        submitSendAda() {
-            this.$v.$touch();
-            if (!this.$v.$invalid) {
-                console.log('valid');
-                this.isSendingAda = true;
-                let metadata = null;
-                if(this.sendForm.metadataFile != null) metadata = this.sendForm.metadataFile.path;
-                console.log(metadata);
-                let amount;
-                if ( this.sendForm.sendAll ) {
-                  amount = this.wallet.balance;
-                } else {
-                  amount = this.sendForm.amount*1000000;
-                }
-                ipcRenderer.send(
-                    'req:send-transaction', 
-                    { 
-                        network: 'testnet', 
-                        wallet: this.walletId, 
-                        address: this.sendForm.address, 
-                        amount: amount ,
-                        sendAll: this.sendForm.sendAll,
-                        passphrase: this.sendForm.passphrase,
-                        metadata: metadata
-                    });
-            }
-        },
+        },       
+        
         mintAsset() {
             let metadata = null;
             if(this.mintForm.metadataFile != null) metadata = this.mintForm.metadataFile.path;
