@@ -18,21 +18,21 @@ module.exports = {
         mac: {
           target: "dmg",
           extraFiles: [
-            "cardano/darwin/**/*",
+            "cardano/macos*/**/*",
             "cardano/configs/**/*"
           ]
         },
         linux: {
           target: "AppImage",
           extraFiles: [
-            "cardano/linux/**/*",
+            "cardano/linux*/**/*",
             "cardano/configs/**/*"
           ]
         },
         win: {
           target: "nsis",
           extraFiles: [
-            "cardano/win32/**/*",
+            "cardano/win*/**/*",
             "cardano/configs/**/*"
           ]
         }
