@@ -114,8 +114,6 @@
 
 <script>
   const { ipcRenderer, shell } = require('electron');
-  import { mapGetters } from 'vuex';
-  import * as walletTypes from '../../store/wallet/types';
   import dayjs from 'dayjs';
   import { validationMixin } from 'vuelidate';
   import Loader from '../Loader';
@@ -177,9 +175,6 @@
         }
     },
     computed: {
-         ...mapGetters({
-          network: walletTypes.NAMESPACE + walletTypes.NETWORK
-        }),
         cssProps () {
             return {
                 '--primary-color': this.$vuetify.theme.themes.light.primary.base
@@ -218,14 +213,10 @@
         // ipcRenderer.off('res:get-addresses', this.setAddresses);
         // ipcRenderer.off('res:get-wallet', this.updateWallet);
     },
-    mounted() {
-        console.log('mounted poll');
+    mounted() {        
         this.pollWallet();
     },
-    methods: {            
-        transactionResult(_, args) {
-         
-        },                 
+    methods: {                             
         displayADA(lovelaces) {
             return `${parseFloat(lovelaces/1000000).toFixed(6)} ADA`;
         },

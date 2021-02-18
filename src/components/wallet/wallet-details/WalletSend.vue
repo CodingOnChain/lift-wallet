@@ -62,8 +62,9 @@
   </v-form>
 </template>
 <script>
-const { ipcRenderer } = require("electron");
 import { validationMixin } from "vuelidate";
+import { mapGetters, mapActions } from "vuex";
+import * as walletTypes from "../../../store/wallet/types";
 
 export default {
   mixins: [validationMixin],
@@ -105,8 +106,7 @@ export default {
       const errors = [];
       if (!this.$v.amount.$dirty) return errors;
       this.amount.length == 0 && errors.push("Amount is required.");
-      !this.isValidAmount &&
-        errors.push("Amount needs to be at least 1 ADA");
+      !this.isValidAmount && errors.push("Amount needs to be at least 1 ADA");
       return errors;
     },
     passphraseErrors: function () {
