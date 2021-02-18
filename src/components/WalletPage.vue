@@ -44,14 +44,12 @@
 </template>
 
 <script>
-  const { ipcRenderer } = require('electron');
-  import NoWallet from './wallet/NoWallet';
-  import AddWallet from './wallet/AddWallet';
-  import WalletDetails from './wallet/WalletDetails';
-  import { mapGetters } from "vuex";
-  import * as walletTypes from "../store/wallet/types";
-
-
+const { ipcRenderer } = require("electron");
+import NoWallet from "./wallet/NoWallet";
+import AddWallet from "./wallet/AddWallet";
+import WalletDetails from "./wallet/WalletDetails";
+import { mapGetters } from "vuex";
+import * as walletTypes from "../store/wallet/types";
 
 export default {
   name: "WalletPage",
@@ -62,42 +60,31 @@ export default {
     WalletDetails,
   },
   watch: {
-    render: function(newVal, oldVal) {
+    render: function (newVal, oldVal) {
       if (!oldVal && newVal) {
         this.getWallets();
       } else {
         this.addingWallet = false;
       }
     },
-
-    computed: {
-      hasWallets: function () {
-        // `this` points to the vm instance
-        return this.wallets.length > 0;
-      },
-      enableDetails: function() {
-        return this.render;
-      },
-      ...mapGetters({
-      wallet: walletTypes.NAMESPACE + walletTypes.WALLET
-    }),
-
-    selectedWalletIndex: function(newVal, oldVal) {
+    selectedWalletIndex: function (newVal, oldVal) {
       if (newVal != undefined && oldVal != newVal) {
         this.selectedWalletId = this.wallets[newVal].name;
         console.log(newVal);
       }
-
-    },
+    }
   },
   computed: {
-    hasWallets: function() {
+    hasWallets: function () {
       // `this` points to the vm instance
       return this.wallets.length > 0;
     },
-    enableDetails: function() {
+    enableDetails: function () {
       return this.render;
-    },
+    },   
+    ...mapGetters({
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
+    }),
   },
   data: () => ({
     selectedWalletIndex: null,
@@ -130,41 +117,32 @@ export default {
     });
   },
   methods: {
-    addWallet: function() {},
-    getWallets: function() {
+    addWallet: function () {},
+    getWallets: function () {
       console.log("get wallets");
       ipcRenderer.send("req:get-wallets", { network: "testnet" });
     },
-    methods: {
-      addWallet: function() {
-        
-      },
-      getWallets: function() {
-        console.log('get wallets');
-        ipcRenderer.send('req:get-wallets', {network: 'testnet'});
-      },
-      getMnemonic: function() {
-        ipcRenderer.send('req:generate-recovery-phrase');
-      },
-      startNewWallet: function() {
-        this.addingWallet = true;
-      },
-      cancelAdd: function() {
+    getMnemonic: function () {
+      ipcRenderer.send("req:generate-recovery-phrase");
+    },
+    startNewWallet: function () {
+      this.addingWallet = true;
+    },
+    cancelAdd: function () {
+      this.addingWallet = false;
+    },
+    newWalletAdded() {
+      if (this.wallet != null) {
+        console.log("new added wallet", this.wallet);
+        this.wallets.push(this.wallet);
+        console.log("wallets totals", this.wallets);
         this.addingWallet = false;
-      },
-      newWalletAdded() {        
-        if(this.wallet!=null){
-          console.log("new added wallet",this.wallet);
-          this.wallets.push(this.wallet);
-          console.log("wallets totals",this.wallets);
-          this.addingWallet = false;
-          this.selectedWalletIndex = this.wallets.length - 1;
-          this.wallet=null;
-        }
+        this.selectedWalletIndex = this.wallets.length - 1;
+        this.wallet = null;
       }
-    }
-  };
-
+    },
+  },
+};
 </script>
 
 <style scoped></style>
