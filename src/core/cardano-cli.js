@@ -194,21 +194,31 @@ export function signTransaction(network, magic, signingKeyPaths, rawTxBody, sign
     return txSign;
 }
 
-export function createPaymentVerificationKey(paymentSigningFile, extendedVerificationKeyFile) {
+export function createExtendedVerificationKey(signingKeyFile, extendedVerificationKeyFile) {
     const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     // build evkey+vkey
     let cmd = `${cardanoCli} key verification-key`
-    cmd += ` --signing-key-file "${paymentSigningFile}"`;
+    cmd += ` --signing-key-file "${signingKeyFile}"`;
     cmd += ` --verification-key-file "${extendedVerificationKeyFile}"`;
 
     return cmd
 }
 
-export function createExtendedVerificationKey(extendedVerificationKeyFile, verificationKeyFile) {
+export function createVerificationKey(extendedVerificationKeyFile, verificationKeyFile) {
     const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     var cmd = `${cardanoCli} key non-extended-key`;
     cmd += ` --extended-verification-key-file "${extendedVerificationKeyFile}"`;
     cmd += ` --verification-key-file "${verificationKeyFile}"`;
 
     return cmd
+}
+
+export function createStakeRegistrationCertificate(stakingVerificationKeyFile, stakingCert) {
+    const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
+    var cmd = `${cardanoCli} stake-address registration-certificate`;
+    cmd += ` --staking-verification-key-file ${stakingVerificationKeyFile}`;
+    cmd += ` --out-file ${stakingCert}`;
+
+    return cmd
+
 }

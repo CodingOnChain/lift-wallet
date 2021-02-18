@@ -11,7 +11,7 @@ import {
     buildTransaction, 
     buildMintTransaction,
     calculateMinFee,
-    createPaymentVerificationKey,
+    createVerificationKey,
     createExtendedVerificationKey,
     getAddressKeyHash,
     createMonetaryPolicy,
@@ -47,8 +47,10 @@ const accountPrvFile = 'account.xprv';
 const accountPubFile = 'account.xpub';
 const paymentFile = 'payment.addr';
 const paymentSigningKeyFile = 'payment.skey';
-const extendedVerificationKeyFile = 'payment.evkey';
-const verificationKeyFile = 'payment.vkey';
+const paymentExtendedVerificationKeyFile = 'payment.evkey';
+const paymentVerificationKeyFile = 'payment.vkey';
+const stakeExtendedVerificationKeyFile = 'stake.evkey';
+const stakeVerificationKeyFile = 'stake.vkey';
 const changeFile = 'change.addr';
 const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
@@ -111,7 +113,7 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     if(paymentPrv.stderr) throw paymentPrv.stderr;
     const paymentPub = await cmd(getChildCmd(accountPub.stdout, "0/0"));
     if(paymentPub.stderr) throw paymentPub.stderr;
-    //payment signiing key (needed to get verification keys)
+    //payment signing key (needed to get verification keys)
     const paymentSKeyPath = path.resolve(walletDir, paymentSigningKeyFile);
     const paymentSigningKey = getBufferHexFromFile(paymentPrv.stdout).slice(0, 128) + getBufferHexFromFile(paymentPub.stdout);
     const paymentSKey = `{
@@ -119,20 +121,42 @@ export async function createWallet(network, name, mnemonic, passphrase) {
         "description": "Payment Signing Key",
         "cborHex": "5880${paymentSigningKey}"
     }`
-    // public [extended] verification key
-    const extendedVerificationKeyPath = path.resolve(walletDir, extendedVerificationKeyFile);
-    const verificationKeyPath = path.resolve(walletDir, verificationKeyFile);
-
-    //stake public
+    //stake priv/pub keys (needed to get verification keys)
+    const stakePrv = await cmd(getChildCmd(accountPrv.stdout, "2/0"));
+    if(stakePrv.stderr) throw stakePrv.stderr;
     const stakePub = await cmd(getChildCmd(accountPub.stdout, "2/0"));
     if(stakePub.stderr) throw stakePub.stderr;
+    //stake signing key (needed to get verification keys)
+    const stakeSKeyPath = path.resolve(walletDir, stakeSigningKeyFile);
+    const stakeSigningKey = getBufferHexFromFile(stakePrv.stdout).slice(0, 128) + getBufferHexFromFile(stakePub.stdout);
+    const stakeSKey = `{
+        "type": "StakeExtendedSigningKeyShelley_ed25519_bip32",
+        "description": "Stake Signing Key",
+        "cborHex": "5880${stakeSigningKey}"
+    }`
+
+    // public payment [extended] verification keys
+    const paymentExtendedVerificationKeyPath = path.resolve(walletDir, paymentExtendedVerificationKeyFile);
+    const paymentVerificationKeyPath = path.resolve(walletDir, paymentVerificationKeyFile);
+    // public stake [extended] verification keys
+    const stakeExtendedVerificationKeyPath = path.resolve(walletDir, stakeExtendedVerificationKeyFile);
+    const stakeVerificationKeyPath = path.resolve(walletDir, stakeVerificationKeyFile);
 
     const addresses = [];
     const changes = [];
+    const stakeAddresses = [];
     for(let i = 0; i < 20; i++) {
         //public payment key 
         const paymentPub = await cmd(getChildCmd(accountPub.stdout, `0/${i}`));
         if(paymentPub.stderr) throw paymentPub.stderr;
+
+        //public change key 
+        const changePub = await cmd(getChildCmd(accountPub.stdout, `1/${i}`));
+        if(changePub.stderr) throw changePub.stderr;
+
+        //public stake key
+        const stakePub = await cmd(getChildCmd(accountPub.stdout, `2/${i}`));
+        if(stakePub.stderr) throw stakePub.stderr;
 
         //enterprise address
         const basePaymentAddr = await cmd(getBaseAddrCmd(paymentPub.stdout, network));
@@ -141,10 +165,10 @@ export async function createWallet(network, name, mnemonic, passphrase) {
         //payment address
         const paymentAddr = await cmd(getPaymentAddrCmd(basePaymentAddr.stdout, stakePub.stdout));
         if(paymentAddr.stderr) throw paymentAddr.stderr;
-        
-        //public change key 
-        const changePub = await cmd(getChildCmd(accountPub.stdout, `1/${i}`));
-        if(changePub.stderr) throw changePub.stderr;
+
+        //stake address
+        const stakeAddr = await cmd(getstakeAddrCmd(stakePub.stdout));
+        if(stakeAddr.stderr) throw stakeAddr.stderr;
 
         //enterprise change address
         const baseChangeAddr = await cmd(getBaseAddrCmd(changePub.stdout, network));
@@ -156,6 +180,7 @@ export async function createWallet(network, name, mnemonic, passphrase) {
 
         addresses.push({ index: i, address: paymentAddr.stdout });
         changes.push({ index: i, address: changeAddr.stdout });
+        stakeAddresses.push({ index: i, adddress: stakeAddr.stdout });
     }
     
     //keys/addresses to save
@@ -163,14 +188,23 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     //account pub
     //10 - payment addresses
     fs.mkdirSync(walletDir);
-    // write publicVerificationKey now that wallet dir exists
+    // write */0 publicVerificationKeys now that wallet dir exists
+    //// payment
     fs.writeFileSync(path.resolve(walletDir, paymentSKeyPath), paymentSKey);
-    let paymentVerificationKey = createPaymentVerificationKey(paymentSKeyPath, extendedVerificationKeyPath);
+    let paymentExtendedVerificationKey = createExtendedVerificationKey(paymentSKeyPath, paymentExtendedVerificationKeyPath);
+    await cli(paymentExtendedVerificationKey);
+    let paymentVerificationKey = createVerificationKey(paymentExtendedVerificationKeyPath, paymentVerificationKeyPath)
     await cli(paymentVerificationKey);
-    let extendedVerificationKey = createExtendedVerificationKey(extendedVerificationKeyPath, verificationKeyPath)
-    await cli(extendedVerificationKey);
-    //// cleanup paymentskey
+    //// stake
+    fs.writeFileSync(path.resolve(walletDir, stakeSKeyPath), stakeSKey);
+    let stakeExtendedVerificationKey = createExtendedVerificationKey(stakeSKeyPath, stakeExtendedVerificationKeyPath);
+    await cli(stakeExtendedVerificationKey);
+    let stakeVerificationKey = createVerificationKey(stakeExtendedVerificationKeyPath, stakeVerificationKeyPath)
+    await cli(stakeVerificationKey);
+
+    //// cleanup skeys
     if (fs.existsSync(paymentSKeyPath)) fs.unlinkSync(paymentSKeyPath);
+    if (fs.existsSync(stakeSKeyPath)) fs.unlinkSync(stakeSKeyPath);
 
     fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv.stdout);
     fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub.stdout);
@@ -204,6 +238,7 @@ export async function getWallets(network) {
 }
 
 export async function getAddresses(network, name) {
+    console.log("@@@ walletsPath, network, name", walletsPath, network, name);
     const walletDir = path.resolve(walletsPath, network, name);
     return JSON.parse(fs.readFileSync(path.resolve(walletDir, paymentFile)))
 }
@@ -255,7 +290,7 @@ export async function getFee(network, name, sendAll, amount, toAddress) {
     return feeResult.stdout.split(' ')[0];
 }
 
-//add ability to send custom ada amount and to address
+//TODO: add ability to send custom ada amount and to address
 export async function mintToken(network, walletName, assetName, tokenAmount, passphrase, metadataPath) {
     const walletDir = path.resolve(walletsPath, network, walletName);
 
@@ -278,8 +313,8 @@ export async function mintToken(network, walletName, assetName, tokenAmount, pas
         fs.mkdirSync(assetDir);
       }
       //get the key hash of the verification key of the wallet
-      const verificationKeyPath = path.resolve(walletDir, verificationKeyFile);
-      const keyHashCmdOutput = await cli(getAddressKeyHash(verificationKeyPath));
+      const paymentVerificationKeyPath = path.resolve(walletDir, paymentVerificationKeyFile);
+      const keyHashCmdOutput = await cli(getAddressKeyHash(paymentVerificationKeyPath));
       const keyHash = keyHashCmdOutput.stdout.replace(/[\n\r]/g, '');
 
       //lets create the monetary policy for the asset
