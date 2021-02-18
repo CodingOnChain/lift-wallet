@@ -45,6 +45,9 @@
   import NoWallet from './wallet/NoWallet';
   import AddWallet from './wallet/AddWallet';
   import WalletDetails from './wallet/WalletDetails';
+  import { mapGetters } from "vuex";
+  import * as walletTypes from "../store/wallet/types";
+
 
   export default {
     name: 'WalletPage',
@@ -76,7 +79,10 @@
       },
       enableDetails: function() {
         return this.render;
-      }
+      },
+      ...mapGetters({
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET
+    }),
     },
     data: () => ({
       selectedWalletIndex: null,
@@ -125,11 +131,15 @@
       cancelAdd: function() {
         this.addingWallet = false;
       },
-      newWalletAdded: function(e) {        
-        console.log("new added wallet",e);
-        this.wallets.push(e.wallet);
-        this.selectedWalletIndex = this.wallets.length - 1;
-        this.addingWallet = false;
+      newWalletAdded() {        
+        if(this.wallet!=null){
+          console.log("new added wallet",this.wallet);
+          this.wallets.push(this.wallet);
+          console.log("wallets totals",this.wallets);
+          this.addingWallet = false;
+          this.selectedWalletIndex = this.wallets.length - 1;
+          this.wallet=null;
+        }
       }
     }
   };

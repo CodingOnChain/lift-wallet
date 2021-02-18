@@ -195,6 +195,13 @@ export default {
       ],
     },
   }),
+  watch: {
+    wallet: function () {
+      this.e6 = 1;                
+      this.isSubmitting = false;
+      this.$emit("added-wallet");
+    } 
+  },
   computed: {
     wordsLengthWalletValidation() {
       return [
@@ -253,13 +260,7 @@ export default {
       const dataTransferObject = {
         walletForm: this.walletForm,
       };
-      this.addingWalletFromBackend(dataTransferObject)
-        .then(() => {
-          console.log("add wallet", this.wallet);
-          this.e6 = 1;      
-          this.$emit("added-wallet", { wallet: this.wallet });
-          this.isSubmitting = false;
-        });
+      this.addingWalletFromBackend(dataTransferObject);
     },
   },
 };

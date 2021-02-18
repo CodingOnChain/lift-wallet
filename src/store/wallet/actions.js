@@ -33,7 +33,6 @@ const actions = {
     console.log('wallet form', walletForm);            
     ipcRenderer.send('req:add-wallet', walletForm);
   }   
-
 };
 
 export default actions;
