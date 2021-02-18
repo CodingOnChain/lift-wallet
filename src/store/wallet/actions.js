@@ -31,10 +31,10 @@ const actions = {
   },
   async [types.ADD_WALLET]({ state }, { walletForm }) {
     console.log(state);
-    console.log("add a new wallet");
-    console.log("wallet form", walletForm);
-    ipcRenderer.send("req:add-wallet", walletForm);
-  },
+    console.log('add a new wallet');            
+    console.log('wallet form', walletForm);            
+    ipcRenderer.send('req:add-wallet', walletForm);
+  }   
 };
 
 export default actions;
