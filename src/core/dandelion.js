@@ -53,6 +53,33 @@ export async function getTransactionsDetails(network, transactions) {
     return transactionResult.data.data.transactions;
 }
 
+export async function getValidPools(network) {
+
+    var sendResult = await axios(
+        {
+            method: 'get',
+            url: `${getPostgrestApiUrl(network)}rpc/get_valid_pools`,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    return sendResult.data;
+}
+
+export async function getPoolMetadata(poolUrl) {
+    
+    var sendResult = await axios(
+        {
+            method: 'get',
+            url: poolUrl,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    return sendResult.data;
+}
+
+
 function getGraphqlUrl(network) {
     return `https://graphql-api.${network}.dandelion.link/`;
 }

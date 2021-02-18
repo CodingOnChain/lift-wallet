@@ -49,8 +49,6 @@ const paymentFile = 'payment.addr';
 const paymentSigningKeyFile = 'payment.skey';
 const paymentExtendedVerificationKeyFile = 'payment.evkey';
 const paymentVerificationKeyFile = 'payment.vkey';
-const stakeExtendedVerificationKeyFile = 'stake.evkey';
-const stakeVerificationKeyFile = 'stake.vkey';
 const changeFile = 'change.addr';
 const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
@@ -121,30 +119,13 @@ export async function createWallet(network, name, mnemonic, passphrase) {
         "description": "Payment Signing Key",
         "cborHex": "5880${paymentSigningKey}"
     }`
-    //stake priv/pub keys (needed to get verification keys)
-    const stakePrv = await cmd(getChildCmd(accountPrv.stdout, "2/0"));
-    if(stakePrv.stderr) throw stakePrv.stderr;
-    const stakePub = await cmd(getChildCmd(accountPub.stdout, "2/0"));
-    if(stakePub.stderr) throw stakePub.stderr;
-    //stake signing key (needed to get verification keys)
-    const stakeSKeyPath = path.resolve(walletDir, stakeSigningKeyFile);
-    const stakeSigningKey = getBufferHexFromFile(stakePrv.stdout).slice(0, 128) + getBufferHexFromFile(stakePub.stdout);
-    const stakeSKey = `{
-        "type": "StakeExtendedSigningKeyShelley_ed25519_bip32",
-        "description": "Stake Signing Key",
-        "cborHex": "5880${stakeSigningKey}"
-    }`
 
     // public payment [extended] verification keys
     const paymentExtendedVerificationKeyPath = path.resolve(walletDir, paymentExtendedVerificationKeyFile);
     const paymentVerificationKeyPath = path.resolve(walletDir, paymentVerificationKeyFile);
-    // public stake [extended] verification keys
-    const stakeExtendedVerificationKeyPath = path.resolve(walletDir, stakeExtendedVerificationKeyFile);
-    const stakeVerificationKeyPath = path.resolve(walletDir, stakeVerificationKeyFile);
 
     const addresses = [];
     const changes = [];
-    const stakeAddresses = [];
     for(let i = 0; i < 20; i++) {
         //public payment key 
         const paymentPub = await cmd(getChildCmd(accountPub.stdout, `0/${i}`));
@@ -166,10 +147,6 @@ export async function createWallet(network, name, mnemonic, passphrase) {
         const paymentAddr = await cmd(getPaymentAddrCmd(basePaymentAddr.stdout, stakePub.stdout));
         if(paymentAddr.stderr) throw paymentAddr.stderr;
 
-        //stake address
-        const stakeAddr = await cmd(getstakeAddrCmd(stakePub.stdout));
-        if(stakeAddr.stderr) throw stakeAddr.stderr;
-
         //enterprise change address
         const baseChangeAddr = await cmd(getBaseAddrCmd(changePub.stdout, network));
         if(baseChangeAddr.stderr) throw baseChangeAddr.stderr;
@@ -180,7 +157,6 @@ export async function createWallet(network, name, mnemonic, passphrase) {
 
         addresses.push({ index: i, address: paymentAddr.stdout });
         changes.push({ index: i, address: changeAddr.stdout });
-        stakeAddresses.push({ index: i, adddress: stakeAddr.stdout });
     }
     
     //keys/addresses to save
@@ -195,16 +171,9 @@ export async function createWallet(network, name, mnemonic, passphrase) {
     await cli(paymentExtendedVerificationKey);
     let paymentVerificationKey = createVerificationKey(paymentExtendedVerificationKeyPath, paymentVerificationKeyPath)
     await cli(paymentVerificationKey);
-    //// stake
-    fs.writeFileSync(path.resolve(walletDir, stakeSKeyPath), stakeSKey);
-    let stakeExtendedVerificationKey = createExtendedVerificationKey(stakeSKeyPath, stakeExtendedVerificationKeyPath);
-    await cli(stakeExtendedVerificationKey);
-    let stakeVerificationKey = createVerificationKey(stakeExtendedVerificationKeyPath, stakeVerificationKeyPath)
-    await cli(stakeVerificationKey);
 
     //// cleanup skeys
     if (fs.existsSync(paymentSKeyPath)) fs.unlinkSync(paymentSKeyPath);
-    if (fs.existsSync(stakeSKeyPath)) fs.unlinkSync(stakeSKeyPath);
 
     fs.writeFileSync(path.resolve(walletDir, accountPrvFile), accountPrv.stdout);
     fs.writeFileSync(path.resolve(walletDir, accountPubFile), accountPub.stdout);
@@ -423,6 +392,7 @@ export async function sendTransaction(network, name, sendAll, amount, toAddress,
             network, 
             [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
 
+            
         //get draft tx-ins
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
@@ -497,9 +467,11 @@ export async function getTransactions(network, name) {
     //gather payment/change addresses for utxos
     const payments = JSON.parse(fs.readFileSync(path.resolve(walletDir, paymentFile)))
     const changes = JSON.parse(fs.readFileSync(path.resolve(walletDir, changeFile)))
+
     const addresses = [...payments.map((a) => a.address), ...changes.map((a) => a.address)]
 
     //get transactions by addresses
+ //get transactions by addresses
     const transactions = await getTransactionsByAddresses(network, addresses);
     
     const transactionsDetails = await getTransactionsDetails(
