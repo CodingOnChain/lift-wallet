@@ -17,22 +17,22 @@
         @input="$v.amount.$touch()"
         @blur="sendAdaFocusOut"
         @focus="sendAdaFocusIn"
-        :hint="`Est. Fee: ${sendForm.feeFormatted}`"
+        :hint="`Est. Fee: ${feeFormatted}`"
         persistent-hint
-        :disabled="isSync || sendForm.readonlyAmount"
+        :disabled="isSync || isReadonlyAmount"
         required
       >
       </v-text-field>
 
       <v-checkbox
-        v-model="readonlyAmount"
+        v-model="isReadonlyAmount"
         class="mt-5"
         label="Send All"
         @change="toggleSendAll"
       ></v-checkbox>
 
       <v-input class="mt-5" label="Total (ADA)"
-        >: {{ sendForm.totalFormatted }}
+        >: {{ totalFormatted }}
       </v-input>
 
       <v-text-field
@@ -75,7 +75,10 @@ export default {
   },
   data() {
     return {
+      address:null,
       showPassphrase: false,
+      isValidPassphrase:false,
+      isReadonlyAmount:false
     };
   },
   props: {
@@ -83,17 +86,19 @@ export default {
   },
   computed: {
     ...mapGetters({
-      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
-      addresses: walletTypes.NAMESPACE + walletTypes.ADDRESSES,
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,      
       transaction: walletTypes.NAMESPACE + walletTypes.TRANSACTION,
       isValidAdress: walletTypes.NAMESPACE + walletTypes.IS_VALID_ADRESS,
       isValidAmount: walletTypes.NAMESPACE + walletTypes.IS_VALID_AMOUNT,
-      isReadonlyAmount: walletTypes.NAMESPACE + walletTypes.IS_READONLY_AMOUNT,
-      isValidPassphrase:
-        walletTypes.NAMESPACE + walletTypes.IS_VALID_PASSPHRASE,
       amount: walletTypes.NAMESPACE + walletTypes.AMOUNT,
       amountFormatted: walletTypes.NAMESPACE + walletTypes.AMOUNT_FORMATTED,
+      fee: walletTypes.NAMESPACE + walletTypes.FEE,
+      feeFormatted: walletTypes.NAMESPACE + walletTypes.FEE_FORMATTED,
       sendAll: walletTypes.NAMESPACE + walletTypes.SEND_ALL,
+      total: walletTypes.NAMESPACE + walletTypes.TOTAL,
+      totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED,
+      passphrase: walletTypes.NAMESPACE + walletTypes.PASSPHRASE,
+      metadataFile: walletTypes.NAMESPACE + walletTypes.METADATA_FILE,
     }),
     addressErrors() {
       const errors = [];
@@ -112,9 +117,9 @@ export default {
     passphraseErrors: function () {
       const errors = [];
       if (!this.$v.passphrase.$dirty) return errors;
-      this.sendForm.passphrase.length == 0 &&
+      this.passphrase.length == 0 &&
         errors.push("Passphrase is required.");
-      !this.sendForm.validPassphrase && errors.push("Incorrect passphrase");
+      !this.isValidPassphrase && errors.push("Incorrect passphrase");
       return errors;
     },
   },
@@ -123,8 +128,7 @@ export default {
   methods: {
     ...mapActions({
       getFee: walletTypes.NAMESPACE + walletTypes.GET_FEE,
-      submitAndSendAda:
-        walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA,
+      submitAndSendAda:walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA
     }),
     addressFocusIn() {
       this.isValidAdress = true;

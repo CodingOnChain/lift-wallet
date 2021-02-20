@@ -39,9 +39,6 @@ export default {
   [types.IS_VALID_ADRESS]: (state) => {
     return state.isValidAdress;
   },
-  [types.IS_READONLY_AMOUNT]: (state) => {
-    return state.isReadonlyAmount;
-  },
   [types.IS_SENDING_ADA]: (state) => {
     return state.isSendingAda;
   },
@@ -71,9 +68,6 @@ export default {
   },
   [types.METADATA_FILE]: (state) => {
     return state.metadataFile;
-  },
-  [types.IS_VALID_PASSPHRASE]: (state) => {
-    return state.isValidPassphrase;
   }
 };
 

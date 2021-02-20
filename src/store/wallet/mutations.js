@@ -21,9 +21,6 @@ export default {
   [types.SET_IS_VALID_AMOUNT]: (state, isValidAmount) => {
     state.isValidAmount = isValidAmount;
   },
-  [types.SET_IS_READONLY_AMOUNT]: (state, isReadonlyAmount) => {
-    state.isReadonlyAmount = isReadonlyAmount;
-  },
   [types.SET_AMOUNT]: (state, amount) => {
     state.amount = amount;
   },
@@ -50,8 +47,5 @@ export default {
   },
   [types.SET_METADATA_FILE]: (state, metadataFile) => {
     state.metadataFile = metadataFile;
-  },
-  [types.IS_VALID_PASSPHRASE]: (state, isValidPassphrase) => {
-    state.isValidPassphrase = isValidPassphrase;
   }
 };

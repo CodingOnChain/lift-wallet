@@ -77,7 +77,7 @@
 
               <v-tab-item>
                 <v-card>
-                  <AddressesTable :tableItems="addresses"></AddressesTable>
+                  <AddressesTable></AddressesTable>
                 </v-card>
               </v-tab-item>
 
@@ -139,8 +139,7 @@ import Loader from "../Loader";
 import AddressesTable from "../wallet/wallet-adresses/AddressesTable";
 import WalletSend from "../wallet/wallet-details/WalletSend";
 import * as walletTypes from "../../store/wallet/types";
-import { mapActions, mapGetters} from "vuex";
-
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   name: "WalletDetails",
@@ -152,11 +151,10 @@ export default {
     amount: {},
     passphrase: {},
   },
-  data: () => ({    
+  data: () => ({
     tabIndex: 0,
     getWalletInterval: null,
-    transactions: null,
-    addresses: [],
+    transactions: null,    
     sendFormValid: false,
     showPassphrase: false,
     showMintPassphrase: false,
@@ -176,7 +174,6 @@ export default {
       } else {
         this.transactions = null;
         this.isSendingAda = false;
-        this.addresses = [];
         clearInterval(this.getWalletInterval);
         console.log("focus true");
         this.pollWallet();
@@ -189,7 +186,6 @@ export default {
         this.tabIndex = 0;
         this.transactions = null;
         this.isSendingAda = false;
-        this.addresses = [];
         console.log("new wallet id");
         this.pollWallet();
       }
@@ -197,7 +193,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      wallet: walletTypes.NAMESPACE + walletTypes.WALLET
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
     }),
     cssProps() {
       return {
@@ -242,7 +238,7 @@ export default {
   },
   mounted() {
     this.setUpSendDataWallet();
-        this.pollWallet();
+    this.pollWallet();
   },
   methods: {
     ...mapActions({

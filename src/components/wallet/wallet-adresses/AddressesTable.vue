@@ -1,8 +1,9 @@
 <template>
   <div>
+    {{addresses}}
     <v-data-table
       :headers="headers"
-      :items="tableItems"
+      :items="addresses"
       disable-pagination
       hide-default-footer
     >
@@ -10,14 +11,17 @@
   </div>
 </template>
 <script>
+import { mapGetters } from "vuex";
+import * as walletTypes from "../../../store/wallet/types";
+
 export default {
   data() {
     return {};
   },
-  props: {
-    tableItems: Array,
-  },
   computed: {
+    ...mapGetters({
+      addresses: walletTypes.NAMESPACE + walletTypes.ADDRESSES
+    }),
     headers() {
       return [
         {

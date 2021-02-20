@@ -68,7 +68,7 @@ const actions = {
           network: "testnet",
           wallet: state.walletId,
         });
-        if (state.addresses.length == 0) {
+        if (state.addresses!=null&&state.addresses.length == 0) {
           ipcRenderer.send("req:get-addresses", {
             name: state.walletId,
             network: "testnet",

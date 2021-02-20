@@ -9,7 +9,6 @@ export const TRANSACTION= 'TRANSACTION';
 export const ADDRESSES= 'ADDRESSES';
 export const WORDS_NUMBER_ALLOWED= 'WORDS_NUMBER_ALLOWED';
 export const IS_VALID_ADRESS= 'IS_VALID_ADRESS';
-export const IS_READONLY_AMOUNT= 'IS_READONLY_AMOUNT';
 export const IS_SENDING_ADA= 'IS_SENDING_ADA';
 export const IS_VALID_AMOUNT= 'IS_VALID_AMOUNT';
 export const NETWORK = 'NETWORK';
@@ -26,7 +25,6 @@ export const FEE = 'FEE';
 export const FEE_FORMATTED = 'FEE_FORMATTED';
 export const SEND_ALL = 'SEND_ALL';
 export const METADATA_FILE = 'METADATA_FILE';
-export const IS_VALID_PASSPHRASE = 'IS_VALID_PASSPHRASE';
 
 // Mutations
 export const SET_MNEMONIC = 'SET_MNEMONIC';
@@ -35,7 +33,6 @@ export const SET_WALLET_ID = 'SET_WALLET_ID';
 export const SET_TRANSACTION = 'SET_TRANSACTION';
 export const SET_ADDRESSES = 'SET_ADDRESSES';
 export const SET_IS_VALID_ADRESS = 'SET_IS_VALID_ADRESS';
-export const SET_IS_READONLY_AMOUNT = 'SET_IS_READONLY_AMOUNT';
 export const SET_IS_SENDING_ADA = 'SET_IS_SENDING_ADA';
 export const SET_IS_VALID_AMOUNT = 'SET_IS_VALID_AMOUNT';
 export const SET_AMOUNT = 'SET_AMOUNT';
@@ -46,7 +43,6 @@ export const SET_FEE= 'SET_FEE';
 export const SET_FEE_FORMATTED= 'SET_FEE_FORMATTED';
 export const SET_SEND_ALL= 'SET_SEND_ALL';
 export const SET_METADATA_FILE= 'SET_METADATA_FILE';
-export const SET_IS_VALID_PASSPHRASE= 'SET_IS_VALID_PASSPHRASE';
 
 // Actions
 export const SET_UP_WALLET = 'SET_UP_WALLET';
