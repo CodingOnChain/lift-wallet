@@ -19,11 +19,11 @@ Proceed with caution.
 
 We recommend using these methods to fulfill prerequisites:
 
-- Windows: use [choco](https://chocolatey.org/):
+- Windows users, try some [choco](https://chocolatey.org/):
 ```
 choco install git nvm bash wget
 ```
-- MacOS: [brew](https://brew.sh/):
+- MacOS users, try some [brew](https://brew.sh/):
 ```
 brew install git nvm bash wget
 ```
