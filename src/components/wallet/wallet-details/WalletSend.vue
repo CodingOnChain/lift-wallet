@@ -119,12 +119,9 @@ export default {
     },
   },
   mounted() {
-    this.setUpSendDataWallet();
   },
   methods: {
     ...mapActions({
-      setUpSendDataWallet:
-        walletTypes.NAMESPACE + walletTypes.SET_UP_SEND_WALLET_DATA,
       getFee: walletTypes.NAMESPACE + walletTypes.GET_FEE,
       submitAndSendAda:
         walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA,
