@@ -236,7 +236,7 @@ export default {
     // ipcRenderer.off('res:get-addresses', this.setAddresses);
     // ipcRenderer.off('res:get-wallet', this.updateWallet);
   },
-  mounted() {
+  mounted() {   
     this.setUpSendDataWallet();
     this.pollWallet();
   },

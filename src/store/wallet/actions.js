@@ -59,22 +59,24 @@ const actions = {
     });
 
     ipcRenderer.on('res:get-addresses', (_, args) => {
+      console.log('add adresses');
       commit(types.SET_ADDRESSES, args.addresses);
     });
     ipcRenderer.on('res:get-wallet', (_, args) => {
+      console.log('walletId: ', state.walletId);
       commit(types.SET_WALLET, args.data);
-      if (state.wallet != null) {
-        ipcRenderer.send("req:get-transactions", {
+      // if (state.wallet != null) {
+      ipcRenderer.send("req:get-transactions", {
+        network: "testnet",
+        wallet: state.walletId,
+      });
+      if (state.addresses == null || state.addresses.length == 0) {
+        ipcRenderer.send("req:get-addresses", {
+          name: state.walletId,
           network: "testnet",
-          wallet: state.walletId,
         });
-        if (state.addresses!=null&&state.addresses.length == 0) {
-          ipcRenderer.send("req:get-addresses", {
-            name: state.walletId,
-            network: "testnet",
-          });
-        }
       }
+      // }
     });
 
 
@@ -147,6 +149,9 @@ const actions = {
       passphrase: state.passphrase,
       metadata: metadata,
     });
+  },
+  [types.SET_WALLET_ID]({ commit }, { walletId }) {
+    commit(types.SET_WALLET_ID, walletId);
   }
 };
 

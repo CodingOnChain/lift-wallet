@@ -1,6 +1,5 @@
 <template>
-  <div>
-    {{addresses}}
+  <div>    
     <v-data-table
       :headers="headers"
       :items="addresses"

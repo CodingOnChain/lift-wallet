@@ -86,7 +86,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,      
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,              
       transaction: walletTypes.NAMESPACE + walletTypes.TRANSACTION,
       isValidAdress: walletTypes.NAMESPACE + walletTypes.IS_VALID_ADRESS,
       isValidAmount: walletTypes.NAMESPACE + walletTypes.IS_VALID_AMOUNT,
