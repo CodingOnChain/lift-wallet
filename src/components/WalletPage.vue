@@ -70,6 +70,10 @@ export default {
     selectedWalletIndex: function (newVal, oldVal) {
       if (newVal != undefined && oldVal != newVal) {
         this.selectedWalletId = this.wallets[newVal].name;
+        const dataTransferObject = {
+          walletId: this.selectedWalletId,
+        };
+        this.configureWalletID(dataTransferObject);
         console.log(newVal);
       }
     },

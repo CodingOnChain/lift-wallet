@@ -51,3 +51,6 @@ export const ADD_WALLET = 'ADD_WALLET';
 export const GET_NEW_MNEMONIC = 'GET_MNEMONIC';
 export const GET_FEE = 'GET_FEE';
 export const SUBMIT_AND_SEND_ADA = 'SUBMIT_AND_SEND_ADA';
+export const CHANGE_IS_VALID_ADRESS = 'CHANGE_IS_VALID_ADRESS';
+export const CHANGE_SEND_ALL = 'CHANGE_SEND_ALL';
+export const CHANGE_AMOUNT = 'CHANGE_AMOUNT';

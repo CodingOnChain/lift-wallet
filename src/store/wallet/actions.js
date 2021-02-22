@@ -151,7 +151,19 @@ const actions = {
     });
   },
   [types.SET_WALLET_ID]({ commit }, { walletId }) {
+    commit(types.SET_TRANSACTION, null);
     commit(types.SET_WALLET_ID, walletId);
+  },
+  [types.CHANGE_IS_VALID_ADRESS]({ commit }, { newValueForIsValidAdress }) {
+    commit(types.SET_IS_VALID_ADRESS, newValueForIsValidAdress);    
+  },
+  [types.CHANGE_SEND_ALL]({ commit }, { newValueForSendAll }) {
+    commit(types.SET_SEND_ALL, newValueForSendAll);    
+  },
+  [types.CHANGE_AMOUNT]({ commit }, { newAmount,newAmountFormatted,newIsValidAmount }) {
+    commit(types.SET_AMOUNT, newAmount);    
+    commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);    
+    commit(types.SET_IS_VALID_AMOUNT, newIsValidAmount);    
   }
 };
 

@@ -1,7 +1,7 @@
  <template>
   <div>
     <loading
-      :active.sync="isLoading"
+      :active="transactions == null"
       :can-cancel="true"
       :is-full-page="fullPage"
     ></loading>
@@ -72,7 +72,6 @@ export default {
   props: ["walletId", "focus"],
   components: { Loading },
   data: () => ({
-      isLoading: true,
       fullPage: false
   }),
   watch: {

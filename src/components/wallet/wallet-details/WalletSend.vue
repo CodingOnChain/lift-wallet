@@ -75,10 +75,10 @@ export default {
   },
   data() {
     return {
-      address:null,
+      address: null,
       showPassphrase: false,
-      isValidPassphrase:false,
-      isReadonlyAmount:false
+      isValidPassphrase: false,
+      isReadonlyAmount: false,
     };
   },
   props: {
@@ -86,7 +86,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,              
+      wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
       isValidAdress: walletTypes.NAMESPACE + walletTypes.IS_VALID_ADRESS,
       isValidAmount: walletTypes.NAMESPACE + walletTypes.IS_VALID_AMOUNT,
       amount: walletTypes.NAMESPACE + walletTypes.AMOUNT,
@@ -116,45 +116,68 @@ export default {
     passphraseErrors: function () {
       const errors = [];
       if (!this.$v.passphrase.$dirty) return errors;
-      this.passphrase.length == 0 &&
-        errors.push("Passphrase is required.");
+      this.passphrase.length == 0 && errors.push("Passphrase is required.");
       !this.isValidPassphrase && errors.push("Incorrect passphrase");
       return errors;
     },
   },
-  mounted() {
-  },
+  mounted() {},
   methods: {
     ...mapActions({
       getFee: walletTypes.NAMESPACE + walletTypes.GET_FEE,
-      submitAndSendAda:walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA
+      submitAndSendAda:
+        walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA,
+      changeIsValidAdress:
+        walletTypes.NAMESPACE + walletTypes.CHANGE_IS_VALID_ADRESS,
+      changeSendAll: walletTypes.NAMESPACE + walletTypes.CHANGE_SEND_ALL,
+      changeAmount: walletTypes.NAMESPACE + walletTypes.CHANGE_AMOUNT,
     }),
     addressFocusIn() {
-      this.isValidAdress = true;
+      const dataTransferObject = {
+        newValueForIsValidAdress: true,
+      };
+      this.changeIsValidAdress(dataTransferObject);
     },
-    sendAdaFocusOut() {
-      this.amount = parseFloat(this.amountFormatted.replace(/[^\d.]/g, ""));
+    sendAdaFocusOut() {      
+      const dataTransferObject = {
+        newAmount: parseFloat(this.amountFormatted.replace(/[^\d.]/g, "")),
+        newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
+        newIsValidAmount: this.isValidAmount,
+      };
       if (isNaN(this.amount)) {
-        this.amount = 0;
+        dataTransferObject.newAmount = 0;
       }
-      this.amountFormatted = this.amount.toFixed(6);
+      dataTransferObject.newAmountFormatted = this.amount.toFixed(6);
+      this.changeAmount(dataTransferObject);
       // this.setSendAdaTotal(); this need to be seted again
     },
     sendAdaFocusIn() {
-      this.isValidAmount = true;
-      this.amountFormatted = this.amount.toString();
+      const dataTransferObject = {
+        newAmount: this.amount,
+        newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
+        newIsValidAmount: true,
+      };
+      this.changeAmount(dataTransferObject);
     },
     toggleSendAll() {
       const shouldSendAll = this.isReadonlyAmount;
-      this.sendAll = true;
+      const dataTransferObject = {
+        newValueForSendAll: true,
+      };
+      this.changeSendAll(dataTransferObject);
+
       if (shouldSendAll) {
-        this.amount = this.wallet.balance / 1000000;
-        this.amountFormatted = `${parseFloat(this.amount).toFixed(6)}`;
+        const dataTransferObject = {
+          newAmount: this.wallet.balance / 1000000,
+          newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
+          newIsValidAmount: this.isValidAmount,
+        };
+        this.changeAmount(dataTransferObject);
         this.getFee();
       }
     },
     passphraseFocusIn() {
-      this.isValidPassphrase = true;
+      this.isValidPassphrase = true;       
     },
     submitSendAda() {
       this.$v.$touch();
