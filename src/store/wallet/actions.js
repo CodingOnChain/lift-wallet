@@ -153,6 +153,10 @@ const actions = {
   [types.SET_WALLET_ID]({ commit }, { walletId }) {
     commit(types.SET_TRANSACTION, null);
     commit(types.SET_WALLET_ID, walletId);
+    ipcRenderer.send("req:get-addresses", {
+      name: walletId,
+      network: "testnet",
+    });
   },
   [types.CHANGE_IS_VALID_ADRESS]({ commit }, { newValueForIsValidAdress }) {
     commit(types.SET_IS_VALID_ADRESS, newValueForIsValidAdress);    
