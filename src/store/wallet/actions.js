@@ -119,7 +119,7 @@ const actions = {
     ipcRenderer.send('req:add-wallet', walletForm);
   },
   async [types.GET_FEE]({ state }) {
-    if (state.address.length > 0) {
+    if (state.address!=null && state.address.length > 0) {
       let amount;
       if (this.state.sendAll) {
         amount = state.wallet.balance;
@@ -130,7 +130,7 @@ const actions = {
     }
   },
   async [types.SUBMIT_AND_SEND_ADA]({ commit, state }) {
-    commit(types.IS_SENDING_ADA, true);
+    commit(types.SET_IS_SENDING_ADA, true);
     let metadata = null;
     if (state.metadataFile != null)
       metadata = state.metadataFile.path;

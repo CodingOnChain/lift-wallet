@@ -5,16 +5,13 @@
         v-model="address"
         label="Address"
         @change="getFee"
-        :error-messages="addressErrors"
         required
         @focus="addressFocusIn"
       ></v-text-field>
 
       <v-text-field
-        v-model="amountFormatted"
-        :error-messages="amountErrors"
-        label="Amount (ADA)"
-        @input="$v.amount.$touch()"
+        v-model="newAmountToBeFormatted"
+        label="Amount (ADA)"       
         @blur="sendAdaFocusOut"
         @focus="sendAdaFocusIn"
         :hint="`Est. Fee: ${feeFormatted}`"
@@ -39,18 +36,15 @@
         :append-icon="showPassphrase ? 'mdi-eye' : 'mdi-eye-off'"
         v-model="passphrase"
         :type="showPassphrase ? 'text' : 'password'"
-        :error-messages="passphraseErrors"
         label="Passphrase"
         required
         :disabled="isSync"
         @click:append="showPassphrase = !showPassphrase"
-        @input="$v.passphrase.$touch()"
-        @blur="$v.passphrase.$touch()"
         @focus="passphraseFocusIn"
       >
       </v-text-field>
 
-      <v-file-input v-model="metadataFile" label="Metadata File">
+      <v-file-input v-model="metadataFileToSend" label="Metadata File">
       </v-file-input>
     </v-card-text>
     <v-card-actions>
@@ -67,18 +61,15 @@ import { mapGetters, mapActions } from "vuex";
 import * as walletTypes from "../../../store/wallet/types";
 
 export default {
-  mixins: [validationMixin],
-  validations: {
-    address: {},
-    amount: {},
-    passphrase: {},
-  },
+  mixins: [validationMixin],  
   data() {
     return {
       address: null,
       showPassphrase: false,
       isValidPassphrase: false,
       isReadonlyAmount: false,
+      metadataFileToSend:null,
+      newAmountToBeFormatted:'0.000000'
     };
   },
   props: {
@@ -96,37 +87,36 @@ export default {
       sendAll: walletTypes.NAMESPACE + walletTypes.SEND_ALL,
       total: walletTypes.NAMESPACE + walletTypes.TOTAL,
       totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED,
-      passphrase: walletTypes.NAMESPACE + walletTypes.PASSPHRASE,
-      metadataFile: walletTypes.NAMESPACE + walletTypes.METADATA_FILE,
+      passphrase: walletTypes.NAMESPACE + walletTypes.PASSPHRASE
     }),
-    addressErrors() {
-      const errors = [];
-      if (!this.$v.address.$dirty) return errors;
-      this.address.length == 0 && errors.push("Address is required.");
-      !this.isValidAdress && errors.push("Address is invalid.");
-      return errors;
-    },
-    amountErrors() {
-      const errors = [];
-      if (!this.$v.amount.$dirty) return errors;
-      this.amount.length == 0 && errors.push("Amount is required.");
-      !this.isValidAmount && errors.push("Amount needs to be at least 1 ADA");
-      return errors;
-    },
-    passphraseErrors: function () {
-      const errors = [];
-      if (!this.$v.passphrase.$dirty) return errors;
-      this.passphrase.length == 0 && errors.push("Passphrase is required.");
-      !this.isValidPassphrase && errors.push("Incorrect passphrase");
-      return errors;
-    },
+    // addressErrors() {
+    //   const errors = [];
+    //   if (!this.$v.address.$dirty) return errors;
+    //   this.address.length == 0 && errors.push("Address is required.");
+    //   !this.isValidAdress && errors.push("Address is invalid.");
+    //   return errors;
+    // },
+    // amountErrors() {
+    //   const errors = [];
+    //   if (!this.$v.amount.$dirty) return errors;
+    //   this.amount.length == 0 && errors.push("Amount is required.");
+    //   !this.isValidAmount && errors.push("Amount needs to be at least 1 ADA");
+    //   return errors;
+    // },
+    // passphraseErrors: function () {
+    //   const errors = [];
+    //   if (!this.$v.passphrase.$dirty) return errors;
+    //   this.passphrase.length == 0 && errors.push("Passphrase is required.");
+    //   !this.isValidPassphrase && errors.push("Incorrect passphrase");
+    //   return errors;
+    // },
   },
   mounted() {},
   methods: {
     ...mapActions({
       getFee: walletTypes.NAMESPACE + walletTypes.GET_FEE,
       submitAndSendAda:
-        walletTypes.NAMESPACE + walletTypes.SUBMITA_AND_SEND_ADA,
+        walletTypes.NAMESPACE + walletTypes.SUBMIT_AND_SEND_ADA,
       changeIsValidAdress:
         walletTypes.NAMESPACE + walletTypes.CHANGE_IS_VALID_ADRESS,
       changeSendAll: walletTypes.NAMESPACE + walletTypes.CHANGE_SEND_ALL,
@@ -180,10 +170,7 @@ export default {
       this.isValidPassphrase = true;       
     },
     submitSendAda() {
-      this.$v.$touch();
-      if (!this.$v.$invalid) {
         this.submitAndSendAda();
-      }
     },
   },
 };
