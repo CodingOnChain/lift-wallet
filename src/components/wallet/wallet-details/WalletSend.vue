@@ -66,6 +66,7 @@ export default {
     return {
       address: null,
       showPassphrase: false,
+      passphrase: null,
       isValidPassphrase: false,
       isReadonlyAmount: false,
       metadataFileToSend:null,
@@ -86,8 +87,7 @@ export default {
       feeFormatted: walletTypes.NAMESPACE + walletTypes.FEE_FORMATTED,
       sendAll: walletTypes.NAMESPACE + walletTypes.SEND_ALL,
       total: walletTypes.NAMESPACE + walletTypes.TOTAL,
-      totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED,
-      passphrase: walletTypes.NAMESPACE + walletTypes.PASSPHRASE
+      totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED
     }),
     // addressErrors() {
     //   const errors = [];
@@ -172,7 +172,13 @@ export default {
       this.isValidPassphrase = true;       
     },
     submitSendAda() {
-        this.submitAndSendAda();
+        const dataTransferObject = {
+          passphrase: this.passphrase          
+        };
+        this.submitAndSendAda(dataTransferObject).then(()=>{
+            console.log("money sent");
+            this.$emit("money-sent");
+        });
     },
   },
 };

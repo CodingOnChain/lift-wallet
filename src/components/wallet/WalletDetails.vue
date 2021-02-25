@@ -36,7 +36,10 @@
 
               <v-tab-item>
                 <v-card>
-                  <WalletSend :isSync="isSendingAda"></WalletSend>
+                  <WalletSend
+                    :isSync="isSendingAda"
+                    @money-sent="theMoneyHasBeenSent"
+                  ></WalletSend>
                 </v-card>
               </v-tab-item>
 
@@ -97,7 +100,7 @@ export default {
   name: "WalletDetails",
   props: ["walletId", "focus"],
   mixins: [validationMixin],
-  components: { WalletAddresses, WalletSend,WalletTransactions },
+  components: { WalletAddresses, WalletSend, WalletTransactions },
   validations: {
     address: {},
     amount: {},
@@ -143,7 +146,7 @@ export default {
   computed: {
     ...mapGetters({
       wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
-      transactions: walletTypes.NAMESPACE + walletTypes.TRANSACTION
+      transactions: walletTypes.NAMESPACE + walletTypes.TRANSACTION,
     }),
     cssProps() {
       return {
@@ -186,7 +189,7 @@ export default {
     // ipcRenderer.off('res:get-addresses', this.setAddresses);
     // ipcRenderer.off('res:get-wallet', this.updateWallet);
   },
-  mounted() {   
+  mounted() {
     this.setUpSendDataWallet();
     this.pollWallet();
   },
@@ -210,7 +213,11 @@ export default {
         });
       }, 5000);
     },
-
+    theMoneyHasBeenSent() {
+      console.log("the money has been sent");
+      this.tabIndex=0;
+      this.$v.$reset();
+    },
     mintAsset() {
       let metadata = null;
       if (this.mintForm.metadataFile != null)
@@ -223,7 +230,7 @@ export default {
         passphrase: this.mintForm.passphrase,
         metadata: metadata,
       });
-    },   
+    },
     navigateToTx(url) {
       shell.openExternal(url);
     },

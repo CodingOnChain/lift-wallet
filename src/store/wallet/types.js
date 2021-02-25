@@ -29,6 +29,7 @@ export const METADATA_FILE = 'METADATA_FILE';
 
 // Mutations
 export const SET_MNEMONIC = 'SET_MNEMONIC';
+export const SET_PASSPHRASE = 'SET_PASSPHRASE';
 export const SET_WALLET = 'SET_WALLET';
 export const SET_WALLET_ID = 'SET_WALLET_ID';
 export const SET_TRANSACTION = 'SET_TRANSACTION';

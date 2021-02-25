@@ -90,9 +90,7 @@ const actions = {
         //      amount: 1,
         //      passphrase: '',
         //      metadataFile: null,
-        //  };        
-        //     this.$v.$reset();
-        //     this.tabIndex = 0;
+        //  }; 
       }
     });
 
@@ -129,8 +127,9 @@ const actions = {
       ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: state.walletId, address: state.address, sendAll: state.sendAll, amount: amount });
     }
   },
-  async [types.SUBMIT_AND_SEND_ADA]({ commit, state }) {
+  async [types.SUBMIT_AND_SEND_ADA]({ commit, state },{passphrase}) {
     commit(types.SET_IS_SENDING_ADA, true);
+    commit(types.SET_PASSPHRASE, passphrase);
     let metadata = null;
     if (state.metadataFile != null)
       metadata = state.metadataFile.path;

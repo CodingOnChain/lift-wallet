@@ -3,6 +3,9 @@ export default {
   [types.SET_MNEMONIC]: (state, mnemonic) => {
     state.mnemonic = mnemonic;
   },
+  [types.SET_PASSPHRASE]: (state, passphrase) => {
+    state.passphrase = passphrase;
+  },
   [types.SET_WALLET]: (state, wallet) => {
     state.wallet = wallet;
   },
