@@ -15,32 +15,6 @@ export const cardanoPlatformPath = process.platform === 'darwin' ? 'macos64':
     process.platform === 'linux' ? 'linux64': 
     process.platform;
 
-
-export function buildTxIn(addressUtxos, amount, fee) {
-    let txIn = [];
-    let totalUsed = 0;
-    for(let u of addressUtxos)
-    {
-        u.assets = [];
-        totalUsed += parseInt(u.value);
-        u.assets.push({ quantity: parseInt(u.value), assetName: 'lovelace' });
-        
-        for(let t of u.tokens) 
-        {
-            u.assets.push({ 
-                quantity: parseInt(t.quantity),
-                assetName: `${t.policyId}.${hex_to_ascii(t.assetName)}`
-            });
-        }
-
-        txIn.push(u);
-        if(totalUsed >= parseInt(amount) + parseInt(fee))
-            break;
-    }
-
-    return txIn;
-}
-
 export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile, isSendAll){
     const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
@@ -51,6 +25,8 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
         totalUsed += parseInt(txIn.value)
         tx += ` --tx-in ${txIn.txHash}#${txIn.index}`;
     }
+
+    
 
     if (isSendAll) {
       let outputAmount = parseInt(amount) - parseInt(fee);

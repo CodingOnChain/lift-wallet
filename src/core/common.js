@@ -2,6 +2,7 @@ import fs from 'fs'
 import util from 'util';
 import crypto from 'crypto';
 import { exec } from 'child_process'
+import lib from 'cardano-crypto.js'
 
 const cmd = util.promisify(exec);
 
@@ -50,4 +51,8 @@ export function hex_to_ascii(str1)
        str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
    }
    return str;
+}
+
+export function getBufferHexFromFile(hex) {
+    return lib.bech32.decode(hex).data.toString('hex');
 }
