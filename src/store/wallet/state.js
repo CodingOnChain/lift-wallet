@@ -10,6 +10,7 @@ export default {
   passphrase: NaN,
   metadata: NaN,
   transaction: null,
+  address: null,
   addresses: null,
   isValidAdress: false,
   isSendingAda: false,

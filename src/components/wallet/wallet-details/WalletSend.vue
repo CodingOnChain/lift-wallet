@@ -130,6 +130,7 @@ export default {
     },
     sendAdaFocusOut() {      
       const dataTransferObject = {
+        newAddress: this.address,
         newAmount: parseFloat(this.amountFormatted.replace(/[^\d.]/g, "")),
         newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
         newIsValidAmount: this.isValidAmount,
@@ -139,6 +140,7 @@ export default {
       }
       dataTransferObject.newAmountFormatted = this.amount.toFixed(6);
       this.changeAmount(dataTransferObject);
+      this.getFee();
       // this.setSendAdaTotal(); this need to be seted again
     },
     sendAdaFocusIn() {

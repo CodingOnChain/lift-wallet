@@ -9,6 +9,9 @@ export default {
   [types.SET_TRANSACTION]: (state, transaction) => {
     state.transaction = transaction;
   },
+  [types.SET_ADDRESS]: (state, address) => {
+    state.address = address;
+  },
   [types.SET_ADDRESSES]: (state, addresses) => {
     state.addresses = addresses;
   },

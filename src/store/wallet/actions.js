@@ -164,7 +164,8 @@ const actions = {
   [types.CHANGE_SEND_ALL]({ commit }, { newValueForSendAll }) {
     commit(types.SET_SEND_ALL, newValueForSendAll);    
   },
-  [types.CHANGE_AMOUNT]({ commit }, { newAmount,newAmountFormatted,newIsValidAmount }) {
+  [types.CHANGE_AMOUNT]({ commit }, { newAddress,newAmount,newAmountFormatted,newIsValidAmount }) {
+    commit(types.SET_ADDRESS, newAddress);    
     commit(types.SET_AMOUNT, newAmount);    
     commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);    
     commit(types.SET_IS_VALID_AMOUNT, newIsValidAmount);    

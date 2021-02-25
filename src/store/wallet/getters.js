@@ -33,6 +33,9 @@ export default {
   [types.TRANSACTION]: (state) => {
     return state.transaction;
   },
+  [types.ADDRESS]: (state) => {
+    return state.address;
+  },
   [types.ADDRESSES]: (state) => {
     return state.addresses;
   },
