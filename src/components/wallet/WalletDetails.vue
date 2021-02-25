@@ -22,6 +22,7 @@
               <v-tab>Receive</v-tab>
               <v-tab>Send</v-tab>
               <v-tab>Mint</v-tab>
+              <v-tab>Staking</v-tab>
 
               <v-tab-item>
                 <Loader v-if="transactions == null" />
@@ -218,6 +219,31 @@
                   </v-form>
                 </v-card>
               </v-tab-item>
+
+              <v-tab-item>
+                <v-card>
+                  <v-form>
+                    <v-card-text>
+
+                      <v-text-field
+                        :append-icon="
+                          showStakingPassphrase ? 'mdi-eye' : 'mdi-eye-off'
+                        "
+                        v-model="stakingForm.passphrase"
+                        :type="showStakingPassphrase ? 'text' : 'password'"
+                        label="Passphrase"
+                        @click:append="showStakingPassphrase = !showStakingPassphrase"
+                      >
+                      </v-text-field>
+
+
+                      <v-btn color="primary" @click="stakeWallet">
+                        Stake
+                      </v-btn>
+                    </v-card-text>
+                  </v-form>
+                </v-card>
+              </v-tab-item>
             </v-tabs>
           </v-sheet>
         </v-card>
@@ -253,6 +279,7 @@ export default {
     sendFormValid: false,
     showPassphrase: false,
     showMintPassphrase: false,
+    showStakingPassphrase: false,
     isSendingAda: false,
     sendForm: {
       address: "",
@@ -276,6 +303,9 @@ export default {
       amount: 1,
       passphrase: "",
       metadataFile: null,
+    },
+    stakingForm: {
+      passphrase: ""
     },
   }),
   watch: {
@@ -383,6 +413,7 @@ export default {
     ipcRenderer.on("res:get-wallet", this.updateWallet);
     ipcRenderer.on("res:send-transaction", this.transactionResult);
     ipcRenderer.on("res:mint-asset", this.transactionResult);
+    ipcRenderer.on("res:delegate", this.stakeResult);
   },
   methods: {
     toggleSendAll() {
@@ -398,6 +429,10 @@ export default {
     },
     sendToken() {
       console.log("send token");
+    },
+    stakeResult(_, args) {
+      console.log(args);
+      this.tabIndex = 0;
     },
     transactionResult(_, args) {
       this.isSendingAda = false;
@@ -603,6 +638,15 @@ export default {
         assetAmount: this.mintForm.amount,
         passphrase: this.mintForm.passphrase,
         metadata: metadata,
+      });
+    },
+    stakeWallet() {
+      console.log('hit button');
+      ipcRenderer.send('req:delegate', {
+        network: "testnet",
+        walletName: this.walletId,
+        passphrase: this.stakingForm.passphrase,
+        poolId: '8040457cd9b1370eedccfccb319b8a9b38cdf1dfdbf491aa53e4d5ec'
       });
     },
     getFormattedDate(txDate) {

@@ -1,11 +1,22 @@
-import { cli, decrypt, encrypt } from '../core/common';
+import { cli, decrypt, encrypt, getBufferHexFromFile } from '../core/common';
 import { 
     calculateMinFee,
     createVerificationKey,
     createExtendedVerificationKey,
     createStakeRegistrationCertificate,
-    buildTransaction } from '../core/cardano-cli.js';
-import {  } from '../core/dandelion.js'
+    buildTransaction,
+    signTransaction } from '../core/cardano-cli.js';
+import { 
+    getPublicCmd,
+    getChildCmd,
+    getStakingAddrCmd } from '../core/cardano-addresses.js';
+import { 
+    getProtocolParams, 
+    getUtxos, 
+    getCurrentSlotNo,
+    submitTransaction,
+    getTransactionsByAddresses,
+    getTransactionsDetails } from '../core/dandelion.js'
 import util from 'util';
 import path from 'path';
 import fs from 'fs';
@@ -22,6 +33,7 @@ const walletsPath = isDevelopment
     ? path.resolve(__dirname, '..', 'cardano', 'wallets')
     : path.resolve(appPath , 'wallets');
 
+const paymentFile = 'payment.addr';
 const changeFile = 'change.addr';
 const protocolParamsFile = 'protocolParams.json';
 const draftTxFile = 'draft.tx';
@@ -34,27 +46,35 @@ const stakeExtendedVerificationKeyFile = 'stake.evkey';
 const stakeVerificationKeyFile = 'stake.vkey';
 const stakeRegistrationCertFile = 'stake.cert';
 const stakeAddressFile = 'stakingAddresses.addr';
+const isRegisteredFile = 'register.0.tx';
 
 let stakeSKeyPath = null;
 
 //delegate a wallet a stake pool
-export async function delegate(network, walletName, passphrase, pool) {
-    //1) are we registered
-    if(isRegistered){
-        //1a) create files
-        await setupWalletStakingFile(network, walletName);
+export async function delegate(network, walletName, passphrase, poolId) {
+    try{
+        //1) are we registered
+        const walletDir = path.resolve(walletsPath, network, walletName);
+        const isRegistered = fs.existsSync(path.resolve(walletDir, isRegisteredFile))
+        
+        if(!isRegistered){
+            //1b) create stake signing keys
+            await createStakeSigningKeys(network, walletName, passphrase);
 
-        //1b) create stake signing keys
-        await createStakeSigningKeys(network, walletName, passphrase);
+            //1a) create files
+            await setupWalletStakingFile(network, walletName);
 
-        //1c) register the certificate
-        await registerStakingCert(network, walletName, passphrase);
+            //1c) register the certificate
+            await registerStakingCert(network, walletName, passphrase);
+        }
+        
+        //3) delegate wallet
+
+        //4) clean up
+        cleanUpStakeSigningKeys();
+    }catch(err) {
+        console.log(err);
     }
-    
-    //3) delegate wallet
-
-    //4) clean up
-    cleanUpStakeSigningKeys();
 }
 
 //register your wallet's staking cert
@@ -66,6 +86,7 @@ async function registerStakingCert(network, walletName, passphrase) {
     const txDraftPath = path.resolve(walletDir, draftTxFile);
     const txRawPath = path.resolve(walletDir, rawTxFile);
     const txSignedPath = path.resolve(walletDir, signedTxFile);
+    const isRegisteredPath = path.resolve(walletDir, isRegisteredFile);
     const signingKeyPaths = [];
 
     let result = { transactionId: null, error: null };
@@ -79,29 +100,30 @@ async function registerStakingCert(network, walletName, passphrase) {
             network, 
             [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
         let amount = 0;
-        addressUtxos.forEach(o => amount += parse.Int(o.value));
+        addressUtxos.forEach(o => amount += parseInt(o.value));
             
         //refresh protocol parameters
         const protocolParamsPath = await refreshProtocolParametersFile(network);
-        const registrationFee = parse.Int(JSON.parse(protocolParamsPath)["keyDeposit"]);
+        const protocolParams = fs.readFileSync(protocolParamsPath).toString();
+        const registrationFee = parseInt(JSON.parse(protocolParams)["keyDeposit"]);
 
         //get draft tx-ins
         let draftTxIns = buildTxIn(addressUtxos, amount, 0);
 
         //build draft transaction
-        let draftTx = buildTransaction('mary-era', 0, 0, toAddress, amount, changes[0].address, draftTxIns, metadataPath, txDraftPath, true)
+        let draftTx = buildTransaction('mary-era', 0, 0, changes[0].address, amount, changes[0].address, draftTxIns, null, txDraftPath, true)
         await cli(draftTx);
 
         //calculate fees
-        const calculateFee = calculateMinFee(txDraftPath, addressUtxos.length, 2, 1, 0, protocolParamsPath);
+        const calculateFee = calculateMinFee(txDraftPath, draftTxIns.length, 1, 1, 0, protocolParamsPath);
         const feeResult = await cli(calculateFee);
         //originally tried to just calculate the fee locally
         //  but had issues when trying to use multiple --tx-in
         //minFeeA * txSize + minFeeB
         //note the output of the 'calculate-min-fee' is: 'XXXX Lovelace' 
         //  this is why i split and take index 0
-        let fee = feeResult.stdout.split(' ')[0];
-        fee += registrationFee;
+        let fee = parseInt(feeResult.stdout.split(' ')[0]);
+        fee += parseInt(registrationFee);
 
         //get current slot no to calculate ttl
         const slotNo = await getCurrentSlotNo(network);
@@ -111,11 +133,12 @@ async function registerStakingCert(network, walletName, passphrase) {
         let rawTxIns = buildTxIn(addressUtxos, amount, fee);
 
         //build raw transaction
-        let rawTx = buildTransaction('allegra-era', fee, ttl, toAddress, amount, changes[0].address, rawTxIns, metadataPath, txRawPath, true)
+        let rawTx = buildTransaction('mary-era', fee, ttl, changes[0].address, amount, changes[0].address, rawTxIns, null, txRawPath, true)
         await cli(rawTx);
 
         await getSigningKeys(draftTxIns, passphrase, walletDir, signingKeyPaths, addresses, changes);
 
+        signingKeyPaths.push(stakeSKeyPath);
         const signedTx = signTransaction(network, 1097911063, signingKeyPaths, txRawPath, txSignedPath);
         await cli(signedTx);
 
@@ -127,6 +150,7 @@ async function registerStakingCert(network, walletName, passphrase) {
 
         //submit transaction to dandelion
         result.transactionId = await submitTransaction(network, signedtxContents);
+        fs.writeFileSync(path.resolve(walletDir, isRegisteredPath), result.transactionId);
     }catch(err) {
         console.error(err);
         if(err.response.data != undefined) {
@@ -140,9 +164,9 @@ async function registerStakingCert(network, walletName, passphrase) {
     }
 
     //clean up
-    if(fs.existsSync(txDraftPath)) fs.unlinkSync(txDraftPath);
-    if(fs.existsSync(txRawPath)) fs.unlinkSync(txRawPath);
-    if(fs.existsSync(txSignedPath)) fs.unlinkSync(txSignedPath);
+    // if(fs.existsSync(txDraftPath)) fs.unlinkSync(txDraftPath);
+    // if(fs.existsSync(txRawPath)) fs.unlinkSync(txRawPath);
+    // if(fs.existsSync(txSignedPath)) fs.unlinkSync(txSignedPath);
     
     signingKeyPaths.forEach(sk => {
         if(fs.existsSync(sk)) fs.unlinkSync(sk);
@@ -164,11 +188,11 @@ async function setupWalletStakingFile(network, walletName) {
     if(stakePub.stderr) throw stakePub.stderr;
 
     //stake address
-    const stakeAddr = await cmd(getStakingAddrCmd(stakePub.stdout));
+    const stakeAddr = await cmd(getStakingAddrCmd(stakePub.stdout, network));
     if(stakeAddr.stderr) throw stakeAddr.stderr;
 
     let stakeAddresses = [];
-    stakeAddresses.push({ index: i, address: stakeAddr.stdout });
+    stakeAddresses.push({ index: 0, address: stakeAddr.stdout });
     fs.writeFileSync(path.resolve(walletDir, stakeAddressFile), JSON.stringify(stakeAddresses));
 
     // public stake [extended] verification keys
@@ -278,4 +302,41 @@ async function getSigningKeys(draftTxIns, passphrase, walletDir, signingKeyPaths
             console.log('Unable to find address from tx input');
         }
     }     
+}
+
+async function refreshProtocolParametersFile(network) {
+
+    const protocolParamsPath = path.resolve(walletsPath, network, protocolParamsFile);
+    const protocolParams = await getProtocolParams(network);
+    fs.writeFileSync(
+        protocolParamsPath,
+        Buffer.from(JSON.stringify(protocolParams)));
+
+    return protocolParamsPath
+
+}
+
+function buildTxIn(utxos, amount, fee) {
+    let txIn = [];
+    let totalUsed = 0;
+    for(let u of utxos)
+    {
+        u.assets = [];
+        totalUsed += parseInt(u.value);
+        u.assets.push({ quantity: parseInt(u.value), assetName: 'lovelace' });
+        
+        for(let t of u.tokens) 
+        {
+            u.assets.push({ 
+                quantity: parseInt(t.quantity),
+                assetName: `${t.policyId}.${hex_to_ascii(t.assetName)}`
+            });
+        }
+
+        txIn.push(u);
+        if(totalUsed >= parseInt(amount) + parseInt(fee))
+            break;
+    }
+
+    return txIn;
 }

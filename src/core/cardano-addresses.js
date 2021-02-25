@@ -41,7 +41,7 @@ export function getPaymentAddrCmd(baseAddr, stakePub){
     return `echo ${baseAddr}| "${addressCli}" address delegation "${stakePub}"`;
 }
 
-export function getStakingAddrCmd(stakePub){
+export function getStakingAddrCmd(stakePub, network){
     const addressCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-address');
-    return `echo ${stakePub}| "${addressCli}" address stake`;
+    return `echo ${stakePub}| "${addressCli}" address stake --network-tag ${network}`;
 }
