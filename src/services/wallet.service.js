@@ -279,13 +279,13 @@ export async function mintToken(network, walletName, assetName, tokenAmount, pas
     }
 
     //clean up
-    cleanUpTxFiles();
+    cleanUpTxFiles(walletDir);
 
     return result;
 }
 
 export async function sendTransaction(network, name, sendAll, amount, toAddress, passphrase, metadataPath) {
-
+    const walletDir = path.resolve(walletsPath, network, name);
     let result = { transactionId: null, error: null };
     try {
         //build transaction 
@@ -293,7 +293,7 @@ export async function sendTransaction(network, name, sendAll, amount, toAddress,
         var signedtxContents = await sendFunds(
             network,
             'mary-era', 
-            path.resolve(walletsPath, network, name), 
+            walletDir, 
             amount, 
             sendAll,
             toAddress, 
@@ -315,7 +315,7 @@ export async function sendTransaction(network, name, sendAll, amount, toAddress,
         }
     }
 
-    cleanUpTxFiles();
+    cleanUpTxFiles(walletDir);
 
     return result;
 }
