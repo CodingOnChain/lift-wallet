@@ -80,19 +80,7 @@ const actions = {
     });
 
 
-    ipcRenderer.on('res:send-transaction', (_, args) => {
-      commit(types.IS_SENDING_ADA, false);
-      if (args.transaction.error) {
-        alert(args.transaction.error);
-      } else {
-        //  this.mintForm = {
-        //      asset: 'lift',
-        //      amount: 1,
-        //      passphrase: '',
-        //      metadataFile: null,
-        //  }; 
-      }
-    });
+   
 
     ipcRenderer.on('mint-asset', (_, args) => {
       commit(types.SET_IS_SENDING_ADA, false);
@@ -117,7 +105,7 @@ const actions = {
     ipcRenderer.send('req:add-wallet', walletForm);
   },
   async [types.GET_FEE]({ state }) {
-    if (state.address!=null && state.address.length > 0) {
+    if (state.address != null && state.address.length > 0) {
       let amount;
       if (this.state.sendAll) {
         amount = state.wallet.balance;
@@ -127,7 +115,7 @@ const actions = {
       ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: state.walletId, address: state.address, sendAll: state.sendAll, amount: amount });
     }
   },
-  async [types.SUBMIT_AND_SEND_ADA]({ commit, state },{passphrase}) {
+  async [types.SUBMIT_AND_SEND_ADA]({ commit, state }, { passphrase }) {
     commit(types.SET_IS_SENDING_ADA, true);
     commit(types.SET_PASSPHRASE, passphrase);
     let metadata = null;
@@ -139,14 +127,41 @@ const actions = {
     } else {
       amount = state.amount * 1000000;
     }
-    ipcRenderer.send("req:send-transaction", {
-      network: "testnet",
-      wallet: state.walletId,
-      address: state.address,
-      amount: amount,
-      sendAll: state.sendAll,
-      passphrase: state.passphrase,
-      metadata: metadata,
+    // ipcRenderer.send("req:send-transaction", {
+    //   network: "testnet",
+    //   wallet: state.walletId,
+    //   address: state.address,
+    //   amount: amount,
+    //   sendAll: state.sendAll,
+    //   passphrase: state.passphrase,
+    //   metadata: metadata,
+    // });
+
+    return new Promise(resolve  => {
+      ipcRenderer.send("req:send-transaction", {
+        network: "testnet",
+        wallet: state.walletId,
+        address: state.address,
+        amount: amount,
+        sendAll: state.sendAll,
+        passphrase: state.passphrase,
+        metadata: metadata,
+      });
+      ipcRenderer.on('res:send-transaction', (_, args) => {
+        commit(types.SET_IS_SENDING_ADA, false);
+        if (args.transaction.error) {
+          alert(args.transaction.error);
+        } else {
+          //  this.mintForm = {
+          //      asset: 'lift',
+          //      amount: 1,
+          //      passphrase: '',
+          //      metadataFile: null,
+          //  }; 
+        }
+        resolve(args);
+      });
+     
     });
   },
   [types.SET_WALLET_ID]({ commit }, { walletId }) {
@@ -158,16 +173,16 @@ const actions = {
     });
   },
   [types.CHANGE_IS_VALID_ADRESS]({ commit }, { newValueForIsValidAdress }) {
-    commit(types.SET_IS_VALID_ADRESS, newValueForIsValidAdress);    
+    commit(types.SET_IS_VALID_ADRESS, newValueForIsValidAdress);
   },
   [types.CHANGE_SEND_ALL]({ commit }, { newValueForSendAll }) {
-    commit(types.SET_SEND_ALL, newValueForSendAll);    
+    commit(types.SET_SEND_ALL, newValueForSendAll);
   },
-  [types.CHANGE_AMOUNT]({ commit }, { newAddress,newAmount,newAmountFormatted,newIsValidAmount }) {
-    commit(types.SET_ADDRESS, newAddress);    
-    commit(types.SET_AMOUNT, newAmount);    
-    commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);    
-    commit(types.SET_IS_VALID_AMOUNT, newIsValidAmount);    
+  [types.CHANGE_AMOUNT]({ commit }, { newAddress, newAmount, newAmountFormatted, newIsValidAmount }) {
+    commit(types.SET_ADDRESS, newAddress);
+    commit(types.SET_AMOUNT, newAmount);
+    commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);
+    commit(types.SET_IS_VALID_AMOUNT, newIsValidAmount);
   }
 };
 

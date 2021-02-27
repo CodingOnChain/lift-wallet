@@ -1,6 +1,11 @@
 <template>
   <v-form>
     <v-card-text>
+      <loading
+        :active="isLoadingData"
+        :can-cancel="true"
+        :is-full-page="false"
+      ></loading>
       <v-text-field
         v-model="address"
         label="Address"
@@ -11,7 +16,7 @@
 
       <v-text-field
         v-model="newAmountToBeFormatted"
-        label="Amount (ADA)"       
+        label="Amount (ADA)"
         @blur="sendAdaFocusOut"
         @focus="sendAdaFocusIn"
         :hint="`Est. Fee: ${feeFormatted}`"
@@ -51,26 +56,29 @@
       <v-btn color="primary" v-if="!isSync" @click="submitSendAda">
         Submit
       </v-btn>
-      <Loader v-if="isSync" />
     </v-card-actions>
   </v-form>
 </template>
 <script>
+import Loading from "vue-loading-overlay";
+import "vue-loading-overlay/dist/vue-loading.css";
 import { validationMixin } from "vuelidate";
 import { mapGetters, mapActions } from "vuex";
 import * as walletTypes from "../../../store/wallet/types";
 
 export default {
-  mixins: [validationMixin],  
+  mixins: [validationMixin],
+  components: { Loading },
   data() {
     return {
       address: null,
       showPassphrase: false,
+      isLoadingData:false,
       passphrase: null,
       isValidPassphrase: false,
       isReadonlyAmount: false,
-      metadataFileToSend:null,
-      newAmountToBeFormatted:'0.000000'
+      metadataFileToSend: null,
+      newAmountToBeFormatted: "0.000000",
     };
   },
   props: {
@@ -87,7 +95,7 @@ export default {
       feeFormatted: walletTypes.NAMESPACE + walletTypes.FEE_FORMATTED,
       sendAll: walletTypes.NAMESPACE + walletTypes.SEND_ALL,
       total: walletTypes.NAMESPACE + walletTypes.TOTAL,
-      totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED
+      totalFormatted: walletTypes.NAMESPACE + walletTypes.TOTAL_FORMATTED,
     }),
     // addressErrors() {
     //   const errors = [];
@@ -111,12 +119,13 @@ export default {
     //   return errors;
     // },
   },
-  mounted() {},
+  mounted() {
+   this.isLoadingData= this.isSync;
+  },
   methods: {
     ...mapActions({
       getFee: walletTypes.NAMESPACE + walletTypes.GET_FEE,
-      submitAndSendAda:
-        walletTypes.NAMESPACE + walletTypes.SUBMIT_AND_SEND_ADA,
+      submitAndSendAda: walletTypes.NAMESPACE + walletTypes.SUBMIT_AND_SEND_ADA,
       changeIsValidAdress:
         walletTypes.NAMESPACE + walletTypes.CHANGE_IS_VALID_ADRESS,
       changeSendAll: walletTypes.NAMESPACE + walletTypes.CHANGE_SEND_ALL,
@@ -128,17 +137,21 @@ export default {
       };
       this.changeIsValidAdress(dataTransferObject);
     },
-    sendAdaFocusOut() {      
+    sendAdaFocusOut() {
       const dataTransferObject = {
         newAddress: this.address,
-        newAmount: parseFloat(this.newAmountToBeFormatted.replace(/[^\d.]/g, "")),
+        newAmount: parseFloat(
+          this.newAmountToBeFormatted.replace(/[^\d.]/g, "")
+        ),
         newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
         newIsValidAmount: this.isValidAmount,
       };
       if (isNaN(this.amount)) {
         dataTransferObject.newAmount = 0;
       }
-      dataTransferObject.newAmountFormatted = dataTransferObject.newAmount.toFixed(6);
+      dataTransferObject.newAmountFormatted = dataTransferObject.newAmount.toFixed(
+        6
+      );
       this.changeAmount(dataTransferObject);
       this.getFee();
       // this.setSendAdaTotal(); this need to be seted again
@@ -169,16 +182,19 @@ export default {
       }
     },
     passphraseFocusIn() {
-      this.isValidPassphrase = true;       
+      this.isValidPassphrase = true;
     },
     submitSendAda() {
-        const dataTransferObject = {
-          passphrase: this.passphrase          
-        };
-        this.submitAndSendAda(dataTransferObject).then(()=>{
-            console.log("money sent");
-            this.$emit("money-sent");
-        });
+      this.isLoadingData = true;
+      let _this=this;
+      const dataTransferObject = {
+        passphrase: this.passphrase,
+      };
+      this.submitAndSendAda(dataTransferObject).then(() => {
+        console.log("money sent");
+        _this.isLoadingData = false;
+        this.$emit("money-sent");
+      });
     },
   },
 };
