@@ -131,14 +131,14 @@ export default {
     sendAdaFocusOut() {      
       const dataTransferObject = {
         newAddress: this.address,
-        newAmount: parseFloat(this.amountFormatted.replace(/[^\d.]/g, "")),
+        newAmount: parseFloat(this.newAmountToBeFormatted.replace(/[^\d.]/g, "")),
         newAmountFormatted: `${parseFloat(this.amount).toFixed(6)}`,
         newIsValidAmount: this.isValidAmount,
       };
       if (isNaN(this.amount)) {
         dataTransferObject.newAmount = 0;
       }
-      dataTransferObject.newAmountFormatted = this.amount.toFixed(6);
+      dataTransferObject.newAmountFormatted = dataTransferObject.newAmount.toFixed(6);
       this.changeAmount(dataTransferObject);
       this.getFee();
       // this.setSendAdaTotal(); this need to be seted again

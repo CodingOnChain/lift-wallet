@@ -95,7 +95,7 @@ const actions = {
     });
 
     ipcRenderer.on('mint-asset', (_, args) => {
-      commit(types.IS_SENDING_ADA, false);
+      commit(types.SET_IS_SENDING_ADA, false);
       if (args.transaction.error) {
         alert(args.transaction.error);
       } else {
@@ -137,7 +137,7 @@ const actions = {
     if (state.sendAll) {
       amount = state.wallet.balance;
     } else {
-      amount = amount * 1000000;
+      amount = state.amount * 1000000;
     }
     ipcRenderer.send("req:send-transaction", {
       network: "testnet",
