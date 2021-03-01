@@ -49,6 +49,7 @@ export const SET_METADATA_FILE= 'SET_METADATA_FILE';
 
 // Actions
 export const SET_UP_WALLET = 'SET_UP_WALLET';
+export const SET_UP_TRANSACTIONS = 'SET_UP_TRANSACTIONS';
 export const SET_UP_SEND_WALLET_DATA = 'SET_UP_SEND_WALLET_DATA';
 export const ADD_WALLET = 'ADD_WALLET';
 export const GET_NEW_MNEMONIC = 'GET_MNEMONIC';

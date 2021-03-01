@@ -73,7 +73,7 @@ export default {
     return {
       address: null,
       showPassphrase: false,
-      isLoadingData:false,
+      isLoadingData: false,
       passphrase: null,
       isValidPassphrase: false,
       isReadonlyAmount: false,
@@ -120,7 +120,7 @@ export default {
     // },
   },
   mounted() {
-   this.isLoadingData= this.isSync;
+    this.isLoadingData = this.isSync;
   },
   methods: {
     ...mapActions({
@@ -153,7 +153,9 @@ export default {
         6
       );
       this.changeAmount(dataTransferObject);
-      this.getFee();
+      this.getFee().then(() => {
+        console.log("fees has been calculated");
+      });
       // this.setSendAdaTotal(); this need to be seted again
     },
     sendAdaFocusIn() {
@@ -178,7 +180,9 @@ export default {
           newIsValidAmount: this.isValidAmount,
         };
         this.changeAmount(dataTransferObject);
-        this.getFee();
+        this.getFee().then(() => {
+          console.log("fees has been calculated");
+        });
       }
     },
     passphraseFocusIn() {
@@ -186,7 +190,7 @@ export default {
     },
     submitSendAda() {
       this.isLoadingData = true;
-      let _this=this;
+      let _this = this;
       const dataTransferObject = {
         passphrase: this.passphrase,
       };

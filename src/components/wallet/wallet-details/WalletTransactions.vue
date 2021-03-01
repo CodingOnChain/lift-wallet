@@ -9,9 +9,7 @@
     <v-row no-gutters v-if="transactions == null">
       <v-col md="6" offset-md="3">
         <v-card class="pa-2 text-center" flat>
-          <v-card-subtitle
-            >Loading Transactions</v-card-subtitle
-          >
+          <v-card-subtitle>Loading Transactions</v-card-subtitle>
         </v-card>
       </v-col>
     </v-row>
@@ -55,7 +53,7 @@
           </tr>
         </tbody>
       </template>
-    </v-simple-table> 
+    </v-simple-table>
   </div>
 </template>
 
@@ -65,31 +63,36 @@ import Loading from "vue-loading-overlay";
 import "vue-loading-overlay/dist/vue-loading.css";
 import dayjs from "dayjs";
 import * as walletTypes from "../../../store/wallet/types";
-import { mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   name: "WalletTransactions",
   props: ["walletId", "focus"],
   components: { Loading },
   data: () => ({
-      fullPage: false
+    fullPage: false,
+    isLoadingTransactions: true,
   }),
-  watch: {
-      transactions(){
-         this.isLoading=false;
-      }
-  },
+  watch: {},
   computed: {
     ...mapGetters({
       transactions: walletTypes.NAMESPACE + walletTypes.TRANSACTION,
     }),
   },
-
-  mounted() {},
+  mounted() {
+    this.setUpTransactions().then(() => {
+      console.log("wallet transactions loaded");
+      this.isLoadingTransactions = false;
+    });
+  },
   methods: {
+    ...mapActions({
+      setUpTransactions:
+        walletTypes.NAMESPACE + walletTypes.SET_UP_TRANSACTIONS,
+    }),
     getFormattedDate(txDate) {
       return dayjs(txDate).format("MMM D, YYYY h:mm A");
-    }
+    },
   },
 };
 </script>
