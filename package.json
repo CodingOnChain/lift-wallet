@@ -10,9 +10,9 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "binaries:darwin":"sh .build/binaries.sh macos64",
-    "binaries:win32":"sh .build/binaries.sh win32",
-    "binaries:linux":"sh .build/binaries.sh linux64"
+    "binaries:macos":"bash -ec 'source baids/[0-9]*; cardano-wallet-download-binaries macos64'",
+    "binaries:windows":"bash -ec 'source baids/[0-9]*; cardano-wallet-download-binaries win64'",
+    "binaries:linux":"bash -ec 'source baids/[0-9]*; cardano-wallet-download-binaries linux64'"
   },
   "main": "background.js",
   "dependencies": {
@@ -57,7 +57,8 @@
       "parser": "babel-eslint"
     },
     "rules": {
-      "semi": 2
+      "semi": 2,
+      "indent": ["error", 2]      
     }
   },
   "browserslist": [

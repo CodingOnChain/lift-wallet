@@ -22,6 +22,7 @@
               <v-tab>Receive</v-tab>
               <v-tab>Send</v-tab>
               <v-tab>Mint</v-tab>
+
               <v-tab-item>
                 <v-card>
                   <WalletTransactions></WalletTransactions>
@@ -31,11 +32,13 @@
               <v-tab-item>
                 <v-card>
                   <WalletAddresses></WalletAddresses>
+
                 </v-card>
               </v-tab-item>
 
               <v-tab-item>
                 <v-card>
+
                   <WalletSend
                     :isSync="isSendingAda"
                     @money-sent="theMoneyHasBeenSent"
@@ -79,6 +82,7 @@
                   </v-form>
                 </v-card>
               </v-tab-item>
+
             </v-tabs>
           </v-sheet>
         </v-card>
@@ -89,6 +93,7 @@
 
 <script>
 const { ipcRenderer, shell } = require("electron");
+
 import { validationMixin } from "vuelidate";
 import WalletAddresses from "../wallet/wallet-details/WalletAddresses";
 import WalletSend from "../wallet/wallet-details/WalletSend";
@@ -96,23 +101,29 @@ import WalletTransactions from "../wallet/wallet-details/WalletTransactions";
 import * as walletTypes from "../../store/wallet/types";
 import { mapActions, mapGetters } from "vuex";
 
+
 export default {
   name: "WalletDetails",
   props: ["walletId", "focus"],
   mixins: [validationMixin],
+
   components: { WalletAddresses, WalletSend, WalletTransactions },
+
   validations: {
     address: {},
     amount: {},
     passphrase: {},
   },
   data: () => ({
+
     tabIndex: 0,
     getWalletInterval: null,
+
     sendFormValid: false,
     showPassphrase: false,
     showMintPassphrase: false,
     isSendingAda: false,
+
     mintForm: {
       asset: "lift",
       amount: 1,
@@ -122,16 +133,19 @@ export default {
   }),
   watch: {
     focus: function (newVal) {
+
       if (!newVal) {
         console.log("focus false");
         clearInterval(this.getWalletInterval);
       } else {
+
         this.isSendingAda = false;
         clearInterval(this.getWalletInterval);
         console.log("focus true");
         this.pollWallet();
       }
     },
+
     walletId: function (newVal, oldVal) {
       if (newVal != oldVal) {
         clearInterval(this.getWalletInterval);
@@ -198,6 +212,7 @@ export default {
       setUpSendDataWallet:
         walletTypes.NAMESPACE + walletTypes.SET_UP_SEND_WALLET_DATA,
     }),
+
     displayADA(lovelaces) {
       return `${parseFloat(lovelaces / 1000000).toFixed(6)} ADA`;
     },
@@ -213,6 +228,7 @@ export default {
         });
       }, 5000);
     },
+
     theMoneyHasBeenSent() {
       console.log("the money has been sent");
       this.tabIndex=0;

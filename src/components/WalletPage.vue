@@ -51,6 +51,7 @@ import WalletDetails from "./wallet/WalletDetails";
 import * as walletTypes from "../store/wallet/types";
 import { mapActions} from "vuex";
 
+
 export default {
   name: "WalletPage",
   props: ["render"],
@@ -73,9 +74,14 @@ export default {
         const dataTransferObject = {
           walletId: this.selectedWalletId,
         };
-        this.configureWalletID(dataTransferObject);
-        console.log(newVal);
+       this.configureWalletID(dataTransferObject);
       }
+    }
+  },
+  computed: {
+    hasWallets: function () {
+      // `this` points to the vm instance
+      return this.wallets.length > 0;
     },
   },
   computed: {
@@ -144,10 +150,13 @@ export default {
       this.wallets.push(e.wallet);
       this.selectedWalletIndex = this.wallets.length - 1;
       this.addingWallet = false;
+
     },
   },
 };
 </script>
 
+
 <style scoped>
 </style>
+
