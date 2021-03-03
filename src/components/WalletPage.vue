@@ -77,13 +77,7 @@ export default {
        this.configureWalletID(dataTransferObject);
       }
     }
-  },
-  computed: {
-    hasWallets: function () {
-      // `this` points to the vm instance
-      return this.wallets.length > 0;
-    },
-  },
+  },  
   computed: {
     hasWallets: function () {
       // `this` points to the vm instance
