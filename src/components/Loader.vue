@@ -13,16 +13,14 @@
 </template>
 
 <script>
-  export default {
-    name: 'Loader',
-    data: () => ({
-      
-    }),
-  };
+export default {
+  name: "Loader",
+  data: () => ({}),
+};
 </script>
 
 <style scoped>
 .max-height {
-  height: 100%
+  height: 100%;
 }
 </style>

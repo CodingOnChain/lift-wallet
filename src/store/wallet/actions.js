@@ -1,5 +1,5 @@
-import * as types from './types.js';
-const { ipcRenderer } = require('electron');
+import * as types from "./types.js";
+const { ipcRenderer } = require("electron");
 const actions = {
   async [types.GET_NEW_MNEMONIC]({ state,commit }, { wordsNumber }) {
     return new Promise(resolve => {
@@ -40,6 +40,7 @@ const actions = {
       commit(types.SET_IS_SENDING_ADA, false);
       if (args.transaction.error) {
         alert(args.transaction.error);
+
       } else {
         //     this.mintForm = {
         //         asset: 'lift',
@@ -76,6 +77,7 @@ const actions = {
           amount = state.amount < 1000000 ? 1000000 : state.amount;
         }
         ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: state.walletId, address: state.address, sendAll: state.sendAll, amount: amount });
+
       }
 
       ipcRenderer.on('res:get-fee', (_, args) => {
@@ -171,6 +173,7 @@ const actions = {
     commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);
     commit(types.SET_IS_VALID_AMOUNT, newIsValidAmount);
   }
+
 };
 
 export default actions;
