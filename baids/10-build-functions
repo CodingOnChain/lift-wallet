@@ -12,6 +12,7 @@ function cardano-wallet-download-binaries() {
   PLATFORM="$1"
   TAG="$2" && test -z "${TAG}" && TAG=$(cardano-wallet-get-latest-tag)
   REQUIRED_BINARIES="cardano-address cardano-cli bech32"
+  WINDOWS_BINARIES="libgmp-10 libffi-7 libsodium-23 libgmpxx-4"
 
   TMP_DIR="/tmp/cardano-wallet" && mkdir -p "${TMP_DIR}"
   PLATFORM_DIR="cardano/${PLATFORM}" && mkdir -p "${PLATFORM_DIR}"
@@ -25,6 +26,10 @@ function cardano-wallet-download-binaries() {
       for bin in ${REQUIRED_BINARIES}
       do
         mv "${TMP_DIR}/${bin}.exe" "${PLATFORM_DIR}/${bin}.exe"
+      done
+      for bin in ${WINDOWS_BINARIES}
+      do
+        mv "${TMP_DIR}/${bin}.dll" "${PLATFORM_DIR}/${bin}.dll"
       done
     ;;
     *)
