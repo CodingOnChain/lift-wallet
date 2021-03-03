@@ -193,15 +193,7 @@ export default {
     },
   },
   destroyed() {
-    // console.log('destroy');
-    // clearInterval(this.getWalletInterval);
-    // this.getWalletInterval = null;
-    // this.transactions = null;
-    // this.isSendingAda = false;
-    // ipcRenderer.off('res:get-transactions', this.setTransactions);
-    // ipcRenderer.off('res:get-fee', this.setFee);
-    // ipcRenderer.off('res:get-addresses', this.setAddresses);
-    // ipcRenderer.off('res:get-wallet', this.updateWallet);
+     console.log('destroy');    
   },
   mounted() {
     this.setUpSendDataWallet();

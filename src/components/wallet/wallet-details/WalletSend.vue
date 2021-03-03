@@ -9,6 +9,7 @@
       <v-text-field
         v-model="address"
         label="Address"
+        @blur="sendAdaFocusOut"
         @change="getFee"
         required
         @focus="addressFocusIn"
@@ -154,9 +155,8 @@ export default {
       );
       this.changeAmount(dataTransferObject);
       this.getFee().then(() => {
-        console.log("fees has been calculated");
+        console.log("fees has been calculated and update the ammount");
       });
-      // this.setSendAdaTotal(); this need to be seted again
     },
     sendAdaFocusIn() {
       const dataTransferObject = {
@@ -167,12 +167,12 @@ export default {
       this.changeAmount(dataTransferObject);
     },
     toggleSendAll() {
+      console.log("send all checked");
       const shouldSendAll = this.isReadonlyAmount;
       const dataTransferObject = {
-        newValueForSendAll: true,
+        newValueForSendAll: shouldSendAll,
       };
       this.changeSendAll(dataTransferObject);
-
       if (shouldSendAll) {
         const dataTransferObject = {
           newAmount: this.wallet.balance / 1000000,

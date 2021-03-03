@@ -1,7 +1,7 @@
 import * as types from "./types.js";
 const { ipcRenderer } = require("electron");
 const actions = {
-  async [types.GET_NEW_MNEMONIC]({ state,commit }, { wordsNumber }) {
+  async [types.GET_NEW_MNEMONIC]({ state, commit }, { wordsNumber }) {
     return new Promise(resolve => {
       var wordsAmmountToBeGenerated = state.wordsNumbersAllowed.find(x => x === wordsNumber);
       if (wordsAmmountToBeGenerated == null) throw resolve('not allowed lenght');
@@ -53,7 +53,7 @@ const actions = {
       }
     });
   },
-  async [types.ADD_WALLET]({commit},{ walletForm }) {
+  async [types.ADD_WALLET]({ commit }, { walletForm }) {
     return new Promise(resolve => {
       ipcRenderer.send('req:add-wallet', walletForm);
       ipcRenderer.on('res:add-wallet', (_, args) => {
@@ -68,8 +68,9 @@ const actions = {
     });
   },
   async [types.GET_FEE]({ state, commit }) {
-    return new Promise(resolve => {
+    return new Promise(resolve => {      
       if (state.address != null && state.address.length > 0) {
+        console.log("checking fees");
         let amount;
         if (this.state.sendAll) {
           amount = state.wallet.balance;
@@ -77,35 +78,38 @@ const actions = {
           amount = state.amount < 1000000 ? 1000000 : state.amount;
         }
         ipcRenderer.send('req:get-fee', { network: 'testnet', wallet: state.walletId, address: state.address, sendAll: state.sendAll, amount: amount });
-
+        ipcRenderer.on('res:get-fee', (_, args) => {
+          console.log("fees", args);
+          if (args.fee != undefined) {
+            const fee = args.fee / 1000000;
+            commit(types.SET_IS_VALID_ADRESS, true);
+            commit(types.SET_FEE, parseFloat(fee));
+            if (isNaN(fee)) {
+              console.log("nan");
+              this.sendForm.fee = 0;
+              commit(types.SET_FEE, 0);
+            }
+            commit(types.SET_FEE_FORMATTED, fee.toFixed(6));
+            commit(types.SET_TOTAL, parseFloat(state.amount) + parseFloat(state.fee));
+            commit(types.SET_TOTAL_FORMATTED, state.total.toFixed(6));
+            if (state.isReadonlyAmount) {
+              const availableWithoutFee = state.wallet.balance - args.fee;
+              commit(types.SET_AMOUNT, availableWithoutFee / 1000000);
+              commit(types.SET_AMOUNT_FORMATTED, `${parseFloat(availableWithoutFee / 1000000).toFixed(6)}`);
+              commit(types.SET_TOTAL, state.wallet.balance);
+              commit(types.SET_TOTAL_FORMATTED, `${parseFloat(availableWithoutFee / 1000000).toFixed(6)}`);
+              commit(types.SET_IS_VALID_AMOUNT, true);
+            }
+          } else {
+            commit(types.SET_IS_VALID_ADRESS, false);
+          }
+          resolve(args);
+        });
+      }else{
+        resolve("error");
       }
 
-      ipcRenderer.on('res:get-fee', (_, args) => {
-        console.log("fees", args);
-        if (args.fee != undefined) {
-          const fee = args.fee / 1000000;
-          commit(types.SET_IS_VALID_ADRESS, true);
-          commit(types.SET_FEE, parseFloat(fee));
-          if (isNaN(fee)) {
-            console.log("nan");
-            this.sendForm.fee = 0;
-            commit(types.SET_FEE, 0);
-          }
-          commit(types.SET_FEE_FORMATTED, fee.toFixed(6));
-          commit(types.SET_TOTAL, parseFloat(state.amount) + parseFloat(state.fee));
-          commit(types.SET_TOTAL_FORMATTED, state.total.toFixed(6));
-          if (state.isReadonlyAmount) {
-            const availableWithoutFee = state.wallet.balance - args.fee;
-            commit(types.SET_AMOUNT, availableWithoutFee / 1000000);
-            commit(types.SET_AMOUNT_FORMATTED, `${parseFloat(availableWithoutFee / 1000000).toFixed(6)}`);
-            commit(types.SET_TOTAL, state.wallet.balance);
-            commit(types.SET_TOTAL_FORMATTED, `${parseFloat(this.sendForm.total / 1000000).toFixed(6)}`);
-          }
-        } else {
-          commit(types.SET_IS_VALID_ADRESS, false);
-        }
-        resolve(args);
-      });
+      
     });
   },
   async [types.SUBMIT_AND_SEND_ADA]({ commit, state }, { passphrase }) {
@@ -120,6 +124,7 @@ const actions = {
     } else {
       amount = state.amount * 1000000;
     }
+
     return new Promise(resolve => {
       ipcRenderer.send("req:send-transaction", {
         network: "testnet",
@@ -165,9 +170,11 @@ const actions = {
     commit(types.SET_IS_VALID_ADRESS, newValueForIsValidAdress);
   },
   [types.CHANGE_SEND_ALL]({ commit }, { newValueForSendAll }) {
+    console.log("send all has been checked", newValueForSendAll);
     commit(types.SET_SEND_ALL, newValueForSendAll);
   },
   [types.CHANGE_AMOUNT]({ commit }, { newAddress, newAmount, newAmountFormatted, newIsValidAmount }) {
+    console.log("amount has been changed", newAmount);
     commit(types.SET_ADDRESS, newAddress);
     commit(types.SET_AMOUNT, newAmount);
     commit(types.SET_AMOUNT_FORMATTED, newAmountFormatted);
