@@ -2,11 +2,11 @@ import * as types from './types.js';
 const { ipcRenderer } = require('electron');
 const actions = {
   async [types.GET_NEW_MNEMONIC]({ state,commit }, { wordsNumber }) {
-    ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
-      return new Promise(resolve => {
-        var wordsAmmountToBeGenerated = state.wordsNumbersAllowed.find(x => x === wordsNumber);
-        if (wordsAmmountToBeGenerated == null) throw 'not allowed lenght';
-        ipcRenderer.send('req:generate-recovery-phrase');
+    return new Promise(resolve => {
+      var wordsAmmountToBeGenerated = state.wordsNumbersAllowed.find(x => x === wordsNumber);
+      if (wordsAmmountToBeGenerated == null) throw resolve('not allowed lenght');
+      ipcRenderer.send('req:generate-recovery-phrase');
+      ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
 
         console.log('phrase', args);
         if (args.isSuccessful) {

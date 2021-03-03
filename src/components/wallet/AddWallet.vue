@@ -217,11 +217,10 @@ export default {
     }),
   },
   mounted() {
-    this.setUpWallet();
+    
   },
   methods: {
-    ...mapActions({
-      setUpWallet: walletTypes.NAMESPACE + walletTypes.SET_UP_WALLET,
+    ...mapActions({      
       getNewMnemonicFromBackend:walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,
       addingWalletFromBackend: walletTypes.NAMESPACE + walletTypes.ADD_WALLET,
     }),
