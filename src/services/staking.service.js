@@ -47,6 +47,7 @@ const stakeVerificationKeyFile = 'stake.vkey';
 const stakeRegistrationCertFile = 'stake.cert';
 const stakeAddressFile = 'stakingAddresses.addr';
 const isRegisteredFile = 'register.0.tx';
+const delegationCertFile = 'delegation.cert';
 
 let stakeSKeyPath = null;
 
@@ -69,12 +70,130 @@ export async function delegate(network, walletName, passphrase, poolId) {
         }
         
         //3) delegate wallet
+        //3a) generate delegation cert
+        // TODO: dynamic poolId :)
+        const poolId = 'pool1lu369gwp0cprpf5vsfxr0gyguz4lnajj9arnqdn3nu6xq929yqq';
+        await createDelegationCert(network, walletName, passphrase, poolId);
+        //3b) register delegation cert
+        await registerStakingCert(network, walletName, passphrase, delegationCert);
 
         //4) clean up
         cleanUpStakeSigningKeys();
     }catch(err) {
         console.log(err);
     }
+}
+
+async function createDelegationCert(network, walletName, passphrase, poolId) {
+
+    //get wallet location
+    const walletDir = path.resolve(walletsPath, network, walletName);
+    
+    const delegationCertPath = path.resolve(walletsDir, delegationCertFile);
+    const stakeVerificationKeyPath = path.resolve(walletDir, stakeVerificationKeyFile);
+
+    let delegCertCmd = createDelegationCertificate(stakeVerificationKeyPath, poolId, delegationCertPath)
+    await cli(delegCertCmd);
+
+}
+
+//register your wallet's delegation cert
+async function registerDelegationCert(network, walletName, passphrase) {
+    //get wallet location
+    const walletDir = path.resolve(walletsPath, network, walletName);
+
+    //tx/key file paths
+    const delegationCertPath = path.resolve(walletsDir, delegationCertFile);
+    const txDraftPath = path.resolve(walletDir, draftTxFile);
+    const txRawPath = path.resolve(walletDir, rawTxFile);
+    const txSignedPath = path.resolve(walletDir, signedTxFile);
+    const isRegisteredPath = path.resolve(walletDir, isRegisteredFile);
+    const signingKeyPaths = [];
+
+    let result = { transactionId: null, error: null };
+    try {
+        //gather payment/change addresses for utxos
+        const addresses = JSON.parse(fs.readFileSync(path.resolve(walletDir, paymentFile)))
+        const changes = JSON.parse(fs.readFileSync(path.resolve(walletDir, changeFile)))
+
+        //UTxOs
+        const addressUtxos = await getUtxos(
+            network, 
+            [...addresses.map((a) => a.address), ...changes.map((a) => a.address)]);
+        let amount = 0;
+        addressUtxos.forEach(o => amount += parseInt(o.value));
+            
+        //refresh protocol parameters
+        const protocolParamsPath = await refreshProtocolParametersFile(network);
+        const protocolParams = fs.readFileSync(protocolParamsPath).toString();
+        const registrationFee = parseInt(JSON.parse(protocolParams)["keyDeposit"]);
+
+        //get draft tx-ins
+        let draftTxIns = buildTxIn(addressUtxos, amount, 0);
+
+        //build draft transaction
+        let draftTx = buildTransaction('mary-era', 0, 0, changes[0].address, amount, changes[0].address, draftTxIns, null, txDraftPath, true, delegationCertPath)
+        await cli(draftTx);
+
+        //calculate fees
+        const calculateFee = calculateMinFee(txDraftPath, draftTxIns.length, 1, 1, 0, protocolParamsPath);
+        const feeResult = await cli(calculateFee);
+        //originally tried to just calculate the fee locally
+        //  but had issues when trying to use multiple --tx-in
+        //minFeeA * txSize + minFeeB
+        //note the output of the 'calculate-min-fee' is: 'XXXX Lovelace' 
+        //  this is why i split and take index 0
+        let fee = parseInt(feeResult.stdout.split(' ')[0]);
+        fee += parseInt(registrationFee);
+
+        //get current slot no to calculate ttl
+        const slotNo = await getCurrentSlotNo(network);
+        const ttl = slotNo + 1000;
+
+        //get draft tx-ins
+        let rawTxIns = buildTxIn(addressUtxos, amount, fee);
+
+        //build raw transaction
+        let rawTx = buildTransaction('mary-era', fee, ttl, changes[0].address, amount, changes[0].address, rawTxIns, null, txRawPath, true, delegationCertPath)
+        await cli(rawTx);
+
+        await getSigningKeys(draftTxIns, passphrase, walletDir, signingKeyPaths, addresses, changes);
+
+        signingKeyPaths.push(stakeSKeyPath);
+        const signedTx = signTransaction(network, 1097911063, signingKeyPaths, txRawPath, txSignedPath);
+        await cli(signedTx);
+
+        //send transaction 
+        //get signed tx binary
+        // var dataHex = JSON.parse(fs.readFileSync(txSignedPath)).cborHex
+        // var dataBinary = getBinaryFromHexString(dataHex)
+        var signedtxContents = JSON.parse(fs.readFileSync(txSignedPath));
+
+        //submit transaction to dandelion
+        result.transactionId = await submitTransaction(network, signedtxContents);
+        fs.writeFileSync(path.resolve(walletDir, isRegisteredPath), result.transactionId);
+    }catch(err) {
+        console.error(err);
+        if(err.response.data != undefined) {
+            console.log(err.response.data);
+            result.error = err.response.data;
+        }
+        else {
+            console.log(err);
+            result.error = err;
+        }
+    }
+
+    //clean up
+    // if(fs.existsSync(txDraftPath)) fs.unlinkSync(txDraftPath);
+    // if(fs.existsSync(txRawPath)) fs.unlinkSync(txRawPath);
+    // if(fs.existsSync(txSignedPath)) fs.unlinkSync(txSignedPath);
+    
+    signingKeyPaths.forEach(sk => {
+        if(fs.existsSync(sk)) fs.unlinkSync(sk);
+    })
+
+    return result;
 }
 
 //register your wallet's staking cert
