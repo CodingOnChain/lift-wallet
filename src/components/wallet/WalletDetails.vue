@@ -243,6 +243,19 @@
                     </v-card-text>
                   </v-form>
                 </v-card>
+                <v-simple-table
+                  v-if="pools != null && pools.length > 0"
+                >
+                  <template v-slot:default>
+                    <tbody>
+                      <tr v-for="p in pools" :key="p.pool_bech32">
+                        <td class="pa-4">
+                          {{ p.pool_bech32 }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </template>
+                </v-simple-table>
               </v-tab-item>
             </v-tabs>
           </v-sheet>
@@ -281,6 +294,7 @@ export default {
     showMintPassphrase: false,
     showStakingPassphrase: false,
     isSendingAda: false,
+    pools: null,
     sendForm: {
       address: "",
       amount: 0,
@@ -407,6 +421,8 @@ export default {
     console.log("mounted poll");
     this.pollWallet();
 
+    ipcRenderer.send("req:get-pool-list", { network: "testnet" });
+
     ipcRenderer.on("res:get-transactions", this.setTransactions);
     ipcRenderer.on("res:get-fee", this.setFee);
     ipcRenderer.on("res:get-addresses", this.setAddresses);
@@ -414,8 +430,12 @@ export default {
     ipcRenderer.on("res:send-transaction", this.transactionResult);
     ipcRenderer.on("res:mint-asset", this.transactionResult);
     ipcRenderer.on("res:delegate", this.stakeResult);
+    ipcRenderer.on('res:get-pool-list', this.setPoolList);
   },
   methods: {
+    setPoolList(_, args) {
+      this.pools = args.pools;
+    },
     toggleSendAll() {
       const shouldSendAll = this.sendForm.readonlyAmount;
       this.sendForm.sendAll = true;

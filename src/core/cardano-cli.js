@@ -15,7 +15,7 @@ export const cardanoPlatformPath = process.platform === 'darwin' ? 'macos64':
     process.platform === 'linux' ? 'linux64': 
     process.platform;
 
-export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile, isSendAll, delegationCertPath){
+export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress, txIns, metadataPath, outputFile, isSendAll, certPath){
     const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     let tx = `"${cardanoCli}" transaction build-raw --${era} --fee ${parseInt(fee)} --ttl ${parseInt(ttl)}`;
     let totalUsed = 0;
@@ -39,7 +39,7 @@ export function buildTransaction(era, fee, ttl, toAddress, amount, changeAddress
 
     if(metadataPath != null) tx += ` --metadata-json-file "${metadataPath}"`;
 
-    if(delegationCertPath != null) tx += ` --certificate-file "${delegationCertPath}"`;
+    if(certPath != null) tx += ` --certificate-file "${certPath}"`;
     
     tx += ` --out-file "${outputFile}"`;
     return tx;
@@ -201,7 +201,7 @@ export function createStakeRegistrationCertificate(stakingVerificationKeyFile, s
 
 }
 
-export function createDelegationCert(stakingVerificationKeyFile, poolId, delegationCert) {
+export function createDelegationCertificate(stakingVerificationKeyFile, poolId, delegationCert) {
     const cardanoCli = path.resolve('.', cardanoPath, cardanoPlatformPath, 'cardano-cli');
     var cmd = `"${cardanoCli}" stake-address delegation-certificate`;
     cmd += ` --staking-verification-key-file "${stakingVerificationKeyFile}"`;

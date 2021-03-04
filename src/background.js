@@ -15,7 +15,7 @@ import {
   mintToken,
   createWallet,
   getTransactions } from './services/wallet.service.js';
-import { delegate } from './services/staking.service.js';
+import { delegate, getPools } from './services/staking.service.js';
 import { 
   cardanoPath,
   cardanoPlatformPath, 
@@ -106,7 +106,6 @@ ipcMain.on('req:start-cnode', (event) => {
   }
 })
 
-
 ipcMain.on('req:stop-cnode', (event) => {
   if(cnode) {
     cnode.kill();
@@ -119,7 +118,6 @@ ipcMain.on('req:stop-cnode', (event) => {
 
   event.reply('res:stop-cnode');
 })
-
 
 ipcMain.on('req:get-network', async (event) => {
   const networkInfo = await getNetworkInfo();
@@ -136,6 +134,7 @@ ipcMain.on('req:generate-recovery-phrase', async (event) => {
     event.reply('res:generate-recovery-phrase', { isSuccessful: false, data: e.toString() });
   }
 })
+
 
 ipcMain.on('req:add-wallet', async (event, args) => {
   try{
@@ -202,10 +201,19 @@ ipcMain.on('req:mint-asset', async (event, args) => {
   event.reply('res:mint-asset', { transaction: result });
 })
 
+//staking
 ipcMain.on('req:delegate', async (event, args) => {
   console.log(args);
   await delegate(args.network, args.walletName, args.passphrase, args.poolId);
   event.reply('res:delegate', {});
+});
+
+ipcMain.on('req:get-pool-list', async(event, args) => {
+  console.log('Getting Pools');
+  const poolList = await getPools(args.network);
+  
+  console.log('Got Pools');
+  event.reply('res:get-pool-list', { pools: poolList })
 });
 
 
