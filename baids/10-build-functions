@@ -26,6 +26,10 @@ function cardano-wallet-download-binaries() {
       do
         mv "${TMP_DIR}/${bin}.exe" "${PLATFORM_DIR}/${bin}.exe"
       done
+      for lib in ${TMP_DIR}/*dll
+      do
+        mv "${lib}" "${PLATFORM_DIR}/"
+      done
     ;;
     *)
       RELEASE_URL="https://github.com/input-output-hk/cardano-wallet/releases/download/${TAG}/cardano-wallet-${TAG}-${PLATFORM}.tar.gz"
@@ -33,6 +37,10 @@ function cardano-wallet-download-binaries() {
       for bin in ${REQUIRED_BINARIES}
       do
         mv "${TMP_DIR}/${bin}" "${PLATFORM_DIR}/"
+      done
+      for lib in ${TMP_DIR}/*dylib
+      do
+        mv "${lib}" "${PLATFORM_DIR}/" || true
       done
     ;;
   esac
