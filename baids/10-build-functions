@@ -40,7 +40,7 @@ function cardano-wallet-download-binaries() {
       done
       for lib in ${TMP_DIR}/*dylib
       do
-        mv "${lib}" "${PLATFORM_DIR}/"
+        mv "${lib}" "${PLATFORM_DIR}/" || true
       done
     ;;
   esac
