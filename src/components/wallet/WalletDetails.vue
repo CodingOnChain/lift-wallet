@@ -46,38 +46,7 @@
 
               <v-tab-item>
                 <v-card>
-                  <v-form>
-                    <v-card-text>
-                      <v-text-field
-                        v-model="mintForm.asset"
-                        label="Asset Name"
-                      ></v-text-field>
-
-                      <v-text-field
-                        v-model="mintForm.amount"
-                        label="Amount"
-                      ></v-text-field>
-
-                      <v-text-field
-                        :append-icon="
-                          showMintPassphrase ? 'mdi-eye' : 'mdi-eye-off'
-                        "
-                        v-model="mintForm.passphrase"
-                        :type="showMintPassphrase ? 'text' : 'password'"
-                        label="Passphrase"
-                        @click:append="showMintPassphrase = !showMintPassphrase"
-                      >
-                      </v-text-field>
-
-                      <v-file-input
-                        v-model="mintForm.metadataFile"
-                        label="Metadata File"
-                      >
-                      </v-file-input>
-
-                      <v-btn color="primary" @click="mintAsset"> Mint </v-btn>
-                    </v-card-text>
-                  </v-form>
+                  <WalletMint></WalletMint>
                 </v-card>
               </v-tab-item>
             </v-tabs>
@@ -89,12 +58,13 @@
 </template>
 
 <script>
-const { ipcRenderer, shell } = require("electron");
+const { ipcRenderer } = require("electron");
 
 import { validationMixin } from "vuelidate";
 import WalletAddresses from "../wallet/wallet-details/WalletAddresses";
 import WalletSend from "../wallet/wallet-details/WalletSend";
 import WalletTransactions from "../wallet/wallet-details/WalletTransactions";
+import WalletMint from "../wallet/wallet-details/WalletMint";
 import * as walletTypes from "../../store/wallet/types";
 import { mapActions, mapGetters } from "vuex";
 
@@ -102,32 +72,17 @@ export default {
   name: "WalletDetails",
   props: ["walletId", "focus"],
   mixins: [validationMixin],
-
-  components: { WalletAddresses, WalletSend, WalletTransactions },
-
-  validations: {
-    address: {},
-    amount: {},
-    passphrase: {},
-  },
+  components: { WalletAddresses, WalletSend, WalletTransactions, WalletMint },
   data: () => ({
     tabIndex: 0,
     getWalletInterval: null,
-
     sendFormValid: false,
     showPassphrase: false,
     showMintPassphrase: false,
     isSendingAda: false,
-
-    mintForm: {
-      asset: "lift",
-      amount: 1,
-      passphrase: "",
-      metadataFile: null,
-    },
   }),
   watch: {
-    focus: function(newVal) {
+    focus: function (newVal) {
       if (!newVal) {
         console.log("focus false");
         clearInterval(this.getWalletInterval);
@@ -139,7 +94,7 @@ export default {
       }
     },
 
-    walletId: function(newVal, oldVal) {
+    walletId: function (newVal, oldVal) {
       if (newVal != oldVal) {
         clearInterval(this.getWalletInterval);
         this.getWalletInterval = null;
@@ -160,7 +115,7 @@ export default {
         "--primary-color": this.$vuetify.theme.themes.light.primary.base,
       };
     },
-    isSyncing: function() {
+    isSyncing: function () {
       if (this.wallet == null) return false;
       if (this.wallet.state.status != "ready") {
         if (
@@ -174,7 +129,7 @@ export default {
       }
       return false;
     },
-    syncProgress: function() {
+    syncProgress: function () {
       if (this.wallet == null) return 0;
       if (
         this.wallet.state.progress != null &&
@@ -197,7 +152,6 @@ export default {
       setUpSendDataWallet:
         walletTypes.NAMESPACE + walletTypes.SET_UP_SEND_WALLET_DATA,
     }),
-
     displayADA(lovelaces) {
       return `${parseFloat(lovelaces / 1000000).toFixed(6)} ADA`;
     },
@@ -218,23 +172,7 @@ export default {
       console.log("the money has been sent");
       this.tabIndex = 0;
       this.$v.$reset();
-    },
-    mintAsset() {
-      let metadata = null;
-      if (this.mintForm.metadataFile != null)
-        metadata = this.mintForm.metadataFile.path;
-      ipcRenderer.send("req:mint-asset", {
-        network: "testnet",
-        walletName: this.walletId,
-        assetName: this.mintForm.asset,
-        assetAmount: this.mintForm.amount,
-        passphrase: this.mintForm.passphrase,
-        metadata: metadata,
-      });
-    },
-    navigateToTx(url) {
-      shell.openExternal(url);
-    },
+    },  
   },
 };
 </script>

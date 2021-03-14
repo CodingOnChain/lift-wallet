@@ -7,7 +7,6 @@ const actions = {
       if (wordsAmmountToBeGenerated == null) throw resolve('not allowed lenght');
       ipcRenderer.send('req:generate-recovery-phrase');
       ipcRenderer.on('res:generate-recovery-phrase', (_, args) => {
-
         console.log('phrase', args);
         if (args.isSuccessful) {
           console.log("generate recovery phrase", args.data);
@@ -27,6 +26,21 @@ const actions = {
       });
     });
   },
+  async [types.SET_MINT_ASSET_TRANSACTION]({ state }, { assetName, assetAmount, passphrase, metadata }) {
+    return new Promise(resolve => {
+      ipcRenderer.send("req:mint-asset", {
+        network: "testnet",
+        walletName: state.walletId,
+        assetName: assetName,
+        assetAmount: assetAmount,
+        passphrase: passphrase,
+        metadata: metadata,
+      });
+      ipcRenderer.on('res:mint-asset', (_, args) => {
+        resolve(args);
+      });
+    });
+  },
   [types.SET_UP_SEND_WALLET_DATA]({ commit, state }) {
     ipcRenderer.on('res:get-wallet', (_, args) => {
       console.log('walletId: ', state.walletId);
@@ -35,22 +49,6 @@ const actions = {
         network: "testnet",
         wallet: state.walletId,
       });
-    });
-    ipcRenderer.on('mint-asset', (_, args) => {
-      commit(types.SET_IS_SENDING_ADA, false);
-      if (args.transaction.error) {
-        alert(args.transaction.error);
-
-      } else {
-        //     this.mintForm = {
-        //         asset: 'lift',
-        //         amount: 1,
-        //         passphrase: '',
-        //         metadataFile: null,
-        //     };
-        //     this.$v.$reset();
-        //     this.tabIndex = 0;
-      }
     });
   },
   async [types.ADD_WALLET]({ commit }, { walletForm }) {
@@ -68,7 +66,7 @@ const actions = {
     });
   },
   async [types.GET_FEE]({ state, commit }) {
-    return new Promise(resolve => {      
+    return new Promise(resolve => {
       if (state.address != null && state.address.length > 0) {
         console.log("checking fees");
         let amount;
@@ -105,11 +103,11 @@ const actions = {
           }
           resolve(args);
         });
-      }else{
+      } else {
         resolve("error");
       }
 
-      
+
     });
   },
   async [types.SUBMIT_AND_SEND_ADA]({ commit, state }, { passphrase }) {
@@ -137,16 +135,6 @@ const actions = {
       });
       ipcRenderer.on('res:send-transaction', (_, args) => {
         commit(types.SET_IS_SENDING_ADA, false);
-        if (args.transaction.error) {
-          alert(args.transaction.error);
-        } else {
-          //  this.mintForm = {
-          //      asset: 'lift',
-          //      amount: 1,
-          //      passphrase: '',
-          //      metadataFile: null,
-          //  }; 
-        }
         resolve(args);
       });
 
