@@ -59,6 +59,7 @@
 
 
 <script>
+const { shell } = require("electron");
 import Loading from "vue-loading-overlay";
 import "vue-loading-overlay/dist/vue-loading.css";
 import dayjs from "dayjs";
@@ -92,6 +93,9 @@ export default {
     }),
     getFormattedDate(txDate) {
       return dayjs(txDate).format("MMM D, YYYY h:mm A");
+    },
+    navigateToTx(url) {
+      shell.openExternal(url);
     },
   },
 };
