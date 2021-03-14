@@ -55,8 +55,8 @@ export default {
     mintAsset() {
       let metadata = null;
       if (this.metadataFile != null) {
-        metadata = this.mintForm.metadataFile.path;
-      }
+        metadata = this.metadataFile.path;
+      }    
       this.isLoading = true;
       const dataTransferObject = {        
         assetName: this.asset,
