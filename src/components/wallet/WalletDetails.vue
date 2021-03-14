@@ -32,13 +32,11 @@
               <v-tab-item>
                 <v-card>
                   <WalletAddresses></WalletAddresses>
-
                 </v-card>
               </v-tab-item>
 
               <v-tab-item>
                 <v-card>
-
                   <WalletSend
                     :isSync="isSendingAda"
                     @money-sent="theMoneyHasBeenSent"
@@ -82,7 +80,6 @@
                   </v-form>
                 </v-card>
               </v-tab-item>
-
             </v-tabs>
           </v-sheet>
         </v-card>
@@ -101,7 +98,6 @@ import WalletTransactions from "../wallet/wallet-details/WalletTransactions";
 import * as walletTypes from "../../store/wallet/types";
 import { mapActions, mapGetters } from "vuex";
 
-
 export default {
   name: "WalletDetails",
   props: ["walletId", "focus"],
@@ -115,7 +111,6 @@ export default {
     passphrase: {},
   },
   data: () => ({
-
     tabIndex: 0,
     getWalletInterval: null,
 
@@ -132,13 +127,11 @@ export default {
     },
   }),
   watch: {
-    focus: function (newVal) {
-
+    focus: function(newVal) {
       if (!newVal) {
         console.log("focus false");
         clearInterval(this.getWalletInterval);
       } else {
-
         this.isSendingAda = false;
         clearInterval(this.getWalletInterval);
         console.log("focus true");
@@ -146,7 +139,7 @@ export default {
       }
     },
 
-    walletId: function (newVal, oldVal) {
+    walletId: function(newVal, oldVal) {
       if (newVal != oldVal) {
         clearInterval(this.getWalletInterval);
         this.getWalletInterval = null;
@@ -167,7 +160,7 @@ export default {
         "--primary-color": this.$vuetify.theme.themes.light.primary.base,
       };
     },
-    isSyncing: function () {
+    isSyncing: function() {
       if (this.wallet == null) return false;
       if (this.wallet.state.status != "ready") {
         if (
@@ -181,7 +174,7 @@ export default {
       }
       return false;
     },
-    syncProgress: function () {
+    syncProgress: function() {
       if (this.wallet == null) return 0;
       if (
         this.wallet.state.progress != null &&
@@ -193,7 +186,7 @@ export default {
     },
   },
   destroyed() {
-     console.log('destroy');    
+    console.log("destroy");
   },
   mounted() {
     this.setUpSendDataWallet();
@@ -223,7 +216,7 @@ export default {
 
     theMoneyHasBeenSent() {
       console.log("the money has been sent");
-      this.tabIndex=0;
+      this.tabIndex = 0;
       this.$v.$reset();
     },
     mintAsset() {

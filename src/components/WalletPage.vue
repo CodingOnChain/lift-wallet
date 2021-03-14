@@ -49,8 +49,7 @@ import NoWallet from "./wallet/NoWallet";
 import AddWallet from "./wallet/AddWallet";
 import WalletDetails from "./wallet/WalletDetails";
 import * as walletTypes from "../store/wallet/types";
-import { mapActions} from "vuex";
-
+import { mapActions } from "vuex";
 
 export default {
   name: "WalletPage",
@@ -61,29 +60,29 @@ export default {
     WalletDetails,
   },
   watch: {
-    render: function (newVal, oldVal) {
+    render: function(newVal, oldVal) {
       if (!oldVal && newVal) {
         this.getWallets();
       } else {
         this.addingWallet = false;
       }
     },
-    selectedWalletIndex: function (newVal, oldVal) {
+    selectedWalletIndex: function(newVal, oldVal) {
       if (newVal != undefined && oldVal != newVal) {
         this.selectedWalletId = this.wallets[newVal].name;
         const dataTransferObject = {
           walletId: this.selectedWalletId,
         };
-       this.configureWalletID(dataTransferObject);
+        this.configureWalletID(dataTransferObject);
       }
-    }
-  },  
+    },
+  },
   computed: {
-    hasWallets: function () {
+    hasWallets: function() {
       // `this` points to the vm instance
       return this.wallets.length > 0;
     },
-    enableDetails: function () {
+    enableDetails: function() {
       return this.render;
     },
   },
@@ -126,31 +125,27 @@ export default {
     ...mapActions({
       configureWalletID: walletTypes.NAMESPACE + walletTypes.SET_WALLET_ID,
     }),
-    getWallets: function () {
+    getWallets: function() {
       console.log("get wallets");
       ipcRenderer.send("req:get-wallets", { network: "testnet" });
     },
-    getMnemonic: function () {
+    getMnemonic: function() {
       ipcRenderer.send("req:generate-recovery-phrase");
     },
-    startNewWallet: function () {
+    startNewWallet: function() {
       this.addingWallet = true;
     },
-    cancelAdd: function () {
+    cancelAdd: function() {
       this.addingWallet = false;
     },
-    newWalletAdded: function (e) {
+    newWalletAdded: function(e) {
       console.log("new added wallet", e);
       this.wallets.push(e.wallet);
       this.selectedWalletIndex = this.wallets.length - 1;
       this.addingWallet = false;
-
     },
   },
 };
 </script>
 
-
-<style scoped>
-</style>
-
+<style scoped></style>
