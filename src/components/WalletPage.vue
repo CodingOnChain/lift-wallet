@@ -138,9 +138,9 @@ export default {
     cancelAdd: function() {
       this.addingWallet = false;
     },
-    newWalletAdded: function(e) {
-      console.log("new added wallet", e);
-      this.wallets.push(e.wallet);
+    newWalletAdded: function(wallet) {
+      console.log("new added wallet", wallet);
+      this.wallets.push(wallet);
       this.selectedWalletIndex = this.wallets.length - 1;
       this.addingWallet = false;
     },

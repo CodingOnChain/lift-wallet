@@ -89,10 +89,10 @@
           </v-row>
         </v-card>
       </v-stepper-content>
-      
+
       <!-- Step 3 -->
       <v-stepper-step :complete="e6 > 3" step="3">
-         {{ $t('lang.wallet.add_wallet') }}
+        {{ $t("lang.wallet.add_wallet") }}
       </v-stepper-step>
 
       <v-stepper-content step="3">
@@ -195,13 +195,7 @@ export default {
       ],
     },
   }),
-  watch: {
-    wallet: function () {
-      this.e6 = 1;                
-      this.isSubmitting = false;
-      this.$emit("added-wallet");
-    } 
-  },
+  watch: {},
   computed: {
     wordsLengthWalletValidation() {
       return [
@@ -220,15 +214,15 @@ export default {
     ...mapGetters({
       mnemonic: walletTypes.NAMESPACE + walletTypes.MNEMONIC,
       wallet: walletTypes.NAMESPACE + walletTypes.WALLET,
-      wordsNumberAllowed: walletTypes.NAMESPACE + walletTypes.WORDS_NUMBER_ALLOWED,
+      wordsNumberAllowed:
+        walletTypes.NAMESPACE + walletTypes.WORDS_NUMBER_ALLOWED,
     }),
   },
-  mounted() {
-    
-  },
+  mounted() {},
   methods: {
-    ...mapActions({      
-      getNewMnemonicFromBackend:walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,
+    ...mapActions({
+      getNewMnemonicFromBackend:
+        walletTypes.NAMESPACE + walletTypes.GET_NEW_MNEMONIC,
       addingWalletFromBackend: walletTypes.NAMESPACE + walletTypes.ADD_WALLET,
     }),
     isWordLenghtAllowed(lenght) {
@@ -259,9 +253,13 @@ export default {
       const dataTransferObject = {
         walletForm: this.walletForm,
       };
-      this.addingWalletFromBackend(dataTransferObject);
+      this.addingWalletFromBackend(dataTransferObject).then((args) => {
+        this.e6 = 1;
+        this.isSubmitting = false;     
+        let wallet=args.data;           
+        this.$emit("added-wallet",wallet);
+      });
     },
   },
 };
-
 </script>
