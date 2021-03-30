@@ -3,7 +3,7 @@
 # LIFT Wallet
 [![GitHub license](https://img.shields.io/github/license/nothingalike/lift-wallet)](https://github.com/nothingalike/lift-wallet/blob/master/LICENSE)
 
-A Cardano Cryptocurrency wallet. This wallet will run a full node on your computer. It ultilizes `cardano-node` and `cardano-wallet`. 
+A Cardano Cryptocurrency Lite wallet. It ultilizes `cardano-cli` and `cardano-address`. 
 
 
 ## Still in Development. 
@@ -11,33 +11,51 @@ Proceed with caution.
 
 
 ## Prerequisites
- - Go to the [cardano-wallet](https://github.com/input-output-hk/cardano-wallet/releases) release page. Download your system's cooresponding binaries. 
- - Go to the [Cardano Configuration](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html) file page. Download the config, shelley genesis, byron genesis, and topology files. Don't rename the files.
+ 
+ - git
+ - nodejs/nvm
+ - bash
+ - wget
 
-## Project setup
+We recommend using these methods to fulfill prerequisites:
 
-1. Create a folder in the root of the project called `cardano`
-2. Inside the new folder `cardano`, create a folder to your corresponding platform according to node's `process.platform`. Current list is [here](https://nodejs.org/api/process.html#process_process_platform). (Example: Windows = win32, Mac = darwin)
-3. Inside your platform folder, paste your `cardano-wallet` binaries you downloaded during the Prerequisites.
-4. Back in the `cardano` folder, create a folder called `configs`.
-5. Paste the configurations files you downloaded during Prerequisites into the `configs` folder.
-
-End Result:
-
-```bash
-├── cardano
-│   ├── configs
-│   │   ├── mainnet-config.json
-│   │   ├── mainnet-byron-genesis.json
-│   │   ├── mainnet-shelley-genesis.json
-│   │   ├── mainnet-topology.json
-│   ├── (platform: win32, darwin, linux, etc)
-│   │   ├── *binaries from cardano-wallet release
+- Windows users, try some [choco](https://chocolatey.org/):
 ```
+choco install git nvm bash wget
+```
+- MacOS users, try some [brew](https://brew.sh/):
+```
+brew install git nvm bash wget
+```
+- Linux: feel free :)
+
+## Initial setup
+
+1. Clone the project in your computer    
+``` bash
+git clone https://github.com/nothingalike/lift-wallet.git
+```
+2. Install `node` dependencies
+```
+# install required nodejs version from .nvmrc
+nvm install
+nvm use
+# install nodejs modules/dependencies
+npm install
+```
+4. Download latest `cardano` binaries for your platform
+``` bash
+npm run binaries:macos
+npm run binaries:linux
+npm run binaries:windows
+```
+
 ## Run
 
 ```
-npm install
-
 npm run electron:serve
 ```
+
+A clean instance of `lift-wallet` should pop up!
+
+ ![alt text](https://user-images.githubusercontent.com/35784914/105702296-5963c100-5eea-11eb-9cb3-83ec46753379.PNG)

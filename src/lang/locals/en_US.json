@@ -1,0 +1,12 @@
+{
+    "notice": {
+        "msg": "You have message"
+    },
+    "wallet": {
+        "add_wallet": "add wallet",
+        "add": "add"
+    },
+    "main": {
+    },
+    "language": "English"       
+}
